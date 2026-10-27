@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lemonade-platform
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/maxisses/lemonade-stand-assistant.git
+    targetRevision: codex/lemonade-cpu-maas
+    path: gitops/platform
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openshift-gitops
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - SkipDryRunOnMissingResource=true

@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: chunker
-        image: quay.io/rh-ee-mmisiura/chunkers:v2.0
+        image: quay.io/rh-ee-mmisiura/chunkers@sha256:3037978e0f23c633cafc6bf226f6c269514677ff3cbb660c46a7b017c573afcd
         imagePullPolicy: Always
         ports:
         - containerPort: 8085

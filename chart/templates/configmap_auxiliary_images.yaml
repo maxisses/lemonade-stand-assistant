@@ -8,5 +8,5 @@ metadata:
   annotations:
     helm.sh/weight: "0"
 data:
-  regexDetectorImage: 'quay.io/trustyai/regex-detector:latest'
-  vllmGatewayImage: 'quay.io/trustyai/vllm-orchestrator-gateway:latest'
+  regexDetectorImage: 'quay.io/trustyai/regex-detector@sha256:8c9ee944d6a745f3036c5f14d03db30c15cfa928b984f33b5d96180602f4e1ab'
+  vllmGatewayImage: 'quay.io/trustyai/vllm-orchestrator-gateway@sha256:c511b386d61a728acdfe8a1ac7a16b3774d072dd053718e5b9c5fab0f025ac3b'

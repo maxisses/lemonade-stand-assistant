@@ -57,18 +57,28 @@ spec:
       containers:
         - name: {{ $app }}
           image: {{ .Values.app.image | default "quay.io/ckavili/lemon-fastapi:1.0.26" }}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "uvicorn"]
+          args: ["app_fastapi:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
           ports:
             - containerPort: 8080
               protocol: TCP
               name: http
           env:
             - name: LOG_LEVEL
-              value: "DEBUG"
+              value: "INFO"
+            - name: MAX_CONCURRENT_REQUESTS
+              value: {{ .Values.app.maxConcurrentRequests | default 1 | quote }}
+            - name: MAX_OUTPUT_TOKENS
+              value: {{ .Values.app.maxOutputTokens | default 128 | quote }}
+            - name: MAX_RETRIES
+              value: {{ .Values.app.maxRetries | default 0 | quote }}
+            - name: ORCHESTRATOR_CA_FILE
+              value: /etc/service-ca/service-ca.crt
             - name: DEMO_VARIANT
               value: {{ include "assistant.variant" . | quote }}
             - name: GUARDRAILS_ORCHESTRATOR_SERVICE_SERVICE_HOST
-              value: "guardrails-orchestrator-service"
+              value: "guardrails-orchestrator-service.{{ $ns }}.svc"
             - name: GUARDRAILS_ORCHESTRATOR_SERVICE_SERVICE_PORT
               value: "8032"
             - name: VLLM_MODEL
@@ -76,10 +86,13 @@ spec:
             - name: VLLM_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ $app }}-secrets
+                  name: {{ .Values.model.existingSecret | default (printf "%s-secrets" $app) }}
                   key: vllm-api-key
-                  optional: true
+                  optional: false
           volumeMounts:
+            - name: service-ca
+              mountPath: /etc/service-ca
+              readOnly: true
             - name: system-prompt
               mountPath: /system-prompt
               readOnly: true
@@ -123,6 +136,9 @@ spec:
               drop:
                 - ALL
       volumes:
+        - name: service-ca
+          configMap:
+            name: lemonade-service-ca
         - name: system-prompt
           configMap:
             name: {{ $app }}-system-prompt
@@ -154,6 +170,7 @@ spec:
       name: http
   type: ClusterIP
 ---
+{{- if .Values.app.publicRoute }}
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
@@ -181,7 +198,9 @@ spec:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect
   wildcardPolicy: None
+{{- end }}
 ---
+{{- if not .Values.model.existingSecret }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -194,7 +213,8 @@ metadata:
     demo-variant: {{ include "assistant.variant" . }}
 type: Opaque
 stringData:
-  vllm-api-key: {{ .Values.model.api_key | default "fake" }}
+  vllm-api-key: {{ .Values.model.api_key | default "fake" | quote }}
+{{- end }}
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -214,3 +234,13 @@ spec:
     - port: http
       path: /metrics
       interval: 3s
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lemonade-service-ca
+  namespace: {{ $ns }}
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
+data: {}

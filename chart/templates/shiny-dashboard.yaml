@@ -37,7 +37,7 @@ spec:
     spec:
       containers:
       - name: shiny
-        image: "{{ .Values.shinyDashboard.image.repository }}:{{ .Values.shinyDashboard.image.tag }}"
+        image: "{{ .Values.shinyDashboard.image.repository }}{{ if .Values.shinyDashboard.image.digest }}@{{ .Values.shinyDashboard.image.digest }}{{ else }}:{{ .Values.shinyDashboard.image.tag }}{{ end }}"
         imagePullPolicy: {{ .Values.shinyDashboard.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.shinyDashboard.service.targetPort }}

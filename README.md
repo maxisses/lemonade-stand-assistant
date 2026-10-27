@@ -1,3 +1,16 @@
+# Customer event build
+
+This fork is being adapted for the 17 November 2026 customer event. Start with
+[deployment operations](docs/operations.md), [manual steps](docs/manual-steps.md),
+and the [build journal](docs/build-journal.md). The upstream documentation below
+is retained as reference and describes the original defaults.
+
+The project build uses external MaaS inference and CPU guardrail detectors.
+Install with deploy/functional-values.yaml. GPU resources require explicit owner
+approval and are rejected by default. Initial testing is functional only: short,
+serial requests, no audience access, load tests, or large scans. Runtime credentials
+must be supplied through local configuration and Kubernetes Secret references.
+
 # Guardrail the Lemonade Stand Assistant
 
 Deploy an AI-powered customer service assistant with built-in safety guardrails to ensure family-friendly, compliant interactions for your business. With a dashboard for metrics and a chat UI, abuse the system and see how it responds! 

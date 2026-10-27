@@ -1,3 +1,5 @@
+# GPU use requires an explicit owner decision; external inference is the project default.
+allowGpu: false
 ---
 # Demo variant (see README / alternatives/):
 #   lemonade | coffee | cafe | mate | piscola | cafept | cachaca
@@ -14,7 +16,11 @@ releaseName: ""
 # Main application (name is derived from variant unless overridden)
 app:
   name: ""  # auto from variant
-  image: quay.io/ckavili/lemon-fastapi:1.0.26
+  publicRoute: false
+  maxConcurrentRequests: 1
+  maxOutputTokens: 128
+  maxRetries: 0
+  image: quay.io/ckavili/lemon-fastapi@sha256:a62dc3333a0dc5890498b23991538ccda9517c4a591ba1c762f8ae962748fd1c
 
 # LLM configuration
 # In-cluster llama-32 uses KServe Service port 80. Override for BYO/MaaS.
@@ -60,6 +66,7 @@ shinyDashboard:
   image:
     repository: quay.io/sara_banderby/shinydashboard
     tag: fedora
+    digest: sha256:6a0106c1173b9c91fad773dff06a21f9366094a4f846edb9643cb89290256242
     pullPolicy: Always
   replicas: 1
   service:
@@ -78,3 +85,7 @@ shinyDashboard:
     limits:
       memory: "1Gi"
       cpu: "500m"
+
+# Supply the detector storage credentials at runtime.
+modelStorage:
+  existingSecret: ""

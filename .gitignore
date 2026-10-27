@@ -1,0 +1,23 @@
+# Local credentials and runtime authentication
+.env
+.env.*
+!.env.example
+local/
+.auth/
+auth.json
+kubeconfig*
+*pull-secret*.json
+
+# Infrastructure state and generated plans
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+# Local execution artifacts
+__pycache__/
+.DS_Store
+
+.venv/
+.pytest_cache/

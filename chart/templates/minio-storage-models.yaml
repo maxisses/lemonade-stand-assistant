@@ -58,20 +58,22 @@ spec:
           claimName: minio-storage-guardrail-detectors-claim
       initContainers:
         - name: download-model
-          image: quay.io/rgeada/llm_downloader:latest
+          image: quay.io/rgeada/llm_downloader@sha256:ee5f459370d481deebb7f866e74aece5aa85932f6428038a7ad6a672398b9f15
           command:
             - bash
             - -c
             - |
               models=(
-                ibm-granite/granite-guardian-hap-125m
-                protectai/deberta-v3-base-prompt-injection-v2
+                ibm-granite/granite-guardian-hap-125m@a76ccfd3ddb790fa7c23db58149bfec7ba1aa57f
+                protectai/deberta-v3-base-prompt-injection-v2@90c9989b1a342275dd0d1a95aad283c04e075671
               )
               echo "Starting download"
-              mkdir /mnt/models/llms/
-              for model in "${models[@]}"; do
+              mkdir -p /mnt/models/llms/
+              for entry in "${models[@]}"; do
+                model="${entry%@*}"
+                revision="${entry##*@}"
                 echo "Downloading $model"
-                /tmp/venv/bin/huggingface-cli download $model --local-dir /mnt/models/huggingface/$(basename $model)
+                /tmp/venv/bin/huggingface-cli download "$model" --revision "$revision" --local-dir /mnt/models/huggingface/$(basename $model)
               done
 
               echo "Done!"
@@ -88,10 +90,24 @@ spec:
             - /models
           env:
             - name: MINIO_ACCESS_KEY
-              value:  THEACCESSKEY
+              {{- if .Values.modelStorage.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.modelStorage.existingSecret }}
+                  key: AWS_ACCESS_KEY_ID
+              {{- else }}
+              value: THEACCESSKEY
+              {{- end }}
             - name: MINIO_SECRET_KEY
+              {{- if .Values.modelStorage.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.modelStorage.existingSecret }}
+                  key: AWS_SECRET_ACCESS_KEY
+              {{- else }}
               value: THESECRETKEY
-          image: quay.io/trustyai/modelmesh-minio-examples:latest
+              {{- end }}
+          image: quay.io/trustyai/modelmesh-minio-examples@sha256:65cb22335574b89af15d7409f62feffcc52cc0e870e9419d63586f37706321a5
           name: minio
           securityContext:
             allowPrivilegeEscalation: false
@@ -104,6 +120,7 @@ spec:
             - mountPath: "/models/"
               name: model-volume
 ---
+{{- if not .Values.modelStorage.existingSecret }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -123,3 +140,4 @@ data:
   AWS_S3_ENDPOINT: aHR0cDovL21pbmlvLXN0b3JhZ2UtZ3VhcmRyYWlsLWRldGVjdG9yczo5MDAw 
   AWS_SECRET_ACCESS_KEY: VEhFU0VDUkVUS0VZ 
 type: Opaque
+{{- end }}

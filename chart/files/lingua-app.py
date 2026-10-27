@@ -5,7 +5,7 @@ import re
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fast_langdetect import detect as fast_detect
 from lingua import Language, LanguageDetectorBuilder
 from pydantic import BaseModel, Field
@@ -83,7 +83,8 @@ def _target_confidence(text: str) -> float:
                 if confidence.language == TARGET_LANGUAGE:
                     return confidence.value
     except Exception as exc:
-        logger.error("Error computing lingua confidence for '%s': %s", text, exc)
+        logger.error("Lingua confidence calculation failed")
+        raise RuntimeError("Language detector unavailable") from exc
     return 0.5
 
 
@@ -93,7 +94,8 @@ def _fast_target_confidence(text: str) -> float:
             if result.get("lang") == TARGET_LANG_CODE:
                 return result.get("score", 0)
     except Exception as exc:
-        logger.error("Error in fast_detect for '%s': %s", text, exc)
+        logger.error("Fast language detection failed")
+        raise RuntimeError("Language detector unavailable") from exc
     return 0.5
 
 
@@ -130,8 +132,7 @@ def detect_language(text: str) -> List[ContentAnalysisResponse]:
             try:
                 detected_lang = detector.detect_language_of(text)
             except Exception as exc:
-                logger.error("Error detecting language for '%s': %s", text, exc)
-                return []
+                raise RuntimeError("Language detector unavailable") from exc
 
             if detected_lang is None or detected_lang == TARGET_LANGUAGE:
                 return []
@@ -141,8 +142,7 @@ def detect_language(text: str) -> List[ContentAnalysisResponse]:
         try:
             detected_lang = detector.detect_language_of(text)
         except Exception as exc:
-            logger.error("Error detecting language for '%s': %s", text, exc)
-            return []
+            raise RuntimeError("Language detector unavailable") from exc
 
         if detected_lang is None or detected_lang == TARGET_LANGUAGE:
             return []
@@ -151,8 +151,7 @@ def detect_language(text: str) -> List[ContentAnalysisResponse]:
             detected_confidence = detector.compute_language_confidence(text, detected_lang)
             target_confidence = detector.compute_language_confidence(text, TARGET_LANGUAGE)
         except Exception as exc:
-            logger.error("Error computing confidence scores for '%s': %s", text, exc)
-            return []
+            raise RuntimeError("Language confidence calculation failed") from exc
 
         if detected_confidence < MIN_CONFIDENCE_THRESHOLD:
             return []
@@ -162,8 +161,8 @@ def detect_language(text: str) -> List[ContentAnalysisResponse]:
 
         return _build_detection(text, 1.0 - target_confidence, detected_lang, target_confidence)
     except Exception as exc:
-        logger.error("Unexpected error in detect_language for '%s': %s", text, exc)
-        return []
+        logger.error("Language validation failed")
+        raise RuntimeError("Language detector unavailable") from exc
 
 
 @app.get("/health")
@@ -179,8 +178,8 @@ async def analyze_contents(request: ContentAnalysisHttpRequest):
     processed_results = []
     for i, result in enumerate(results):
         if isinstance(result, Exception):
-            logger.error("Critical error processing content '%s': %s", request.contents[i], result)
-            processed_results.append([])
+            logger.error("Language detector request failed")
+            raise HTTPException(status_code=503, detail="Language detector unavailable")
         else:
             processed_results.append(result)
 

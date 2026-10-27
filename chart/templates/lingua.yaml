@@ -73,7 +73,7 @@ spec:
               protocol: TCP
           imagePullPolicy: Always
           terminationMessagePolicy: File
-          image: 'quay.io/ckavili/lingua-language-detector:0.0.25'
+          image: 'quay.io/ckavili/lingua-language-detector@sha256:582fd311bd2d426185c04cfbf7813f63bb1a40658ddb28a521f86a0c7e133af8'
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       volumes:

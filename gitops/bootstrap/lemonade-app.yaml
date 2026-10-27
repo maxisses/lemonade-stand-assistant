@@ -1,0 +1,22 @@
+# Sync manually after platform readiness and runtime secret creation.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lemonade-demo
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/maxisses/lemonade-stand-assistant.git
+    targetRevision: codex/lemonade-cpu-maas
+    path: chart
+    helm:
+      releaseName: lemonade-demo
+      valueFiles:
+        - ../deploy/functional-values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: lemonade-demo
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

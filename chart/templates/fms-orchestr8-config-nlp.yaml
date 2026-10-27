@@ -19,6 +19,10 @@ data:
       service:
         hostname: {{ .Values.model.endpoint | default "llama-32-predictor" }}
         port: {{ .Values.model.port | default "80" }}
+        {{- if eq (int (.Values.model.port | default 80)) 443 }}
+        tls:
+          insecure: false
+        {{- end }}
     detectors:
       regex_competitor:
         type: text_contents

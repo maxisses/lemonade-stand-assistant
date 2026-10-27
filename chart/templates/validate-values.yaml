@@ -1,0 +1,6 @@
+{{- if and (not .Values.model) (not .Values.allowGpu) -}}
+{{- fail "Configure an external model endpoint. The local GPU model requires explicit approval and allowGpu=true." -}}
+{{- end -}}
+{{- if and (or .Values.detectors.hap.useGpu .Values.detectors.promptInjection.useGpu) (not .Values.allowGpu) -}}
+{{- fail "GPU detectors require explicit approval and allowGpu=true." -}}
+{{- end -}}

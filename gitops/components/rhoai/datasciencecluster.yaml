@@ -1,0 +1,43 @@
+apiVersion: datasciencecluster.opendatahub.io/v2
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  components:
+    dashboard:
+      managementState: Managed
+    kserve:
+      managementState: Managed
+      rawDeploymentServiceConfig: Headed
+    trustyai:
+      managementState: Managed
+    aipipelines:
+      managementState: Removed
+    workbenches:
+      managementState: Removed
+    aigateway:
+      managementState: Removed
+    mcplifecycleoperator:
+      managementState: Removed
+    feastoperator:
+      managementState: Removed
+    kueue:
+      managementState: Removed
+    llamastackoperator:
+      managementState: Removed
+    mlflowoperator:
+      managementState: Removed
+    modelregistry:
+      managementState: Removed
+    ogx:
+      managementState: Removed
+    ray:
+      managementState: Removed
+    sparkoperator:
+      managementState: Removed
+    trainer:
+      managementState: Removed
+    trainingoperator:
+      managementState: Removed

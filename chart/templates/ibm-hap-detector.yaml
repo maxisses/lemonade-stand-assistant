@@ -31,7 +31,7 @@ spec:
           value: /mnt/models
         - name: HF_HOME
           value: /tmp/hf_home
-      image: quay.io/trustyai/guardrails-detector-huggingface-runtime:latest
+      image: quay.io/trustyai/guardrails-detector-huggingface-runtime@sha256:3d052b86f8c857d62a26b9827900bbf922c6e584af8f83ae3c0dd83f17b74f43
       name: kserve-container
       ports:
         - containerPort: 8000

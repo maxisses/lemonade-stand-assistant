@@ -1,0 +1,26 @@
+# Initial integration only. Keep requests serial and outputs short.
+variant: lemonade
+namespace:
+  create: true
+  name: lemonade-demo
+model:
+  name: qwen38-27b
+  endpoint: maas-rhdp.apps.maas.redhatworkshops.io
+  port: 443
+  existingSecret: lemonade-model
+app:
+  maxConcurrentRequests: 1
+  maxOutputTokens: 128
+  maxRetries: 0
+  publicRoute: false
+detectors:
+  hap:
+    useGpu: false
+  promptInjection:
+    useGpu: false
+shinyDashboard:
+  route:
+    enabled: false
+
+modelStorage:
+  existingSecret: minio-data-connection-detector-models
