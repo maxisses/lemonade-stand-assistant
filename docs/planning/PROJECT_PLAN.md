@@ -23,6 +23,14 @@ The referenced keynote was streamed on **13 May 2026**, not in 2027. The reposit
 - Use Terraform and GitOps conventions from the reference project. Exclude AAP, ACM, edge clusters, RDS, and a separately hosted MaaS gateway from the baseline.
 - See PREREQUISITES.md for measured results and remaining validation. The historical GPU-based budget and pre-27-October milestones below are superseded; recalculate for actual CPU hours and the remaining period.
 
+## Functional build status — 27 October 2026
+
+The replacement portfolio account now hosts a ready ROSA HCP 4.21.34 cluster in eu-central-1 with three m6i.2xlarge workers and zero GPUs. OpenShift AI 3.5.2, GitOps 1.22.2, FMS, and the CPU detectors are running. The external qwen38-27b endpoint works through the complete guarded application path. Functional values use non-thinking generation, a 128-token cap, one active request, no automatic retries, and complete-response validation. The exact provider checkpoint is not exposed.
+
+Measured single-case checks: normal answer allowed (1.956 s), local topic rule blocked (0.179 s), English-only policy blocked (0.378 s), and instruction override blocked (0.806 s). Earlier failed integration requests are retained as failures. These observations do not establish detection quality across a corpus or event capacity. Browser checks also confirm the normal answer, topic block, and matching request counters.
+
+The first [Customer] Lemonade Division branding and unique request-outcome dashboard are implemented. Access remains operator-only through localhost forwarding. Counts cover the current application process and reset on restart, visibly labeled. Persistent event reporting, baseline comparison, automated evaluation/adaptive swarms, temporary audience access, and the stage package remain open. FMS is the working reference implementation; the planned NeMo assessment remains outstanding. See app/docs/build-journal.md and app/docs/version-manifest.json for evidence and exact versions.
+
 ## 2. Event deliverables
 
 | Priority | Deliverable | Complete when … |

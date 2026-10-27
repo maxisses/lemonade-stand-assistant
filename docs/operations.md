@@ -41,8 +41,30 @@ helm template lemonade-demo chart -f deploy/functional-values.yaml
 oc kustomize gitops/platform
 ```
 
-The upstream default local-model installation is intentionally gated by allowGpu=false. A GPU approval is a prerequisite to changing that setting. The functional values select external inference and do not create model-key or storage-key Secrets; create those securely before deployment. Operator channels are proposed and manual approval is configured; record exact selected versions after cluster catalog inspection.
+The upstream default local-model installation is intentionally gated by allowGpu=false. A GPU approval is a prerequisite to changing that setting. The functional values select external inference and do not create model-key or storage-key Secrets; create those securely before deployment. Selected operators are GitOps 1.22.2 and OpenShift AI 3.5.2; manual upgrade approval remains configured. Exact images are recorded in docs/version-manifest.json.
 
 After the cluster Terraform apply completes, run python3 scripts/cluster_login.py to populate the isolated kubeconfig. Once the namespace exists, run python3 scripts/runtime_secrets.py for model/storage credentials. These helpers do not print secret values. All subsequent oc commands must explicitly select local/kubeconfig.
 
 In the original, now retired account, OCM and user roles were restored/linked with the ROSA CLI. In the active portfolio account those roles already existed and were reused. They are account/organization resources outside this project's Terraform state; retain them by default during Lemonade teardown. The lemonade-account and lemonade-operator role families are managed by this project's ROSA stage.
+
+## Current operator access and response mode
+
+The functional deployment uses FMS complete JSON responses (app.upstreamStreaming=false) and model.chatTemplateKwargs.enable_thinking=false. Keep the small 128-token budget and zero retries for this phase. The app emits a browser response only after all upstream and local output checks pass. The provider's exact checkpoint revision remains unknown; revalidate behavior after provider changes.
+
+From this repository, open two separate terminals for the local-only operator views:
+
+```sh
+oc --kubeconfig local/kubeconfig -n lemonade-demo port-forward service/lemonade-stand 18080:8080 --address 127.0.0.1
+```
+
+```sh
+oc --kubeconfig local/kubeconfig -n lemonade-demo port-forward service/shiny-dashboard 18081:3838 --address 127.0.0.1
+```
+
+Use http://127.0.0.1:18080 for chat and http://127.0.0.1:18081 for the dashboard. Stop each forwarding process with Ctrl-C. A pod rollout can end forwarding; restart it afterward. These addresses are only for the operator's machine and are not event audience links.
+
+The TrustyAI operator generates guardrails Routes. The internal-only NetworkPolicy allows namespace-local callers, platform monitoring, and the AI application namespace, while excluding ingress-router pods. Supplemental Route IP allowlists were also set during bootstrap; the NetworkPolicy is the declarative control. Do not remove it to enable audience participation; implement a deliberately authenticated audience entry path first.
+
+Dashboard conversations equal allowed + blocked + errors + rejected + pending. Detector hits are a separate breakdown. Metrics include requests handled by /api/chat, not malformed HTTP bodies rejected before that handler. They are in-memory, single-process counters; restarting the app resets them. The dashboard labels this limitation and hides stale values when scraping fails. Preserve reports before rollouts when durable event evidence is needed. The UI stop button cancels only its browser request; it is not an event-wide stop control.
+
+An additional single functional case is available as python3 scripts/functional_probe.py prompt-injection. Do not turn these helpers into a larger scan until its budget is agreed. R dashboard validation uses tests/test_dashboard.R with the deployed image's R runtime; it makes no model calls.

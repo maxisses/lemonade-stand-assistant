@@ -22,7 +22,7 @@ Video metadata, chapter descriptions, and selected frames were inspected. Around
 | rh-ai-quickstart/lemonade-stand-assistant | 5c0f65f07e4773c9770dde866bb877fe727e3391 |
 | trustyai-explainability/trustyai-llm-demo | acfcaf328b96eced637a74eee4374e5dc7d37054 |
 
-Both public repositories were shallow-cloned into temporary directories for analysis. The project workspace does not yet contain an application checkout. The current quickstart includes later variants and is not necessarily identical to the Summit build.
+Both public repositories were shallow-cloned into temporary directories for analysis. At that initial review, the project workspace did not yet contain an application checkout; the owner's fork has since been cloned into app/. The current quickstart includes later variants and is not necessarily identical to the Summit build.
 
 The README references the original TrustyAI Lemonade example. The quickstart uses the MIT license; model licenses and container/product entitlements require separate checks. The provocative prompt-injection text in the GitHub repository description is demo content, not an instruction to the implementation agent.
 
@@ -125,3 +125,11 @@ The owner's fork matches the inspected upstream revision and is now cloned into 
 CPU-only Terraform and initial chart/application changes have been prepared, with pinned images/model revisions and offline tests for buffered output, failure handling, serial admission, and server-assigned source labels. The owner renewed ROSA authentication. State storage, networking, and IAM/OIDC prerequisites were created, but the cluster request failed the original account's Marketplace billing check; no cluster was created.
 
 The owner authorized switching to the portfolio AWS account and clarified that the original Open Environment was deleted. The portfolio account remains available and its previous demo was removed. Read-only checks confirmed its ROSA billing listing, no target-account cluster, and no VPCs, NAT gateways, or EC2 instances in eu-central-1. Configuration has now switched, with original credentials/state archived and account-specific Terraform state isolation. Removal of original-account resources is owner-reported rather than independently verified. See app/docs/build-journal.md for current status. Initial validation excludes larger scans and load tests by explicit owner instruction.
+
+## 10. Runtime findings from the CPU build, 27 October 2026
+
+The reference-source findings above describe the inspected upstream revision. The adapted fork now runs on ROSA/OpenShift AI with external MaaS and CPU detectors. Full benign generation, local topic blocking, language-policy blocking, and a single prompt-injection block passed. Exact versions and both successful and failed measurements are recorded in app/docs/version-manifest.json. No load test or large scan was run.
+
+Runtime integration required a trusted CA bundle for the FMS client, compatible S3 connection metadata, one worker per CPU detector for the functional sizing, and provider non-thinking options. FMS streaming did not reliably preserve the terminal finish reason after output detection; the working configuration uses complete JSON responses with complete input/output validation before delivery. Protected output is still buffered and fail-closed. The app now records unique request outcomes separately from detector hits. A browser check confirms that the dashboard matches normal and blocked requests; counters remain process-local and are labeled accordingly.
+
+The operator automatically creates guardrails Routes. A namespace ingress policy excludes ingress-router pods; an internal health call succeeded while the same connection from a router pod timed out. Application/dashboard Routes remain disabled. This supports operator-only functional operation, not event audience readiness.

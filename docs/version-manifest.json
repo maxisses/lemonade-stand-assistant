@@ -8,7 +8,7 @@
     "rhoai_channel": "stable-3.5",
     "gitops_channel": "gitops-1.22"
   },
-  "runtime_validation": "pending cluster access",
+  "runtime_validation": "Functional CPU-only path validated on 2026-10-27; serial requests only, no capacity claim",
   "images": [
     {
       "image": "quay.io/ckavili/lemon-fastapi:1.0.26",
@@ -71,7 +71,7 @@
     "release_image": "quay.io/openshift-release-dev/ocp-release@sha256:b6bdbb9508197e3ca704994cfae3441d1ad3526a6569793919b8e3938dfc559a",
     "gitops_csv": "openshift-gitops-operator.v1.22.2",
     "rhoai_csv": "rhods-operator.3.5.2",
-    "operator_installation": "both selected CSVs Succeeded; AI components are starting",
+    "operator_installation": "Both CSVs Succeeded; DataScienceCluster Ready",
     "gitops_bundles": [
       "registry.redhat.io/openshift-gitops-1/gitops-operator-bundle@sha256:2ba58c50f771c08bbc5a1d8572c7b058df55bc71667cc66026d42840eb4bee6d"
     ],
@@ -85,6 +85,230 @@
       "rhods-operator.3.5.2": [
         "registry.redhat.io/rhoai/odh-rhel9-operator@sha256:ae88dfb2323a386f9d50512234a93f21e8028ab28b194ddb42e1f324eee965cd"
       ]
+    },
+    "cpu_workers": [
+      {
+        "instance_type": "m6i.2xlarge",
+        "ready": true,
+        "gpu_allocatable": "0"
+      },
+      {
+        "instance_type": "m6i.2xlarge",
+        "ready": true,
+        "gpu_allocatable": "0"
+      },
+      {
+        "instance_type": "m6i.2xlarge",
+        "ready": true,
+        "gpu_allocatable": "0"
+      }
+    ]
+  },
+  "runtime_recorded_at": "2026-10-27T13:30:16.804719+00:00",
+  "deployed_containers": [
+    {
+      "pod": "chunker-service-65f477b9fb-cqcvx",
+      "container": "chunker",
+      "image": "quay.io/rh-ee-mmisiura/chunkers@sha256:3037978e0f23c633cafc6bf226f6c269514677ff3cbb660c46a7b017c573afcd",
+      "image_id": "quay.io/rh-ee-mmisiura/chunkers@sha256:3037978e0f23c633cafc6bf226f6c269514677ff3cbb660c46a7b017c573afcd",
+      "ready": true
+    },
+    {
+      "pod": "guardrails-detector-ibm-hap-predictor-745fd9549f-9szfm",
+      "container": "kserve-container",
+      "image": "quay.io/trustyai/guardrails-detector-huggingface-runtime@sha256:3d052b86f8c857d62a26b9827900bbf922c6e584af8f83ae3c0dd83f17b74f43",
+      "image_id": "quay.io/trustyai/guardrails-detector-huggingface-runtime@sha256:3d052b86f8c857d62a26b9827900bbf922c6e584af8f83ae3c0dd83f17b74f43",
+      "ready": true
+    },
+    {
+      "pod": "guardrails-detector-ibm-hap-predictor-745fd9549f-9szfm",
+      "container": "kube-rbac-proxy",
+      "image": "registry.redhat.io/rhoai/odh-kube-rbac-proxy-rhel9@sha256:ce8eb36be58b878376e64146c0a4ec281666da63b0f13765689a77117f1771c2",
+      "image_id": "registry.redhat.io/rhoai/odh-kube-rbac-proxy-rhel9@sha256:ce8eb36be58b878376e64146c0a4ec281666da63b0f13765689a77117f1771c2",
+      "ready": true
+    },
+    {
+      "pod": "guardrails-orchestrator-f6c9bd5b-4tcm9",
+      "container": "guardrails-orchestrator",
+      "image": "registry.redhat.io/rhoai/odh-fms-guardrails-orchestrator-rhel9@sha256:d1103eebfd167801a268b2df777a8d760f4c7f4460b6f61adc82b423fe374e0b",
+      "image_id": "registry.redhat.io/rhoai/odh-fms-guardrails-orchestrator-rhel9@sha256:14676b485653b7f0bdfc8be62b7f3d112aa2f1817a3dc0eed1dd8a1586b45789",
+      "ready": true
+    },
+    {
+      "pod": "guardrails-orchestrator-f6c9bd5b-4tcm9",
+      "container": "guardrails-orchestrator-detectors",
+      "image": "registry.redhat.io/rhoai/odh-built-in-detector-rhel9@sha256:06d7602d6f0aa5f22c4daaa744baf627f24a136a7ba1d3bc23720b0267d45cc8",
+      "image_id": "registry.redhat.io/rhoai/odh-built-in-detector-rhel9@sha256:06d7602d6f0aa5f22c4daaa744baf627f24a136a7ba1d3bc23720b0267d45cc8",
+      "ready": true
+    },
+    {
+      "pod": "lemonade-stand-5b5f85f954-xsvh7",
+      "container": "lemonade-stand",
+      "image": "quay.io/ckavili/lemon-fastapi@sha256:a62dc3333a0dc5890498b23991538ccda9517c4a591ba1c762f8ae962748fd1c",
+      "image_id": "quay.io/ckavili/lemon-fastapi@sha256:a62dc3333a0dc5890498b23991538ccda9517c4a591ba1c762f8ae962748fd1c",
+      "ready": true
+    },
+    {
+      "pod": "lingua-detector-5db8845bd5-7vb57",
+      "container": "lingua-detector",
+      "image": "quay.io/ckavili/lingua-language-detector@sha256:582fd311bd2d426185c04cfbf7813f63bb1a40658ddb28a521f86a0c7e133af8",
+      "image_id": "quay.io/ckavili/lingua-language-detector@sha256:582fd311bd2d426185c04cfbf7813f63bb1a40658ddb28a521f86a0c7e133af8",
+      "ready": true
+    },
+    {
+      "pod": "minio-storage-guardrail-detectors-74d47f9cf7-686rn",
+      "container": "minio",
+      "image": "quay.io/trustyai/modelmesh-minio-examples@sha256:65cb22335574b89af15d7409f62feffcc52cc0e870e9419d63586f37706321a5",
+      "image_id": "quay.io/trustyai/modelmesh-minio-examples@sha256:65cb22335574b89af15d7409f62feffcc52cc0e870e9419d63586f37706321a5",
+      "ready": true
+    },
+    {
+      "pod": "prompt-injection-detector-predictor-689f89d684-m5g89",
+      "container": "kserve-container",
+      "image": "quay.io/trustyai/guardrails-detector-huggingface-runtime@sha256:3d052b86f8c857d62a26b9827900bbf922c6e584af8f83ae3c0dd83f17b74f43",
+      "image_id": "quay.io/trustyai/guardrails-detector-huggingface-runtime@sha256:3d052b86f8c857d62a26b9827900bbf922c6e584af8f83ae3c0dd83f17b74f43",
+      "ready": true
+    },
+    {
+      "pod": "prompt-injection-detector-predictor-689f89d684-m5g89",
+      "container": "kube-rbac-proxy",
+      "image": "registry.redhat.io/rhoai/odh-kube-rbac-proxy-rhel9@sha256:ce8eb36be58b878376e64146c0a4ec281666da63b0f13765689a77117f1771c2",
+      "image_id": "registry.redhat.io/rhoai/odh-kube-rbac-proxy-rhel9@sha256:ce8eb36be58b878376e64146c0a4ec281666da63b0f13765689a77117f1771c2",
+      "ready": true
+    },
+    {
+      "pod": "shiny-dashboard-578d49c97d-mlszv",
+      "container": "shiny",
+      "image": "quay.io/sara_banderby/shinydashboard@sha256:6a0106c1173b9c91fad773dff06a21f9366094a4f846edb9643cb89290256242",
+      "image_id": "quay.io/sara_banderby/shinydashboard@sha256:6a0106c1173b9c91fad773dff06a21f9366094a4f846edb9643cb89290256242",
+      "ready": true
     }
-  }
+  ],
+  "functional_configuration": {
+    "model": "qwen38-27b",
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "max_output_tokens": 128,
+    "temperature": 0,
+    "retries": 0,
+    "max_concurrent_requests": 1,
+    "orchestrator_streaming": false,
+    "audience_access_enabled": false
+  },
+  "functional_results": [
+    {
+      "timestamp": "2026-10-27T12:58:18.710616+00:00",
+      "cluster_id": "2tn4c1sto6l3cj13je431lqenalg0f38",
+      "case": "local-block",
+      "requests": 1,
+      "retries": 0,
+      "outcome": "blocked",
+      "detectors": [
+        "regex"
+      ],
+      "seconds": 0.179,
+      "response_characters": 0,
+      "response_sha256": null,
+      "passed": true
+    },
+    {
+      "timestamp": "2026-10-27T13:07:04.543583+00:00",
+      "cluster_id": "2tn4c1sto6l3cj13je431lqenalg0f38",
+      "case": "benign",
+      "requests": 1,
+      "retries": 0,
+      "outcome": "error",
+      "detectors": [],
+      "seconds": 6.515,
+      "response_characters": 0,
+      "response_sha256": null,
+      "passed": false
+    },
+    {
+      "timestamp": "2026-10-27T13:16:41.535421+00:00",
+      "cluster_id": "2tn4c1sto6l3cj13je431lqenalg0f38",
+      "case": "benign",
+      "requests": 1,
+      "retries": 0,
+      "outcome": "error",
+      "detectors": [],
+      "seconds": 6.033,
+      "response_characters": 0,
+      "event_types": [
+        "error"
+      ],
+      "response_sha256": null,
+      "passed": false
+    },
+    {
+      "timestamp": "2026-10-27T13:18:50.730315+00:00",
+      "cluster_id": "2tn4c1sto6l3cj13je431lqenalg0f38",
+      "case": "benign",
+      "requests": 1,
+      "retries": 0,
+      "outcome": "error",
+      "detectors": [],
+      "seconds": 2.003,
+      "response_characters": 0,
+      "event_types": [
+        "error"
+      ],
+      "response_sha256": null,
+      "passed": false
+    },
+    {
+      "timestamp": "2026-10-27T13:21:41.806173+00:00",
+      "cluster_id": "2tn4c1sto6l3cj13je431lqenalg0f38",
+      "case": "benign",
+      "requests": 1,
+      "retries": 0,
+      "outcome": "allowed",
+      "detectors": [],
+      "seconds": 1.956,
+      "response_characters": 111,
+      "event_types": [
+        "chunk",
+        "done"
+      ],
+      "response_sha256": "151d26c28ab7b7748771054841f01486871d5730101d29df6665fcb38e3b672e",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-10-27T13:22:08.742144+00:00",
+      "cluster_id": "2tn4c1sto6l3cj13je431lqenalg0f38",
+      "case": "language-policy",
+      "requests": 1,
+      "retries": 0,
+      "outcome": "blocked",
+      "detectors": [
+        "language"
+      ],
+      "seconds": 0.378,
+      "response_characters": 0,
+      "event_types": [
+        "error"
+      ],
+      "response_sha256": null,
+      "passed": true
+    },
+    {
+      "timestamp": "2026-10-27T13:29:41.782747+00:00",
+      "cluster_id": "2tn4c1sto6l3cj13je431lqenalg0f38",
+      "case": "prompt-injection",
+      "requests": 1,
+      "retries": 0,
+      "outcome": "blocked",
+      "detectors": [
+        "prompt-injection"
+      ],
+      "seconds": 0.806,
+      "response_characters": 0,
+      "event_types": [
+        "error"
+      ],
+      "response_sha256": null,
+      "passed": true
+    }
+  ]
 }

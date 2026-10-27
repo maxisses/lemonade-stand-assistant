@@ -11,6 +11,14 @@ approval and are rejected by default. Initial testing is functional only: short,
 serial requests, no audience access, load tests, or large scans. Runtime credentials
 must be supplied through local configuration and Kubernetes Secret references.
 
+The CPU-only baseline is running and functionally verified as of 27 October 2026.
+Normal answers, topic blocking, English-policy blocking, and one prompt-injection
+case passed. The branded dashboard counts final request outcomes separately from
+detector hits. Access is local/operator-only; see the forwarding instructions in
+[operations](docs/operations.md). Automated red teaming, baseline comparison,
+persistent event reporting, and audience controls remain open. This is not yet an
+event-capacity or stage-readiness claim.
+
 # Guardrail the Lemonade Stand Assistant
 
 Deploy an AI-powered customer service assistant with built-in safety guardrails to ensure family-friendly, compliant interactions for your business. With a dashboard for metrics and a chat UI, abuse the system and see how it responds! 

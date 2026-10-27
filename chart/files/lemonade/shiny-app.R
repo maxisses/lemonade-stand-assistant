@@ -278,8 +278,8 @@ server <- function(input, output, session) {
   output$request_status <- renderText({
     m <- metrics_data()
     if (is.null(m)) return("Live data unavailable")
-    paste("Pending:", m$active_requests, "• Admission/length rejections:", m$rejected_requests,
-          "• Source: presenter • Mode: protected")
+    paste("Pending:", m$active_requests, "| Admission/length rejections:", m$rejected_requests,
+          "| Source: presenter | Mode: protected")
   })
 
   # Render detector bars
@@ -329,7 +329,7 @@ server <- function(input, output, session) {
   output$last_updated <- renderText({
     stamp <- last_success()
     if (is.null(stamp)) return("Waiting for live metrics")
-    paste("Last successful update:", format(stamp, "%H:%M:%S"))
+    paste("Last successful update (UTC):", format(stamp, "%H:%M:%S", tz = "UTC"))
   })
 }
 

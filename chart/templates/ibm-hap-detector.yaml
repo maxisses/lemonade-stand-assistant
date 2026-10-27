@@ -48,7 +48,7 @@ metadata:
   annotations:
     helm.sh/weight: "1"
     openshift.io/display-name: guardrails-detector-ibm-hap
-    serving.kserve.io/deploymentMode: RawDeployment
+    serving.kserve.io/deploymentMode: Standard
   name: guardrails-detector-ibm-hap
   labels:
     opendatahub.io/dashboard: 'true'
