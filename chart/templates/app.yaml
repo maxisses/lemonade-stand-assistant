@@ -87,6 +87,8 @@ spec:
               value: "8032"
             - name: VLLM_MODEL
               value: {{ .Values.model.name | default "llama32" }}
+            - name: MODEL_CHAT_TEMPLATE_KWARGS
+              value: {{ .Values.model.chatTemplateKwargs | default dict | toJson | quote }}
           volumeMounts:
             - name: service-ca
               mountPath: /etc/service-ca

@@ -9,6 +9,9 @@ model:
   endpoint: maas-rhdp.apps.maas.redhatworkshops.io
   port: 443
   existingSecret: lemonade-model
+  # Keep the small functional budget for final text, not hidden reasoning.
+  chatTemplateKwargs:
+    enable_thinking: false
 app:
   maxConcurrentRequests: 1
   maxOutputTokens: 128

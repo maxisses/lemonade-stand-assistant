@@ -65,6 +65,13 @@ class GuardrailTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([e['content'] for e in events if e['type']=='chunk'], ['Fresh lemonade.'])
         self.assertEqual(events[-1]['type'], 'done')
 
+    async def test_server_template_options_forwarded_without_exposing_reasoning(self):
+        lines = ['data:'+json.dumps({'choices':[{'delta':{'reasoning_content':'Private intermediate text'}}]})+'\n', chunk('Fresh lemonade.'), chunk(finish='stop'), 'data:[DONE]\n']
+        with patch.object(app, 'MODEL_CHAT_TEMPLATE_KWARGS', {'enable_thinking': False}):
+            events, session = await self.run_stream(lines)
+        self.assertEqual(session.payload['chat_template_kwargs'], {'enable_thinking': False})
+        self.assertEqual([e['content'] for e in events if e['type']=='chunk'], ['Fresh lemonade.'])
+
     async def test_unspaced_late_block_after_finish_discards_content(self):
         blocked = {'warnings':[{'type':'UNSUITABLE_OUTPUT'}]}
         events, _ = await self.run_stream([chunk('Buffered text.'), chunk(finish='stop'), 'data:'+json.dumps(blocked)+'\n', 'data:[DONE]\n'])

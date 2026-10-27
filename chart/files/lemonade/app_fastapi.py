@@ -39,6 +39,9 @@ ORCHESTRATOR_HOST = os.getenv("GUARDRAILS_ORCHESTRATOR_SERVICE_SERVICE_HOST", "l
 ORCHESTRATOR_PORT = os.getenv("GUARDRAILS_ORCHESTRATOR_SERVICE_SERVICE_PORT", "8080")
 VLLM_MODEL = os.getenv("VLLM_MODEL", "llama32")
 VLLM_API_KEY = os.getenv("VLLM_API_KEY", "")
+MODEL_CHAT_TEMPLATE_KWARGS = json.loads(os.getenv("MODEL_CHAT_TEMPLATE_KWARGS", "{}"))
+if not isinstance(MODEL_CHAT_TEMPLATE_KWARGS, dict):
+    raise ValueError("MODEL_CHAT_TEMPLATE_KWARGS must be a JSON object")
 
 # Detect if running in-cluster (internal service) vs external (route)
 IS_INTERNAL_SERVICE = ORCHESTRATOR_HOST not in ("localhost", "") and ORCHESTRATOR_PORT not in ("443", "80")
@@ -428,6 +431,9 @@ async def process_chat(message: str, source: str = "audience") -> AsyncGenerator
             }
         }
     }
+
+    if MODEL_CHAT_TEMPLATE_KWARGS:
+        payload["chat_template_kwargs"] = MODEL_CHAT_TEMPLATE_KWARGS
 
     headers = {"Content-Type": "application/json"}
     if VLLM_API_KEY:
