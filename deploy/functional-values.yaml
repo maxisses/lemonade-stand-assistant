@@ -17,8 +17,24 @@ app:
 detectors:
   hap:
     useGpu: false
+    workers: 1
+    resources:
+      requests:
+        cpu: "1"
+        memory: 2Gi
+      limits:
+        cpu: "2"
+        memory: 4Gi
   promptInjection:
     useGpu: false
+    workers: 1
+    resources:
+      requests:
+        cpu: "1"
+        memory: 4Gi
+      limits:
+        cpu: "2"
+        memory: 8Gi
 shinyDashboard:
   route:
     enabled: false
