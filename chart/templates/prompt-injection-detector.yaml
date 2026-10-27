@@ -53,8 +53,6 @@ metadata:
     helm.sh/weight: "1"
     openshift.io/display-name: prompt-injection-detector
     serving.kserve.io/deploymentMode: RawDeployment
-    opendatahub.io/connections: {{ .Values.modelStorage.existingSecret | default "minio-data-connection-detector-models" | quote }}
-    opendatahub.io/connection-path: deberta-v3-base-prompt-injection-v2
   name: prompt-injection-detector
   labels:
     opendatahub.io/dashboard: 'true'
@@ -81,6 +79,9 @@ spec:
           nvidia.com/gpu: '1'
           {{- end }}
       runtime: guardrails-detector-runtime-prompt-injection
+      storage:
+        key: {{ .Values.modelStorage.existingSecret | default "minio-data-connection-detector-models" | quote }}
+        path: deberta-v3-base-prompt-injection-v2
     {{- if .Values.detectors.promptInjection.useGpu }}
     tolerations:
       - effect: NoSchedule

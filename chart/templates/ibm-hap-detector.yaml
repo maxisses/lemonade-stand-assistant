@@ -49,8 +49,6 @@ metadata:
     helm.sh/weight: "1"
     openshift.io/display-name: guardrails-detector-ibm-hap
     serving.kserve.io/deploymentMode: RawDeployment
-    opendatahub.io/connections: {{ .Values.modelStorage.existingSecret | default "minio-data-connection-detector-models" | quote }}
-    opendatahub.io/connection-path: granite-guardian-hap-125m
   name: guardrails-detector-ibm-hap
   labels:
     opendatahub.io/dashboard: 'true'
@@ -77,6 +75,9 @@ spec:
           nvidia.com/gpu: '1'
           {{- end }}
       runtime: guardrails-detector-runtime-hap
+      storage:
+        key: {{ .Values.modelStorage.existingSecret | default "minio-data-connection-detector-models" | quote }}
+        path: granite-guardian-hap-125m
     {{- if .Values.detectors.hap.useGpu }}
     tolerations:
       - effect: NoSchedule
