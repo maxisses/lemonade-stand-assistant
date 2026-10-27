@@ -24,3 +24,7 @@ shinyDashboard:
 
 modelStorage:
   existingSecret: minio-data-connection-detector-models
+
+# Keep operator-generated Routes unreachable during functional validation.
+networkPolicy:
+  internalOnly: true

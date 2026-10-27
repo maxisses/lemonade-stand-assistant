@@ -29,6 +29,9 @@ def main():
     }
     for name, data in definitions.items():
         manifest={'apiVersion':'v1','kind':'Secret','metadata':{'name':name,'namespace':'lemonade-demo'},'type':'Opaque','stringData':data}
+        if name == 'minio-data-connection-detector-models':
+            manifest['metadata']['labels'] = {'opendatahub.io/managed':'true', 'opendatahub.io/dashboard':'true'}
+            manifest['metadata']['annotations'] = {'opendatahub.io/connection-type-protocol':'s3', 'openshift.io/display-name':'Guardrail detector model storage'}
         result=subprocess.run(['oc','apply','--server-side','--field-manager=lemonade-runtime-secrets','-f','-'],input=json.dumps(manifest),env=env,capture_output=True,text=True)
         if result.returncode:sys.exit('Secret bootstrap failed for '+name+'; response withheld')
         print('Configured runtime secret: '+name)

@@ -89,3 +89,7 @@ shinyDashboard:
 # Supply the detector storage credentials at runtime.
 modelStorage:
   existingSecret: ""
+
+# Keep operator-generated Routes unreachable during functional validation.
+networkPolicy:
+  internalOnly: true

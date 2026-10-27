@@ -71,9 +71,20 @@
     "release_image": "quay.io/openshift-release-dev/ocp-release@sha256:b6bdbb9508197e3ca704994cfae3441d1ad3526a6569793919b8e3938dfc559a",
     "gitops_csv": "openshift-gitops-operator.v1.22.2",
     "rhoai_csv": "rhods-operator.3.5.2",
-    "operator_installation": "pending; selected from live cluster catalog",
+    "operator_installation": "both selected CSVs Succeeded; AI components are starting",
     "gitops_bundles": [
       "registry.redhat.io/openshift-gitops-1/gitops-operator-bundle@sha256:2ba58c50f771c08bbc5a1d8572c7b058df55bc71667cc66026d42840eb4bee6d"
-    ]
+    ],
+    "rhoai_bundles": [
+      "registry.redhat.io/rhoai/odh-operator-bundle@sha256:f9f91ae8a34bde6bae77c97dfa3c231d29d5fa3cd00145fbe72be1a9da71d705"
+    ],
+    "operator_images": {
+      "openshift-gitops-operator.v1.22.2": [
+        "registry.redhat.io/openshift-gitops-1/gitops-rhel9-operator@sha256:f5773d35e496a55999590024d1d8290e916c05d77ebdadcdc3263c29ea1a434a"
+      ],
+      "rhods-operator.3.5.2": [
+        "registry.redhat.io/rhoai/odh-rhel9-operator@sha256:ae88dfb2323a386f9d50512234a93f21e8028ab28b194ddb42e1f324eee965cd"
+      ]
+    }
   }
 }

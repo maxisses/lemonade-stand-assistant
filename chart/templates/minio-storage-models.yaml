@@ -133,6 +133,7 @@ metadata:
   annotations:
     helm.sh/weight: "-5"
     opendatahub.io/connection-type: s3
+    opendatahub.io/connection-type-protocol: s3
     openshift.io/display-name: Minio Data Connection - Guardrail Detector Models
 data: 
   AWS_ACCESS_KEY_ID: VEhFQUNDRVNTS0VZ

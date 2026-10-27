@@ -23,6 +23,9 @@ data:
         request_timeout: 60
         {{- if eq (int (.Values.model.port | default 80)) 443 }}
         tls:
+          # FMS requires cert_path even when no client key is used.
+          cert_path: /etc/pki/tls/certs/ca-bundle.crt
+          client_ca_cert_path: /etc/pki/tls/certs/ca-bundle.crt
           insecure: false
         {{- end }}
     detectors:
