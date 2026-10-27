@@ -81,7 +81,7 @@ fetch_metrics <- function() {
 }
 
 # UI
-ui <- page_fillable(
+ui <- page_fluid(
   theme = bs_theme(
     bg = "#151515",
     fg = "#FFFFFF",
@@ -169,9 +169,8 @@ ui <- page_fillable(
         padding-left: 10px;
       }
       .last-updated {
-        position: fixed;
-        bottom: 10px;
-        right: 10px;
+        text-align: right;
+        margin: 10px 0;
         font-size: 12px;
         color: #C9C9C9;
       }
@@ -202,6 +201,7 @@ ui <- page_fillable(
 
   layout_columns(
     col_widths = c(3, 3, 3, 3),
+    fill = FALSE,
 
     div(class = "metric-card",
         div(class = "metric-label", "Conversations"),
