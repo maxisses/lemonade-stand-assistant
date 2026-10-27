@@ -72,11 +72,11 @@ def main():
             # Exactly one application request; no retry loop or batch option.
             with urllib.request.urlopen(request, timeout=120) as response:
                 for line in response:
-                    if line.startswith(b"data: "):
-                        events.append(json.loads(line[6:]))
+                    if line.startswith(b"data:"):
+                        events.append(json.loads(line[5:].lstrip(b" ")))
             chunks = "".join(e.get("content", "") for e in events if e.get("type") == "chunk")
             errors = [e for e in events if e.get("type") == "error"]
-            blocked = errors and all(e.get("detector_type") for e in errors) and not chunks
+            blocked = errors and all(e.get("detector_type") in {"regex", "hap", "language", "prompt-injection", "policy"} for e in errors) and not chunks
             completed = chunks and any(e.get("type") == "done" for e in events) and not errors
             outcome = "blocked" if blocked else "allowed" if completed else "error"
             detectors = sorted({e["detector_type"] for e in errors if e.get("detector_type")})
@@ -86,6 +86,7 @@ def main():
                 "requests": 1, "retries": 0, "outcome": outcome,
                 "detectors": detectors, "seconds": round(time.monotonic() - start, 3),
                 "response_characters": len(chunks),
+                "event_types": [e.get("type") for e in events],
                 "response_sha256": hashlib.sha256(chunks.encode()).hexdigest() if chunks else None,
                 "passed": outcome == expected and (not detector or detector in detectors),
             }

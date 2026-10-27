@@ -442,14 +442,18 @@ async def process_chat(message: str, source: str = "audience") -> AsyncGenerator
         if not line:
             return None, False, None, None, None
 
-        if line.startswith("event: error"):
+        if line.startswith("event:") and line[6:].strip() == "error":
             raise RuntimeError("Guardrails service returned an error event")
 
-        if line == "data: [DONE]" or not line.startswith("data: "):
+        if not line.startswith("data:"):
+            return None, False, None, None, None
+        # SSE permits an optional space after the colon. Axum emits data:{...}.
+        data = line[5:].lstrip(" ")
+        if data == "[DONE]":
             return None, False, None, None, None
 
         try:
-            chunk_data = json.loads(line[6:])
+            chunk_data = json.loads(data)
         except json.JSONDecodeError as exc:
             raise RuntimeError("Invalid guardrails response") from exc
 
@@ -553,14 +557,14 @@ async def process_chat(message: str, source: str = "audience") -> AsyncGenerator
 
                         chunk_count += 1
                         total_bytes += len(line_bytes)
-                        buffer += line_bytes.decode("utf-8", errors="ignore")
+                        buffer += line_bytes.decode("utf-8")
                     except Exception:
                         raise
 
                     # Process complete lines
                     while "\n" in buffer:
                         line, buffer = buffer.split("\n", 1)
-                        if line.strip() == "data: [DONE]":
+                        if line.startswith("data:") and line[5:].strip() == "[DONE]":
                             stream_completed = True
                         content, should_block, block_msg, detector_type, finish_reason = await parse_sse_line(line)
 
@@ -589,7 +593,11 @@ async def process_chat(message: str, source: str = "audience") -> AsyncGenerator
                                 return
                             # Buffer all content until the complete stream passes validation.
 
-                if not stream_completed or last_finish_reason not in ("stop", "length"):
+                logger.info(
+                    "Guardrails stream ended: completed=%s finish_reason=%s response_characters=%d",
+                    stream_completed, last_finish_reason, len(full_response),
+                )
+                if buffer.strip() or not stream_completed or last_finish_reason not in ("stop", "length"):
                     yield {"type": "error", "message": "Incomplete response; validation did not finish."}
                     return
 

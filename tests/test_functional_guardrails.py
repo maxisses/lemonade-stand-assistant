@@ -59,6 +59,38 @@ class GuardrailTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(any(e['type']=='chunk' for e in events))
         self.assertEqual(events[-1].get('detector_type'), 'regex')
 
+    async def test_sse_fields_without_optional_space_are_processed(self):
+        lines = [chunk('Fresh lemonade.'), chunk(finish='stop'), 'data: [DONE]\n']
+        events, _ = await self.run_stream([line.replace('data: ', 'data:', 1) for line in lines])
+        self.assertEqual([e['content'] for e in events if e['type']=='chunk'], ['Fresh lemonade.'])
+        self.assertEqual(events[-1]['type'], 'done')
+
+    async def test_unspaced_late_block_after_finish_discards_content(self):
+        blocked = {'warnings':[{'type':'UNSUITABLE_OUTPUT'}]}
+        events, _ = await self.run_stream([chunk('Buffered text.'), chunk(finish='stop'), 'data:'+json.dumps(blocked)+'\n', 'data:[DONE]\n'])
+        self.assertFalse(any(e['type']=='chunk' for e in events))
+        self.assertEqual(events[-1].get('detector_type'), 'policy')
+
+    async def test_finish_without_completion_marker_is_not_released(self):
+        events, _ = await self.run_stream([chunk('Buffered text.'), chunk(finish='stop')])
+        self.assertFalse(any(e['type']=='chunk' for e in events))
+        self.assertEqual(events[-1]['type'], 'error')
+
+    async def test_transport_failure_after_terminal_frame_discards_content(self):
+        events, _ = await self.run_stream([chunk('Buffered text.'), chunk(finish='stop'), 'data:[DONE]\n', ConnectionError('Interrupted transport')])
+        self.assertFalse(any(e['type']=='chunk' for e in events))
+        self.assertEqual(events[-1]['type'], 'error')
+
+    async def test_unspaced_error_event_discards_content(self):
+        events, _ = await self.run_stream([chunk('Buffered text.'), 'event:error\n'])
+        self.assertFalse(any(e['type']=='chunk' for e in events))
+        self.assertEqual(events[-1]['type'], 'error')
+
+    async def test_incomplete_final_frame_is_not_ignored(self):
+        events, _ = await self.run_stream([chunk('Buffered text.'), chunk(finish='stop'), 'data:[DONE]\n', 'data:{'])
+        self.assertFalse(any(e['type']=='chunk' for e in events))
+        self.assertEqual(events[-1]['type'], 'error')
+
     async def test_late_detector_block_discards_earlier_content(self):
         blocked = {'warnings':[{'type':'UNSUITABLE_OUTPUT'}], 'detections':{'output':[{'results':[{'detector_id':'hap','score':1.0}]}]}}
         events, _ = await self.run_stream([chunk('Text that must remain buffered.'), 'data: '+json.dumps(blocked)+'\n'])
