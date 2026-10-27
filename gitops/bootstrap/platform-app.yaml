@@ -4,14 +4,14 @@ metadata:
   name: lemonade-platform
   namespace: openshift-gitops
 spec:
-  project: default
+  project: lemonade-demo
   source:
     repoURL: https://github.com/maxisses/lemonade-stand-assistant.git
     targetRevision: codex/lemonade-cpu-maas
     path: gitops/platform
   destination:
     server: https://kubernetes.default.svc
-    namespace: openshift-gitops
+    namespace: lemonade-demo
   syncPolicy:
     automated:
       prune: true

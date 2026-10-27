@@ -5,7 +5,7 @@ metadata:
   name: lemonade-demo
   namespace: openshift-gitops
 spec:
-  project: default
+  project: lemonade-demo
   source:
     repoURL: https://github.com/maxisses/lemonade-stand-assistant.git
     targetRevision: codex/lemonade-cpu-maas

@@ -65,3 +65,9 @@ The accepted ROSA cluster progressed from validating to pending and then install
 The replacement-account ROSA apply completed successfully. Three m6i.2xlarge instances are running and all three Kubernetes nodes report Ready. The isolated cluster login succeeded without exposing credentials. The final platform monitoring operator became Available during inspection; cluster version convergence is being checked before operator bootstrap.
 
 The live catalog offers OpenShift GitOps 1.22.2 and OpenShift AI 3.5.2 on the planned channels. Starting CSVs are now pinned while retaining Manual InstallPlan approval. Source checksums were added to application/language-detector pod templates so ConfigMap-mounted code, UI, or prompt changes cause a rollout instead of leaving old subPath content active. Helm lint/render passes. Operator installation and real guardrail inference remain outstanding.
+
+## 27 October 2026 — GitOps installed with scoped supplemental permissions
+
+GitOps 1.22.2 reached Succeeded and its default controller components are running. Automatic approval review rejected the proposed additional cluster-admin binding because permanent, broad service-account administration was not explicitly authorized. No part of that rejected command ran. A read-only permission review showed the operator already had the required namespace, Subscription/OperatorGroup, and monitoring ConfigMap permissions.
+
+The replacement bootstrap grants only DataScienceCluster-specific cluster permissions and the application resource types in lemonade-demo. An AppProject further limits source repository, destination namespaces, and resource kinds. Server-side dry-run passed after bootstrapping the target namespace; the scoped roles and project were then applied successfully. No cluster-admin binding was created. The operator's default permissions were not changed. This resolves the rejected step without an additional owner approval request.

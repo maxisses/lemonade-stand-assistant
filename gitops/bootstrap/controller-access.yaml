@@ -1,13 +1,111 @@
-# Platform configuration needs cluster-wide permissions in this dedicated demo.
+# Extend default operator permissions only for this demo's resource types.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lemonade-demo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: lemonade-gitops-datasciencecluster
+rules:
+  # Kubernetes RBAC cannot restrict create operations by resourceNames.
+  - apiGroups: [datasciencecluster.opendatahub.io]
+    resources: [datascienceclusters]
+    verbs: [create]
+  - apiGroups: [datasciencecluster.opendatahub.io]
+    resources: [datascienceclusters]
+    resourceNames: [default-dsc]
+    verbs: [get, update, patch, delete]
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: lemonade-gitops-platform-admin
+  name: lemonade-gitops-datasciencecluster
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cluster-admin
+  name: lemonade-gitops-datasciencecluster
 subjects:
   - kind: ServiceAccount
     name: openshift-gitops-argocd-application-controller
     namespace: openshift-gitops
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: lemonade-gitops-application
+  namespace: lemonade-demo
+rules:
+  - apiGroups: [""]
+    resources: [configmaps, services, persistentvolumeclaims]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [apps]
+    resources: [deployments]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [serving.kserve.io]
+    resources: [servingruntimes, inferenceservices]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [trustyai.opendatahub.io]
+    resources: [guardrailsorchestrators]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [monitoring.coreos.com]
+    resources: [servicemonitors]
+    verbs: [get, list, watch, create, update, patch, delete]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: lemonade-gitops-application
+  namespace: lemonade-demo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: lemonade-gitops-application
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: lemonade-demo
+  namespace: openshift-gitops
+spec:
+  description: CPU-only Lemonade platform and application configuration
+  sourceRepos:
+    - https://github.com/maxisses/lemonade-stand-assistant.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: lemonade-demo
+    - server: https://kubernetes.default.svc
+      namespace: redhat-ods-operator
+    - server: https://kubernetes.default.svc
+      namespace: openshift-monitoring
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: datasciencecluster.opendatahub.io
+      kind: DataScienceCluster
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: apps
+      kind: Deployment
+    - group: operators.coreos.com
+      kind: OperatorGroup
+    - group: operators.coreos.com
+      kind: Subscription
+    - group: serving.kserve.io
+      kind: ServingRuntime
+    - group: serving.kserve.io
+      kind: InferenceService
+    - group: trustyai.opendatahub.io
+      kind: GuardrailsOrchestrator
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor
