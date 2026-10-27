@@ -1,7 +1,8 @@
 # Initial integration only. Keep requests serial and outputs short.
 variant: lemonade
 namespace:
-  create: true
+  # The platform Application owns the namespace.
+  create: false
   name: lemonade-demo
 model:
   name: qwen38-27b
