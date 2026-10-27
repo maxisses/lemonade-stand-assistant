@@ -17,6 +17,14 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: lemonade-demo
+  ignoreDifferences:
+    # The OpenShift service CA controller owns this one injected public certificate.
+    - group: ""
+      kind: ConfigMap
+      name: lemonade-service-ca
+      namespace: lemonade-demo
+      jsonPointers:
+        - /data/service-ca.crt
   syncPolicy:
     syncOptions:
       - CreateNamespace=true

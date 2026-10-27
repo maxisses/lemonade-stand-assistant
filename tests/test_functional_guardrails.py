@@ -183,4 +183,67 @@ class GuardrailTests(unittest.IsolatedAsyncioTestCase):
             _ = [line async for line in response.body_iterator]
         self.assertEqual(sources, ['presenter'])
 
+class OutcomeTests(unittest.IsolatedAsyncioTestCase):
+    async def request(self, process, busy=False, message='Lemonade please.'):
+        collector = app.AsyncMetricsCollector()
+        slots = asyncio.Semaphore(1)
+        if busy: await slots.acquire()
+        with patch.object(app, 'metrics', collector), patch.object(app, 'process_chat', process), patch.object(app, 'request_slots', slots):
+            request = Request({'type':'http', 'headers':[(b'x-source', b'fake'), (b'x-mode', b'baseline')]})
+            response = await app.chat(app.ChatRequest(message=message), request)
+            events = [event async for event in response.body_iterator]
+        data = collector._sources['presenter']
+        self.assertEqual(data['total_requests'], 1)
+        self.assertEqual(data['active_requests'], 0)
+        self.assertEqual(sum(data['outcomes'].values()), 1)
+        self.assertIn('mode="protected"', await collector.get_prometheus_metrics())
+        return data
+
+    async def test_several_detector_hits_count_as_one_block(self):
+        async def process(message, source):
+            await app.metrics.add_detections([{'results':[{'detector_id':'hap'},{'detector_id':'language_detection'}]}], 'input', source)
+            yield {'type':'error', 'detector_type':'hap'}
+        data = await self.request(process)
+        self.assertEqual(data['outcomes']['blocked'], 1)
+        self.assertEqual(sum(d['input'] for d in data['detections'].values()), 2)
+
+    async def test_service_failure_is_not_a_policy_block(self):
+        async def process(message, source):
+            yield {'type':'error', 'detector_type':'error'}
+        data = await self.request(process)
+        self.assertEqual(data['outcomes']['error'], 1)
+        self.assertEqual(data['outcomes']['blocked'], 0)
+
+    async def test_completed_request_counts_once(self):
+        async def process(message, source):
+            yield {'type':'chunk', 'content':'Lemonade.'}
+            yield {'type':'done'}
+        data = await self.request(process)
+        self.assertEqual(data['outcomes']['allowed'], 1)
+
+    async def test_busy_request_is_rejected_before_processing(self):
+        async def process(message, source):
+            raise AssertionError('Busy request reached processing')
+            yield
+        data = await self.request(process, busy=True)
+        self.assertEqual(data['outcomes']['rejected'], 1)
+
+    async def test_length_limit_is_rejected_not_blocked(self):
+        data = await self.request(app.process_chat, message='a' * (app.MAX_INPUT_CHARS + 1))
+        self.assertEqual(data['outcomes']['rejected'], 1)
+
+    async def test_disconnected_request_leaves_one_error_and_no_pending_request(self):
+        collector = app.AsyncMetricsCollector()
+        async def process(message, source):
+            yield {'type':'chunk', 'content':'Buffered test.'}
+            yield {'type':'done'}
+        with patch.object(app, 'metrics', collector), patch.object(app, 'process_chat', process), patch.object(app, 'request_slots', asyncio.Semaphore(1)):
+            response = await app.chat(app.ChatRequest(message='Lemonade.'), Request({'type':'http', 'headers':[]}))
+            await anext(response.body_iterator)
+            self.assertEqual(collector._sources['presenter']['active_requests'], 1)
+            await response.body_iterator.aclose()
+        data = collector._sources['presenter']
+        self.assertEqual(data['outcomes'], {'allowed':0,'blocked':0,'error':1,'rejected':0})
+        self.assertEqual(data['active_requests'], 0)
+
 if __name__ == '__main__': unittest.main()

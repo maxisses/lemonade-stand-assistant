@@ -182,6 +182,8 @@ class AsyncMetricsCollector:
         if source not in self._sources:
             self._sources[source] = {
                 "total_requests": 0,
+                "active_requests": 0,
+                "outcomes": {name: 0 for name in ("allowed", "blocked", "error", "rejected")},
                 "local_regex_blocks": 0,
                 "detections": {d: {"input": 0, "output": 0} for d in self.DETECTOR_NAMES},
             }
@@ -190,6 +192,13 @@ class AsyncMetricsCollector:
         async with self.lock:
             self._ensure_source(source)
             self._sources[source]["total_requests"] += 1
+            self._sources[source]["active_requests"] += 1
+
+    async def finish_request(self, source: str, outcome: str):
+        async with self.lock:
+            data = self._sources[source]
+            data["outcomes"][outcome] += 1
+            data["active_requests"] -= 1
 
     async def increment_local_regex_block(self, source: str = "audience"):
         async with self.lock:
@@ -224,7 +233,21 @@ class AsyncMetricsCollector:
                 "# TYPE guardrail_requests_total counter",
             ]
             for source, data in self._sources.items():
-                lines.append(f'guardrail_requests_total{{source="{source}"}} {data["total_requests"]}')
+                lines.append(f'guardrail_requests_total{{source="{source}",mode="protected"}} {data["total_requests"]}')
+
+            lines.extend([
+                "# HELP guardrail_request_outcomes_total One final outcome per application request",
+                "# TYPE guardrail_request_outcomes_total counter",
+            ])
+            for source, data in self._sources.items():
+                for outcome, count in data["outcomes"].items():
+                    lines.append(f'guardrail_request_outcomes_total{{source="{source}",mode="protected",outcome="{outcome}"}} {count}')
+            lines.extend([
+                "# HELP guardrail_active_requests Application requests awaiting a final outcome",
+                "# TYPE guardrail_active_requests gauge",
+            ])
+            for source, data in self._sources.items():
+                lines.append(f'guardrail_active_requests{{source="{source}",mode="protected"}} {data["active_requests"]}')
 
             lines.extend([
                 "",
@@ -371,12 +394,10 @@ async def process_chat(message: str, source: str = "audience") -> AsyncGenerator
     if len(message) > MAX_INPUT_CHARS:
         yield {
             "type": "error",
-            "message": "Your message is too long! Please keep your question short and simple - ideally under 100 characters."
+            "message": "Your message is too long! Please keep your question short and simple - ideally under 100 characters.",
+            "outcome": "rejected",
         }
         return
-
-    # Increment request counter
-    await metrics.increment_request(source)
 
     # LOCAL REGEX CHECK: Pre-filter before sending to orchestrator
     # This reduces load on the orchestrator by catching obvious violations locally
@@ -685,13 +706,28 @@ async def chat(request: ChatRequest, raw_request: Request):
     source = "presenter"
 
     async def generate():
-        if request_slots.locked():
-            event = {"type": "error", "message": "A request is already running. Please wait."}
-            yield f"data: {json.dumps(event)}\n\n"
-            return
-        async with request_slots:
-            async for event in process_chat(request.message, source=source):
+        await metrics.increment_request(source)
+        outcome = "error"  # Includes interrupted/disconnected requests.
+        try:
+            if request_slots.locked():
+                outcome = "rejected"
+                event = {"type": "error", "message": "A request is already running. Please wait."}
                 yield f"data: {json.dumps(event)}\n\n"
+                return
+            async with request_slots:
+                async for event in process_chat(request.message, source=source):
+                    if event["type"] == "done":
+                        outcome = "allowed"
+                    elif event["type"] == "error":
+                        if event.get("outcome") == "rejected":
+                            outcome = "rejected"
+                        elif event.get("detector_type") in {"regex", "hap", "language", "prompt-injection", "policy"}:
+                            outcome = "blocked"
+                        else:
+                            outcome = "error"
+                    yield f"data: {json.dumps(event)}\n\n"
+        finally:
+            await asyncio.shield(metrics.finish_request(source, outcome))
 
     return StreamingResponse(
         generate(),

@@ -31,6 +31,8 @@ spec:
       app: shiny-dashboard
   template:
     metadata:
+      annotations:
+        checksum/dashboard-source: {{ .Files.Get (printf "%s/shiny-app.R" $files) | sha256sum }}
       labels:
         app: shiny-dashboard
         app.kubernetes.io/name: shiny-dashboard

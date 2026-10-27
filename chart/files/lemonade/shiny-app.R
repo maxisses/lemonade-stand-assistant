@@ -13,9 +13,11 @@ parse_prometheus_metrics <- function(metrics_text) {
 
   metrics <- list(
     total_requests = 0,
-    input_blocked = 0,
-    output_blocked = 0,
+    blocked_requests = 0,
+    service_errors = 0,
     approved_requests = 0,
+    rejected_requests = 0,
+    active_requests = 0,
     detections_by_detector = list()
   )
 
@@ -29,16 +31,16 @@ parse_prometheus_metrics <- function(metrics_text) {
       metrics$total_requests <- metrics$total_requests + value
     }
 
-    # Parse guardrail_detections_by_direction for input
-    if (grepl('^guardrail_detections_by_direction.*direction="input"', line)) {
-      value <- as.numeric(str_extract(line, "\\d+$"))
-      metrics$input_blocked <- metrics$input_blocked + value
+    # Final request outcomes are independent of the number of detector hits.
+    outcome_fields <- c(allowed = "approved_requests", blocked = "blocked_requests",
+                        error = "service_errors", rejected = "rejected_requests")
+    if (grepl('^guardrail_request_outcomes_total', line)) {
+      outcome <- str_match(line, 'outcome="([^"]+)"')[2]
+      field <- outcome_fields[[outcome]]
+      if (!is.null(field)) metrics[[field]] <- metrics[[field]] + as.numeric(str_extract(line, "\\d+$"))
     }
-
-    # Parse guardrail_detections_by_direction for output
-    if (grepl('^guardrail_detections_by_direction.*direction="output"', line)) {
-      value <- as.numeric(str_extract(line, "\\d+$"))
-      metrics$output_blocked <- metrics$output_blocked + value
+    if (grepl('^guardrail_active_requests', line)) {
+      metrics$active_requests <- metrics$active_requests + as.numeric(str_extract(line, "\\d+$"))
     }
 
     # Parse guardrail_detections_by_detector
@@ -58,10 +60,6 @@ parse_prometheus_metrics <- function(metrics_text) {
       }
     }
   }
-
-  # Calculate approved requests
-  total_detections <- metrics$input_blocked + metrics$output_blocked
-  metrics$approved_requests <- max(0, metrics$total_requests - total_detections)
 
   return(metrics)
 }
@@ -89,8 +87,8 @@ ui <- page_fillable(
     fg = "#FFFFFF",
     primary = "#EE0000",  # Red Hat Red
     secondary = "#FFFFFF",
-    base_font = font_google("Red Hat Text"),
-    heading_font = font_google("Red Hat Display")
+    base_font = "system-ui",
+    heading_font = "system-ui"
   ),
 
   tags$head(
@@ -118,7 +116,7 @@ ui <- page_fillable(
         color: #FFFFFF;
       }
       .metric-label {
-        font-size: 14px;
+        font-size: 18px;
         color: #C9C9C9;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -190,7 +188,7 @@ ui <- page_fillable(
       .footer {
         text-align: center;
         color: #6A6E73;
-        font-size: 14px;
+        font-size: 18px;
         margin-top: 30px;
         padding: 20px 0;
         border-top: 1px solid #2A2A2A;
@@ -198,40 +196,42 @@ ui <- page_fillable(
     "))
   ),
 
-  titlePanel("🍋 Lemonade stand guardrails dashboard"),
+  titlePanel("🍋 [Customer] Lemonade Division"),
 
-  div(class = "subtitle", "Real-time monitoring of AI guardrail detections and request metrics"),
+  div(class = "subtitle", "Demo scenario • Act 1: AgentOps • Protected assistant"),
 
   layout_columns(
     col_widths = c(3, 3, 3, 3),
 
     div(class = "metric-card",
-        div(class = "metric-label", "Total Requests"),
+        div(class = "metric-label", "Conversations"),
         div(class = "metric-value total", textOutput("total_requests"))
     ),
 
     div(class = "metric-card",
-        div(class = "metric-label", "Input Blocked"),
-        div(class = "metric-value blocked-input", textOutput("input_blocked"))
+        div(class = "metric-label", "Blocked requests"),
+        div(class = "metric-value blocked-input", textOutput("blocked_requests"))
     ),
 
     div(class = "metric-card",
-        div(class = "metric-label", "Answers Blocked"),
-        div(class = "metric-value blocked-output", textOutput("output_blocked"))
+        div(class = "metric-label", "Service errors"),
+        div(class = "metric-value blocked-output", textOutput("service_errors"))
     ),
 
     div(class = "metric-card",
-        div(class = "metric-label", "Approved Requests"),
+        div(class = "metric-label", "Approved responses"),
         div(class = "metric-value approved", textOutput("approved_requests"))
     )
   ),
 
-  h2("Detections by detector"),
+  div(class = "subtitle", textOutput("request_status")),
+  h2("Policy checks triggered"),
+  p("One request can trigger several checks. These hits are separate from request outcomes."),
   uiOutput("detector_bars"),
 
   div(class = "last-updated", textOutput("last_updated")),
 
-  div(class = "footer", "Built by CAI Team • Powered by OpenShift AI")
+  div(class = "footer", "Live application metrics • Counters reset when the application restarts • Powered by OpenShift AI")
 )
 
 # Server
@@ -239,15 +239,15 @@ server <- function(input, output, session) {
 
   # Reactive value to store metrics
   metrics_data <- reactiveVal(NULL)
+  last_success <- reactiveVal(NULL)
 
   # Auto-refresh metrics
   observe({
     invalidateLater(REFRESH_INTERVAL * 1000, session)
 
     new_metrics <- fetch_metrics()
-    if (!is.null(new_metrics)) {
-      metrics_data(new_metrics)
-    }
+    metrics_data(new_metrics)
+    if (!is.null(new_metrics)) last_success(Sys.time())
   })
 
   # Render metric cards
@@ -257,22 +257,29 @@ server <- function(input, output, session) {
     format(m$total_requests, big.mark = ",")
   })
 
-  output$input_blocked <- renderText({
+  output$blocked_requests <- renderText({
     m <- metrics_data()
     if (is.null(m)) return("--")
-    format(m$input_blocked, big.mark = ",")
+    format(m$blocked_requests, big.mark = ",")
   })
 
-  output$output_blocked <- renderText({
+  output$service_errors <- renderText({
     m <- metrics_data()
     if (is.null(m)) return("--")
-    format(m$output_blocked, big.mark = ",")
+    format(m$service_errors, big.mark = ",")
   })
 
   output$approved_requests <- renderText({
     m <- metrics_data()
     if (is.null(m)) return("--")
     format(m$approved_requests, big.mark = ",")
+  })
+
+  output$request_status <- renderText({
+    m <- metrics_data()
+    if (is.null(m)) return("Live data unavailable")
+    paste("Pending:", m$active_requests, "• Admission/length rejections:", m$rejected_requests,
+          "• Source: presenter • Mode: protected")
   })
 
   # Render detector bars
@@ -297,12 +304,12 @@ server <- function(input, output, session) {
 
       # Map detector names to display names
       display_name <- switch(detector,
-                             "hap" = "🤬 Swearing",
+                             "hap" = "Respectful language",
                              "language" = "🇬🇧 Non-English",
                              "language_detection" = "🇬🇧 Non-English",
-                             "prompt_injection" = "👮 Jailbreak",
-                             "regex_fruit" = "🍏 Non Lemon",
-                             "regex_competitor" = "🍏 Non Lemon",
+                             "prompt_injection" = "👮 Instruction override",
+                             "regex_fruit" = "🍋 Lemon-only topics",
+                             "regex_competitor" = "🍋 Lemon-only topics",
                              "pii" = "🔒 PII",
                              "message_length" = "📏 Length",
                              "topic_relevance" = "🍑 Off-Topic",
@@ -320,9 +327,9 @@ server <- function(input, output, session) {
 
   # Last updated timestamp
   output$last_updated <- renderText({
-    m <- metrics_data()
-    if (is.null(m)) return("")
-    paste("Last updated:", format(Sys.time(), "%H:%M:%S"))
+    stamp <- last_success()
+    if (is.null(stamp)) return("Waiting for live metrics")
+    paste("Last successful update:", format(stamp, "%H:%M:%S"))
   })
 }
 

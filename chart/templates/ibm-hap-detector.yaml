@@ -63,13 +63,13 @@ spec:
       name: ''
       resources:
         limits:
-          cpu: {{ .Values.detectors.hap.resources.limits.cpu }}
+          cpu: {{ .Values.detectors.hap.resources.limits.cpu | quote }}
           memory: {{ .Values.detectors.hap.resources.limits.memory }}
           {{- if .Values.detectors.hap.useGpu }}
           nvidia.com/gpu: '1'
           {{- end }}
         requests:
-          cpu: {{ .Values.detectors.hap.resources.requests.cpu }}
+          cpu: {{ .Values.detectors.hap.resources.requests.cpu | quote }}
           memory: {{ .Values.detectors.hap.resources.requests.memory }}
           {{- if .Values.detectors.hap.useGpu }}
           nvidia.com/gpu: '1'

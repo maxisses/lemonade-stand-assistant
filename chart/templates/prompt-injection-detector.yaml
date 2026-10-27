@@ -67,13 +67,13 @@ spec:
       name: ''
       resources:
         limits:
-          cpu: {{ .Values.detectors.promptInjection.resources.limits.cpu }}
+          cpu: {{ .Values.detectors.promptInjection.resources.limits.cpu | quote }}
           memory: {{ .Values.detectors.promptInjection.resources.limits.memory }}
           {{- if .Values.detectors.promptInjection.useGpu }}
           nvidia.com/gpu: '1'
           {{- end }}
         requests:
-          cpu: {{ .Values.detectors.promptInjection.resources.requests.cpu }}
+          cpu: {{ .Values.detectors.promptInjection.resources.requests.cpu | quote }}
           memory: {{ .Values.detectors.promptInjection.resources.requests.memory }}
           {{- if .Values.detectors.promptInjection.useGpu }}
           nvidia.com/gpu: '1'
