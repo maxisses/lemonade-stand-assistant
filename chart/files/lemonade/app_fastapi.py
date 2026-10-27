@@ -39,6 +39,7 @@ ORCHESTRATOR_HOST = os.getenv("GUARDRAILS_ORCHESTRATOR_SERVICE_SERVICE_HOST", "l
 ORCHESTRATOR_PORT = os.getenv("GUARDRAILS_ORCHESTRATOR_SERVICE_SERVICE_PORT", "8080")
 VLLM_MODEL = os.getenv("VLLM_MODEL", "llama32")
 VLLM_API_KEY = os.getenv("VLLM_API_KEY", "")
+ORCHESTRATOR_STREAMING = os.getenv("ORCHESTRATOR_STREAMING", "true").lower() == "true"
 MODEL_CHAT_TEMPLATE_KWARGS = json.loads(os.getenv("MODEL_CHAT_TEMPLATE_KWARGS", "{}"))
 if not isinstance(MODEL_CHAT_TEMPLATE_KWARGS, dict):
     raise ValueError("MODEL_CHAT_TEMPLATE_KWARGS must be a JSON object")
@@ -416,7 +417,7 @@ async def process_chat(message: str, source: str = "audience") -> AsyncGenerator
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": message}
         ],
-        "stream": True,
+        "stream": ORCHESTRATOR_STREAMING,
         "max_tokens": MAX_OUTPUT_TOKENS,
         "temperature": 0,
         "detectors": {
@@ -527,7 +528,7 @@ async def process_chat(message: str, source: str = "audience") -> AsyncGenerator
         if choices:
             choice = choices[0]
             finish_reason = choice.get("finish_reason")
-            delta = choice.get("delta", {})
+            delta = choice.get("delta", choice.get("message", {}))
             content = delta.get("content", "")
             if content:
                 return content, False, None, None, finish_reason
@@ -545,6 +546,29 @@ async def process_chat(message: str, source: str = "audience") -> AsyncGenerator
                 if response.status != 200:
                     logger.error("Guardrails API returned HTTP %s", response.status)
                     yield {"type": "error", "message": f"API error: {response.status}"}
+                    return
+
+                if not ORCHESTRATOR_STREAMING:
+                    # FMS completes all output detectors before returning this JSON body.
+                    body = await response.json()
+                    content, should_block, block_msg, detector_type, finish_reason = await parse_sse_line("data:" + json.dumps(body))
+                    if should_block:
+                        yield {"type": "error", "message": block_msg, "detector_type": detector_type}
+                        return
+                    if finish_reason not in ("stop", "length") or not isinstance(content, str) or not content:
+                        yield {"type": "error", "message": "Incomplete response; validation did not finish."}
+                        return
+                    if check_regex_locally(content):
+                        await metrics.add_detections(
+                            [{"results": [{"detector_id": "regex_competitor", "score": 1.0}]}], "output", source,
+                        )
+                        yield {"type": "error", "message": DETECTOR_MESSAGES["regex_competitor_output"], "detector_type": "regex"}
+                        return
+                    logger.info("Guardrails response validated: finish_reason=%s response_characters=%d", finish_reason, len(content))
+                    yield {"type": "chunk", "content": content}
+                    if finish_reason == "length":
+                        yield {"type": "chunk", "content": "\n\n_Response reached the demo's length limit._"}
+                    yield {"type": "done"}
                     return
 
                 full_response = ""

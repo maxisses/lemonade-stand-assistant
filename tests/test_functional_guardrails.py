@@ -29,6 +29,10 @@ class FakeResponse:
         line = next(self.lines, b'')
         if isinstance(line, Exception): raise line
         return line.encode() if isinstance(line, str) else line
+    async def json(self):
+        result = next(self.lines)
+        if isinstance(result, Exception): raise result
+        return result
 
 
 class FakeSession:
@@ -46,6 +50,40 @@ class GuardrailTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(app, 'aiohttp_session', session), patch.object(app, 'MAX_RETRIES', 0):
             events = [e async for e in app.process_chat(message, source='presenter')]
         return events, session
+
+    async def run_unary(self, body):
+        with patch.object(app, 'ORCHESTRATOR_STREAMING', False):
+            return await self.run_stream([body])
+
+    async def test_complete_unary_response_is_released(self):
+        events, session = await self.run_unary({'choices':[{'message':{'content':'Fresh lemonade.'},'finish_reason':'stop'}]})
+        self.assertFalse(session.payload['stream'])
+        self.assertEqual([e['content'] for e in events if e['type']=='chunk'], ['Fresh lemonade.'])
+        self.assertEqual(events[-1]['type'], 'done')
+
+    async def test_unary_output_detection_discards_content(self):
+        body = {'choices':[{'message':{'content':'Must remain hidden.'},'finish_reason':'stop'}], 'warnings':[{'type':'UNSUITABLE_OUTPUT'}]}
+        events, _ = await self.run_unary(body)
+        self.assertFalse(any(e['type']=='chunk' for e in events))
+        self.assertEqual(events[-1].get('detector_type'), 'policy')
+
+    async def test_unary_input_detection_without_choices_is_a_block(self):
+        events, _ = await self.run_unary({'warnings':[{'type':'UNSUITABLE_INPUT'}]})
+        self.assertFalse(any(e['type']=='chunk' for e in events))
+        self.assertEqual(events[-1].get('detector_type'), 'policy')
+
+    async def test_unary_failures_and_incomplete_content_are_not_released(self):
+        bodies = [ConnectionError('Transport failed'), {}, {'choices':[{'message':{'content':'Buffered.'}}]}, {'choices':[{'message':{'reasoning_content':'Private.'},'finish_reason':'length'}]}]
+        for body in bodies:
+            with self.subTest(body=type(body).__name__):
+                events, _ = await self.run_unary(body)
+                self.assertFalse(any(e['type']=='chunk' for e in events))
+                self.assertEqual(events[-1]['type'], 'error')
+
+    async def test_unary_local_output_policy_is_enforced(self):
+        events, _ = await self.run_unary({'choices':[{'message':{'content':'Try oranges.'},'finish_reason':'stop'}]})
+        self.assertFalse(any(e['type']=='chunk' for e in events))
+        self.assertEqual(events[-1].get('detector_type'), 'regex')
 
     async def test_valid_stream_is_released_once_after_completion(self):
         events, session = await self.run_stream([chunk('Fresh '), chunk('lemonade.'), chunk(finish='stop'), 'data: [DONE]\n'])

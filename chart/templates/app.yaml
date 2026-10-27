@@ -89,6 +89,8 @@ spec:
               value: {{ .Values.model.name | default "llama32" }}
             - name: MODEL_CHAT_TEMPLATE_KWARGS
               value: {{ .Values.model.chatTemplateKwargs | default dict | toJson | quote }}
+            - name: ORCHESTRATOR_STREAMING
+              value: {{ .Values.app.upstreamStreaming | quote }}
           volumeMounts:
             - name: service-ca
               mountPath: /etc/service-ca

@@ -16,6 +16,7 @@ app:
   maxConcurrentRequests: 1
   maxOutputTokens: 128
   maxRetries: 0
+  upstreamStreaming: false
   publicRoute: false
 detectors:
   hap:

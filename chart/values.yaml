@@ -20,6 +20,7 @@ app:
   maxConcurrentRequests: 1
   maxOutputTokens: 128
   maxRetries: 0
+  upstreamStreaming: true
   image: quay.io/ckavili/lemon-fastapi@sha256:a62dc3333a0dc5890498b23991538ccda9517c4a591ba1c762f8ae962748fd1c
 
 # LLM configuration
