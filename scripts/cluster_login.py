@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Log into the provisioned demo cluster without printing or passing passwords in argv."""
 import json, os, pty, select, subprocess, sys, termios, time
-from project_env import ROOT, infrastructure_environment
+from project_env import ROOT, terraform_environment, verify_backend
 
 def main():
-    env = infrastructure_environment()
+    env = terraform_environment('rosa')
+    verify_backend('rosa', env)
     identity = json.loads(subprocess.check_output(['aws','sts','get-caller-identity','--output','json'], env=env))
     if identity['Account'] != env['TF_VAR_expected_account_id']:
         sys.exit('AWS account mismatch')

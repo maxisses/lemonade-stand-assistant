@@ -19,6 +19,8 @@ data:
       service:
         hostname: {{ .Values.model.endpoint | default "llama-32-predictor" }}
         port: {{ .Values.model.port | default "80" }}
+        api_token: MODEL_API_KEY
+        request_timeout: 60
         {{- if eq (int (.Values.model.port | default 80)) 443 }}
         tls:
           insecure: false

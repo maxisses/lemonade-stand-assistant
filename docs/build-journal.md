@@ -31,3 +31,25 @@ The owner renewed ROSA login. STS confirms the expected project AWS account, ROS
 The account already had an OCM role association, but its referenced IAM role was absent. The registered ManagedOpenShift role was restored under the existing name and the current user's role was created/linked. These ROSA CLI bootstrap roles are outside the Terraform module; retain them until cluster teardown, and assess their removal separately if other clusters share them. No association was unlinked or redirected to a different organization.
 
 The application now uses the orchestrator's full service DNS name to match its certificate. Runtime secret bootstrap uses server-side apply, and cluster login reads the generated password in memory and supplies it through a private terminal rather than command arguments. Both helpers use the isolated project kubeconfig/context.
+
+## 27 October 2026 — cluster request blocked by Marketplace billing linkage
+
+State storage and the 15-resource network stage completed successfully. The ROSA plan was checked for cloud_region=eu-central-1, replicas=3, m6i.2xlarge, and no GPU pool. Its apply created the cluster IAM/OIDC prerequisites but the Red Hat cluster-creation API returned HTTP 400: the billing account is not linked to the signed-in Red Hat organization at AWS Marketplace.
+
+No cluster was created by that rejected request. The owner has been asked to complete the AWS-to-Red-Hat account/billing association. Do not repeatedly apply while the association is incomplete. Keep the existing Terraform state; re-plan after the linkage is ready and reuse already created infrastructure. A NAT gateway, EIP, VPC, state bucket, and IAM/OIDC bootstrap resources now exist; networking/storage charges may continue while waiting. No GPU nodes or model inference calls were created by this infrastructure work.
+
+Implementation commit 6c2dc5e was pushed to codex/lemonade-cpu-maas so GitOps can consume it. Further functional changes must be committed before application synchronization. No pull request has been created.
+
+## 27 October 2026 — replacement account verified; cleanup clarification pending
+
+The owner authorized moving the Lemonade build to the portfolio demo's AWS account, superseding the earlier AWS-credential restriction, then reported that the other environment is being deleted. A read-only STS check confirms this is a different account. The Red Hat Accounts Management quota-cost response lists it as an AWS billing account for quota cluster|byoc|moa|marketplace. AWS returned no VPCs, NAT gateways, or EC2 instances in eu-central-1. These findings do not establish that account deletion or all cleanup has finished.
+
+Asked whether only portfolio resources are being removed or the entire Open Environment is being deleted. No cloud mutations, credential switch, backend reconfiguration, or state migration were performed in this work block. The original Lemonade NAT/storage/IAM/OIDC resources remain and need separate cleanup. Preserve access and state for both accounts; do not run a replacement-account apply until its retention and cleanup status are clear.
+
+The external model bearer key is now referenced by the orchestrator's generation-service configuration rather than supplied to the chat application. This uses a Secret-backed environment variable and retains verified TLS. Helm lint/render and all eleven offline regression tests pass; the operator CRD and complete inference path still need cluster validation. No additional MaaS requests were sent.
+
+## 27 October 2026 — clarified deletion scope and switched accounts
+
+The owner clarified that the original AWS Open Environment was deleted; the portfolio account remains available and its demo should already be removed. Read-only checks verified a distinct target account, its ROSA Marketplace billing listing, no cluster, no VPC/NAT/instances in eu-central-1, and existing OCM/user roles. No existing Lemonade state bucket was found.
+
+Original credentials, context, local bootstrap state, backend metadata, and saved plans were archived privately. Active configuration now selects the verified portfolio account. The Terraform wrapper uses account-specific backend metadata and bootstrap state, verifies backend identity, and rejects saved plans for another account or region. Four offline account-boundary tests were added; all fifteen offline tests pass. The owner's deletion of the original environment is recorded without claiming independent verification of resource removal. No cleanup or rebuild command was run against the portfolio project's own Terraform state.

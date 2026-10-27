@@ -1,4 +1,5 @@
 {{- $ns := include "assistant.namespace" . }}
+{{- $app := include "assistant.appName" . }}
 ---
 ---
 apiVersion: trustyai.opendatahub.io/v1alpha1
@@ -12,6 +13,12 @@ spec:
   enableBuiltInDetectors: true
   enableGuardrailsGateway: false
   orchestratorConfig: fms-orchestr8-config-nlp
+  env:
+    - name: MODEL_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: {{ .Values.model.existingSecret | default (printf "%s-secrets" $app) }}
+          key: vllm-api-key
   otelExporter:
     otlpProtocol: grpc
   replicas: 1

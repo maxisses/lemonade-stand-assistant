@@ -18,7 +18,7 @@ The referenced keynote was streamed on **13 May 2026**, not in 2027. The reposit
 
 - Use the owner's fork in app/: https://github.com/maxisses/lemonade-stand-assistant. Its initial HEAD matches the inspected revision.
 - Prefer the external Red Hat MaaS endpoint/model from .env. Direct ordinary and streaming requests succeeded. Run all detectors on CPU. No GPU provisioning without explicit approval.
-- Start with three CPU workers in eu-central-1, subject to platform validation. The owner confirmed service availability, Quay write access, ROSA activation/linkage, and demo entitlements. The Red Hat service-account and registry credentials from the portfolio project may be reused; AWS credentials must come from this project.
+- Start with three CPU workers in eu-central-1, subject to platform validation. The owner confirmed service availability, Quay write access, and demo entitlements. Red Hat and registry credential reuse was authorized first; the owner subsequently authorized switching to the portfolio AWS account after the original account's ROSA cluster request failed its Marketplace billing check.
 - The owner reports no current MaaS limits. This does not establish unlimited capacity. Initial validation is strictly functional: serial requests, short outputs, no load tests or larger automated scans until separately discussed.
 - Use Terraform and GitOps conventions from the reference project. Exclude AAP, ACM, edge clusters, RDS, and a separately hosted MaaS gateway from the baseline.
 - See PREREQUISITES.md for measured results and remaining validation. The historical GPU-based budget and pre-27-October milestones below are superseded; recalculate for actual CPU hours and the remaining period.
@@ -256,9 +256,9 @@ Event day: run an end-to-end check about 60 minutes beforehand; start a fresh de
 
 ## 13. Next actions
 
-1. Clone the verified owner fork into app/ and record versions.
-2. Validate the authorized Red Hat authentication and user-confirmed activation; prepare CPU-only Terraform and GitOps configuration.
-3. Deploy the cluster and original guardrail path with external MaaS inference. Use individual serial benign/blocked functional checks only.
+1. Use the portfolio AWS account. The owner clarified that the original Open Environment was deleted, while the portfolio account remains available and its demo was removed. STS, ROSA billing, and an empty eu-central-1 VPC/NAT/instance inventory were verified before switching. No target-account cluster exists.
+2. The active .env and account context now select the verified portfolio account. Original credentials, bootstrap state, backend metadata, and plans are archived privately. Terraform uses account-specific data directories and bootstrap state, validates backend identity, and rejects saved plans for another account or region. Removal of every original-account resource was not independently verified; the owner reports environment deletion.
+3. The fork, pinned versions, CPU-only Terraform, and GitOps configuration are prepared. Deploy the cluster and original guardrail path in the verified target account. Use individual serial benign/blocked functional checks only.
 4. Record the FMS/NeMo integration decision; implement comparison modes, correct metrics, access controls, and branding placeholders.
 5. Discuss bounded evaluation/load budgets before running larger tests. Confirm slot length, owners, and brand assets ahead of rehearsals.
 

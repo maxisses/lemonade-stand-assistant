@@ -4,7 +4,11 @@ The initial build uses three m6i.2xlarge workers, a single-AZ ROSA HCP cluster, 
 
 ## Configuration
 
-Keep project configuration in ../.env or set LEMONADE_ENV_FILE. Credentials are never command-line arguments to Terraform. local/context.json records the expected AWS account and region; scripts/tf.py checks STS before each command, and AWS providers enforce allowed_account_ids. No portfolio AWS credentials are reused.
+Keep project configuration in ../.env or set LEMONADE_ENV_FILE. Credentials are never command-line arguments to Terraform. local/context.json records the expected AWS account and region; scripts/tf.py checks STS before each command, and AWS providers enforce allowed_account_ids.
+
+The active account is now the portfolio AWS account, verified through STS and ROSA billing after the owner clarified that the original Open Environment was deleted. Original credentials, local bootstrap state, backend metadata, and plans are archived under ignored local/accounts/. Treat them as historical evidence, not active deployment inputs. Original-account cleanup was reported by the owner and not independently verified.
+
+The wrapper isolates backend metadata under local/terraform/ACCOUNT/STAGE and bootstrap state under local/accounts/ACCOUNT/bootstrap.tfstate. It verifies backend account, region, and stage before use, and checks saved-plan account/region before apply. Initialization supplies the correct backend configuration automatically. Do not bypass the wrapper or copy state/plans between accounts. Plan files should use absolute paths under local/.
 
 The default RHCS authentication path uses the current local ROSA refresh-token session. Renew it with rosa login --use-device-code, including before teardown. Alternatively set RHCS_AUTH=service-account and valid RHCS_CLIENT_ID/RHCS_CLIENT_SECRET in local configuration.
 

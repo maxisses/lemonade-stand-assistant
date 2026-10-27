@@ -84,4 +84,6 @@ These are work items, not additional accounts the owner must acquire:
 
 ## Build follow-up
 
-The fork has now been cloned into app/. Reused registry credentials work, but the reused Red Hat service-account credentials return HTTP 401 and the cached ROSA session is expired. The owner was asked to run rosa login --use-device-code. CPU-only infrastructure and application preparation proceeded locally while awaiting that login; no cloud infrastructure has been created. See app/docs/build-journal.md for completed checks and remaining work.
+The fork is cloned into app/, and registry access works. The owner renewed the cached ROSA login after the reused Red Hat service account returned HTTP 401. Infrastructure preparation and initial applies created state storage, networking, and IAM/OIDC prerequisites in the original account, but cluster creation failed the Marketplace billing check. No cluster was created.
+
+The owner subsequently authorized switching to the portfolio AWS account and clarified that the original Open Environment was deleted. The portfolio account remains available and its demo was removed. A read-only check on 27 October confirmed ROSA Marketplace billing, no target-account clusters, and no VPCs, NAT gateways, or EC2 instances in eu-central-1. Active configuration now uses that account; old credentials, bootstrap state, backend metadata, and plans are archived privately. No independent proof of complete original-account resource deletion is claimed. See app/docs/build-journal.md for completed checks and remaining work.
