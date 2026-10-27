@@ -18,6 +18,7 @@ metadata:
   namespace: openshift-gitops-operator
 spec:
   channel: gitops-1.22
+  startingCSV: openshift-gitops-operator.v1.22.2
   installPlanApproval: Manual
   name: openshift-gitops-operator
   source: redhat-operators

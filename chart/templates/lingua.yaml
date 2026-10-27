@@ -25,6 +25,8 @@ spec:
       app: lingua-detector
   template:
     metadata:
+      annotations:
+        checksum/application: {{ .Files.Get "files/lingua-app.py" | sha256sum | quote }}
       labels:
         app: lingua-detector
     spec:

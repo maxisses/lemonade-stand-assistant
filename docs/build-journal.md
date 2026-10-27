@@ -59,3 +59,9 @@ The replacement account's state bucket and 15-resource networking stage complete
 ROSA accepted the replacement-account cluster request and reports validating. The cluster's installer-role ARN confirms the target AWS account; the CLI's cluster object exposes the account through aws.sts.role_arn and aws.billing_account_id, not aws.account_id. Future inventory filters must use these actual fields. Three m6i.2xlarge workers in eu-central-1 were confirmed in the accepted request. The complete cluster/guardrail path is still pending. A one-request functional probe helper is prepared, with verified cluster forwarding, a concurrency lock, no retries, and private measured-result records; it has not yet sent a live request.
 
 The accepted ROSA cluster progressed from validating to pending and then installing; DNS and OIDC are ready, and the status contains no provisioning error. Cluster login, operator installation, and live functional probes are still outstanding.
+
+## 27 October 2026 — CPU cluster ready and operator versions selected
+
+The replacement-account ROSA apply completed successfully. Three m6i.2xlarge instances are running and all three Kubernetes nodes report Ready. The isolated cluster login succeeded without exposing credentials. The final platform monitoring operator became Available during inspection; cluster version convergence is being checked before operator bootstrap.
+
+The live catalog offers OpenShift GitOps 1.22.2 and OpenShift AI 3.5.2 on the planned channels. Starting CSVs are now pinned while retaining Manual InstallPlan approval. Source checksums were added to application/language-detector pod templates so ConfigMap-mounted code, UI, or prompt changes cause a rollout instead of leaving old subPath content active. Helm lint/render passes. Operator installation and real guardrail inference remain outstanding.

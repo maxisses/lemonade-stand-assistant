@@ -45,4 +45,4 @@ The upstream default local-model installation is intentionally gated by allowGpu
 
 After the cluster Terraform apply completes, run python3 scripts/cluster_login.py to populate the isolated kubeconfig. Once the namespace exists, run python3 scripts/runtime_secrets.py for model/storage credentials. These helpers do not print secret values. All subsequent oc commands must explicitly select local/kubeconfig.
 
-The OCM and user roles were restored/linked with the ROSA CLI using the existing ManagedOpenShift prefix. They are account/organization bootstrap resources outside the Terraform stages. During final teardown, check whether they are shared before removing them with the ROSA CLI.
+In the original, now retired account, OCM and user roles were restored/linked with the ROSA CLI. In the active portfolio account those roles already existed and were reused. They are account/organization resources outside this project's Terraform state; retain them by default during Lemonade teardown. The lemonade-account and lemonade-operator role families are managed by this project's ROSA stage.

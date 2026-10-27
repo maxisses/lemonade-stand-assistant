@@ -20,6 +20,7 @@ metadata:
   namespace: redhat-ods-operator
 spec:
   channel: stable-3.5
+  startingCSV: rhods-operator.3.5.2
   installPlanApproval: Manual
   name: rhods-operator
   source: redhat-operators

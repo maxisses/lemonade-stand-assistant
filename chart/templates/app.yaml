@@ -49,6 +49,10 @@ spec:
       app: {{ $app }}
   template:
     metadata:
+      annotations:
+        checksum/application: {{ .Files.Get (printf "%s/app_fastapi.py" $files) | sha256sum | quote }}
+        checksum/ui: {{ .Files.Get (printf "%s/index.html" $files) | sha256sum | quote }}
+        checksum/prompt: {{ .Files.Get (printf "%s/system-prompt.txt" $files) | sha256sum | quote }}
       labels:
         app: {{ $app }}
         app.kubernetes.io/name: {{ $app }}
