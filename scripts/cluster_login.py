@@ -42,8 +42,12 @@ def main():
                 proc.terminate()
                 sys.exit('Cluster certificate was not trusted; insecure login was refused')
         if proc.poll() is None:
-            proc.terminate()
-            proc.wait(timeout=10)
+            # A closed PTY can arrive just before the child exit is observable.
+            try:
+                proc.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                proc.terminate()
+                proc.wait(timeout=10)
         if proc.returncode:
             sys.exit('Cluster login did not complete; identity provider may still be initializing')
     finally:

@@ -22,6 +22,8 @@ Use a project kubeconfig under local/. Bootstrap OpenShift GitOps, then synchron
 
 Only one request at a time. Start with one normal Lemonade question, one prepared local policy block, and one detector-mediated example after confirming the first two results. Use short output limits and no automatic retries. Record service errors separately from policy blocks. Do not run load tests, audience bursts, or larger red-team scans until discussed with the owner.
 
+After cluster login and application readiness, run python3 scripts/functional_probe.py benign, inspect the result, then run local-block and language-policy individually. The helper verifies the project kubeconfig, opens its own localhost-only forwarding connection to the chat service, and sends exactly one request with no retries. A local file lock prevents concurrent probe processes. Results under ignored local/functional-results/ record actual outcomes, timing, and a response hash; they do not store model response text. A successful local block does not establish that the orchestrator or model worked. The language case tests the English-only policy, not multilingual safety quality.
+
 ## Teardown
 
 Export any needed reports, remove demo applications and their external resources, then destroy rosa, foundation, and bootstrap in that order using the guarded wrapper. Keep a working Red Hat login until ROSA deletion finishes. The versioned state bucket intentionally has force_destroy=false; retain state until all resources are confirmed removed, then explicitly purge versions before deleting the bucket. Check residual load balancers, EIPs/NAT, volumes, log groups, state versions, and OIDC/IAM resources. Registry images and external MaaS usage have separate lifecycles.
