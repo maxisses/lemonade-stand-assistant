@@ -4,6 +4,24 @@ The initial build uses three m6i.2xlarge workers, a single-AZ ROSA HCP cluster, 
 
 ## Configuration
 
+For a consolidated URL and login overview, run from this repository:
+
+```sh
+python3 scripts/show_access.py
+```
+
+The helper verifies the project kubeconfig's API address before reading current Route metadata. It lists the ROSA console, OpenShift AI, GitOps, monitoring APIs, CLI downloads, cluster API, the recorded MaaS endpoint, and local chat/dashboard access commands. It reports when live discovery fails instead of inventing URLs. The recorded AWS account is labeled as context, not a fresh STS check. It does not start forwarding processes, change cluster resources, or make model requests. Use --offline for recorded context without cluster calls, or --json for structured output without credentials.
+
+The console administrator username is cluster-admin. To copy its password explicitly on your own Mac:
+
+```sh
+python3 scripts/show_access.py --copy-admin-password
+```
+
+This option checks the live AWS account, selected Terraform backend, and state API address before reading the single admin_password output. It sends the password to pbcopy through stdin, never command arguments, terminal output, or a new file. The option changes your clipboard; replace its contents after pasting. It cannot be combined with --offline or --json. No password is read by the default overview. API keys, registry passwords, and AWS credential values are never displayed. This is an optional manual operation; automated validation covers it with fake credentials and does not touch the user's clipboard.
+
+From the parent project folder, use python3 app/scripts/show_access.py instead.
+
 Keep project configuration in ../.env or set LEMONADE_ENV_FILE. Credentials are never command-line arguments to Terraform. local/context.json records the expected AWS account and region; scripts/tf.py checks STS before each command, and AWS providers enforce allowed_account_ids.
 
 The active account is now the portfolio AWS account, verified through STS and ROSA billing after the owner clarified that the original Open Environment was deleted. Original credentials, local bootstrap state, backend metadata, and plans are archived under ignored local/accounts/. Treat them as historical evidence, not active deployment inputs. Original-account cleanup was reported by the owner and not independently verified.

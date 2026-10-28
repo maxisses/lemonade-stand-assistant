@@ -310,5 +310,6 @@
       "response_sha256": null,
       "passed": true
     }
-  ]
+  ],
+  "provider_endpoint": "https://maas-rhdp.apps.maas.redhatworkshops.io/v1/chat/completions"
 }

@@ -5,6 +5,10 @@ This fork is being adapted for the 17 November 2026 customer event. Start with
 and the [build journal](docs/build-journal.md). The upstream documentation below
 is retained as reference and describes the original defaults.
 
+Run `python3 scripts/show_access.py` for current project URLs, login hints, and
+local forwarding commands. See [operations](docs/operations.md) for the optional
+manual password-copy command. The default overview never displays credentials.
+
 The project build uses external MaaS inference and CPU guardrail detectors.
 Install with deploy/functional-values.yaml. GPU resources require explicit owner
 approval and are rejected by default. Initial testing is functional only: short,
