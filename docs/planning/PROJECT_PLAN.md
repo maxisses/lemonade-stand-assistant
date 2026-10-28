@@ -2,6 +2,10 @@
 
 Updated: 28 October 2026 · Event: 17 November 2026 · Time zone: Europe/Vienna
 
+## Temporary operational status — 28 October
+
+The owner requested a four-day shutdown. Source and reproducible rebuild steps are saved; three SQLite databases and all infrastructure states are privately backed up. Application entry points are stopped, but AWS resources remain running because the Red Hat login expired and prevents the supported ROSA teardown. An additional private S3 checkpoint upload awaits explicit approval; no archive has been uploaded. See app/docs/shutdown.md for the current status and app/docs/rebuild.md for restart. No automatic restart is scheduled.
+
 ## 1. Recommendation and objective
 
 Build a two-act demonstration on OpenShift AI in AWS: **first AgentOps with guardrails, then red teaming of the protected system**. The customer's fictional new Lemonade business unit launches an AI customer assistant. Act 1 shows useful answers, business policies, input/output checks, and observable runtime behavior, including manual audience challenges. Act 2 asks how thoroughly that protection has been tested, then introduces automated attacks, findings, and the improvement/retest loop. A baseline comparison supports evaluation; it is not the opening story.

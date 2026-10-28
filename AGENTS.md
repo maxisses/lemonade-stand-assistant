@@ -81,3 +81,8 @@ This checkout is the app/ directory referenced in the parent workspace plan. Inf
 - Actual application modules remain in chart/files/lemonade. Campaigns use the same protected process_chat path; attacker, judge and FMS share the internal provider-budget service. Do not bypass it to make a test pass.
 - Functional/adaptive/retest integration and persistence passed within bounded serial profiles. They do not establish capacity for 100 attendees. Two model judgments remain pending operator review.
 - Provider pause requires its own explicit resume control. Campaign resume retains its original deadline and cannot clear provider throttling or rolling usage. Keep PVC claims in the consumer sync wave because gp3 uses WaitForFirstConsumer.
+
+
+## Temporary shutdown requested on 28 October
+
+The owner requested a four-day shutdown, durable backup and reproducible restart. Read docs/shutdown.md (app/docs/shutdown.md from the parent) before cloud work: it records actual completion versus blocked steps. Do not assume closed application entry points mean AWS compute is stopped. Preserve the verified private SQLite checkpoint and retained bootstrap/state bucket; never commit them. Use scripts/shutdown.py for account-scoped delete-only plans and docs/rebuild.md / scripts/rebuild.py for rebuilding. Do not restart automatically after four days.

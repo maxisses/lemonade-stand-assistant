@@ -625,5 +625,25 @@
       "concurrency": 1,
       "gpu_nodes": 0
     }
+  },
+  "shutdown": {
+    "date": "2026-10-28",
+    "requested_duration_days": 4,
+    "status": "entrypoints_stopped_cloud_teardown_blocked_by_expired_red_hat_login",
+    "account": "058264461741",
+    "region": "eu-central-1",
+    "cluster_id": "2tn4c1sto6l3cj13je431lqenalg0f38",
+    "entrypoint_replicas": 0,
+    "cloud_compute_still_running": true,
+    "private_checkpoint": "local/backups/2026-10-28-ooo-final",
+    "local_restore_hash_verified": true,
+    "archive_sha256": "015b46a1ebc9f519d064d103dabbb4eb8e21f8d562c1d447b6ef2601310d546a",
+    "campaigns": 6,
+    "custom_profiles": 1,
+    "provider_call_records": 54,
+    "s3_checkpoint_uploaded": false,
+    "s3_upload_pending_owner_approval": true,
+    "targeted_recovery_tests_passed": 13,
+    "automatic_restart_scheduled": false
   }
 }

@@ -1,5 +1,7 @@
 # CPU-only deployment operations
 
+**Temporary shutdown requested on 28 October:** read [shutdown status](shutdown.md) before using historical live URLs or operating cloud resources. The guarded restart procedure is in [rebuild.md](rebuild.md).
+
 The initial build uses three m6i.2xlarge workers, a single-AZ ROSA HCP cluster, external MaaS inference, and CPU guardrail detectors. Single-AZ is a demo trade-off; this is not a production HA design. There is no GPU machine-pool resource.
 
 ## Configuration
