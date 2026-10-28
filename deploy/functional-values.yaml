@@ -53,3 +53,9 @@ networkPolicy:
 # Publish only authenticated operator proxies, not the raw application services.
 operatorAccess:
   enabled: true
+
+demoControl:
+  enabled: true
+  storageSize: 1Gi
+  operatorUrl: https://lemonade-chat-lemonade-demo.apps.rosa.lemonade-demo.28s8.p3.openshiftapps.com
+  audienceUrl: https://lemonade-audience-lemonade-demo.apps.rosa.lemonade-demo.28s8.p3.openshiftapps.com

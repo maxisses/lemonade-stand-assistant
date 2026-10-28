@@ -31,6 +31,12 @@ data:
 {{ .Files.Get (printf "%s/app_fastapi.py" $files) | indent 4 }}
   index.html: |
 {{ .Files.Get (printf "%s/index.html" $files) | indent 4 }}
+{{- if .Values.demoControl.enabled }}
+{{- range $name := list "campaigns.py" "demo_control.py" "control.html" "audience.html" "audience-qr.svg" }}
+  {{ $name }}: |
+{{ $.Files.Get (printf "%s/%s" $files $name) | indent 4 }}
+{{- end }}
+{{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -44,6 +50,8 @@ metadata:
     demo-variant: {{ include "assistant.variant" . }}
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: {{ $app }}
@@ -52,6 +60,9 @@ spec:
       annotations:
         checksum/application: {{ .Files.Get (printf "%s/app_fastapi.py" $files) | sha256sum | quote }}
         checksum/ui: {{ .Files.Get (printf "%s/index.html" $files) | sha256sum | quote }}
+        {{- if .Values.demoControl.enabled }}
+        checksum/control: {{ printf "%s%s%s%s" (.Files.Get (printf "%s/demo_control.py" $files)) (.Files.Get (printf "%s/campaigns.py" $files)) (.Files.Get (printf "%s/control.html" $files)) (.Files.Get (printf "%s/audience.html" $files)) | sha256sum | quote }}
+        {{- end }}
         checksum/prompt: {{ .Files.Get (printf "%s/system-prompt.txt" $files) | sha256sum | quote }}
       labels:
         app: {{ $app }}
@@ -69,6 +80,29 @@ spec:
               protocol: TCP
               name: http
           env:
+            {{- if .Values.demoControl.enabled }}
+            - name: DEMO_CONTROL_ENABLED
+              value: "true"
+            - name: DEMO_DATA_DIR
+              value: /data
+            - name: DEMO_SESSION_SECRET
+              valueFrom:
+                secretKeyRef: {name: lemonade-control, key: session-secret}
+            - name: AUDIENCE_GATEWAY_KEY
+              valueFrom:
+                secretKeyRef: {name: lemonade-control, key: gateway-key}
+            - name: MODEL_API_KEY
+              valueFrom:
+                secretKeyRef: {name: lemonade-model, key: vllm-api-key}
+            - name: PROVIDER_BUDGET_URL
+              value: https://lemonade-provider-budget.{{ $ns }}.svc:8443
+            - name: OPERATOR_URL
+              value: {{ .Values.demoControl.operatorUrl | quote }}
+            - name: AUDIENCE_URL
+              value: {{ .Values.demoControl.audienceUrl | quote }}
+            - name: POLICY_CONFIG_HASH
+              value: {{ printf "%s%s" (include (print $.Template.BasePath "/fms-orchestr8-config-nlp.yaml") .) (.Values.detectors | toJson) | sha256sum | quote }}
+            {{- end }}
             - name: LOG_LEVEL
               value: "INFO"
             - name: MAX_CONCURRENT_REQUESTS
@@ -92,6 +126,22 @@ spec:
             - name: ORCHESTRATOR_STREAMING
               value: {{ .Values.app.upstreamStreaming | quote }}
           volumeMounts:
+            {{- if .Values.demoControl.enabled }}
+            - name: state
+              mountPath: /data
+            {{- range $name := list "campaigns.py" "demo_control.py" }}
+            - name: app-files
+              mountPath: /application/{{ $name }}
+              subPath: {{ $name }}
+              readOnly: true
+            {{- end }}
+            {{- range $name := list "control.html" "audience.html" "audience-qr.svg" }}
+            - name: app-files
+              mountPath: /application/static/{{ $name }}
+              subPath: {{ $name }}
+              readOnly: true
+            {{- end }}
+            {{- end }}
             - name: service-ca
               mountPath: /etc/service-ca
               readOnly: true
@@ -138,6 +188,11 @@ spec:
               drop:
                 - ALL
       volumes:
+        {{- if .Values.demoControl.enabled }}
+        - name: state
+          persistentVolumeClaim:
+            claimName: lemonade-campaign-data
+        {{- end }}
         - name: service-ca
           configMap:
             name: lemonade-service-ca

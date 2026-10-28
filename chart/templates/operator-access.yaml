@@ -76,7 +76,7 @@ spec:
             - --cookie-refresh=5m
             - --skip-provider-button=true
             - --pass-basic-auth=false
-            - --pass-access-token=false
+            - --pass-access-token={{ if and $root.Values.demoControl.enabled (eq $target.name "lemonade-chat") }}true{{ else }}false{{ end }}
             - --pass-user-bearer-token=false
             - --request-logging=false
           ports:

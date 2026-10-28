@@ -10,6 +10,7 @@ import logging
 import os
 import re
 import ssl
+import sys
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -183,7 +184,7 @@ class AsyncMetricsCollector:
             self._sources[source] = {
                 "total_requests": 0,
                 "active_requests": 0,
-                "outcomes": {name: 0 for name in ("allowed", "blocked", "error", "rejected")},
+                "outcomes": {name: 0 for name in ("allowed", "blocked", "error", "rejected", "cancelled")},
                 "local_regex_blocks": 0,
                 "detections": {d: {"input": 0, "output": 0} for d in self.DETECTOR_NAMES},
             }
@@ -346,7 +347,13 @@ async def lifespan(app: FastAPI):
     logger.info(f"API URL: {API_URL}")
     logger.info(f"Model: {VLLM_MODEL}")
 
-    yield
+    if demo_control is not None:
+        await demo_control.startup()
+    try:
+        yield
+    finally:
+        if demo_control is not None:
+            await demo_control.shutdown()
 
     # Cleanup
     await aiohttp_session.close()
@@ -366,7 +373,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
@@ -704,6 +711,12 @@ async def chat(request: ChatRequest, raw_request: Request):
     """SSE streaming chat endpoint with real-time streaming."""
     # This internal integration endpoint has a server-assigned source.
     source = "presenter"
+    if demo_control is not None:
+        async def controlled():
+            result = await demo_control.execute(request.message, source)
+            for event in result["events"]:
+                yield f"data: {json.dumps(event)}\n\n"
+        return StreamingResponse(controlled(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
 
     async def generate():
         await metrics.increment_request(source)
@@ -907,6 +920,11 @@ async def root():
 # =============================================================================
 # Run with Uvicorn
 # =============================================================================
+
+demo_control = None
+if os.getenv("DEMO_CONTROL_ENABLED", "false").lower() == "true":
+    from demo_control import install
+    demo_control = install(app, sys.modules[__name__])
 
 if __name__ == "__main__":
     import uvicorn

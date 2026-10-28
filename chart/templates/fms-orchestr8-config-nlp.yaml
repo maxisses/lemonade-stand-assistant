@@ -17,15 +17,15 @@ data:
             port: 8085
     openai: 
       service:
-        hostname: {{ .Values.model.endpoint | default "llama-32-predictor" }}
-        port: {{ .Values.model.port | default "80" }}
+        hostname: {{ if .Values.demoControl.enabled }}lemonade-provider-budget.{{ $ns }}.svc{{ else }}{{ .Values.model.endpoint | default "llama-32-predictor" }}{{ end }}
+        port: {{ if .Values.demoControl.enabled }}8443{{ else }}{{ .Values.model.port | default "80" }}{{ end }}
         api_token: MODEL_API_KEY
         request_timeout: 60
-        {{- if eq (int (.Values.model.port | default 80)) 443 }}
+        {{- if or .Values.demoControl.enabled (eq (int (.Values.model.port | default 80)) 443) }}
         tls:
           # FMS requires cert_path even when no client key is used.
-          cert_path: /etc/pki/tls/certs/ca-bundle.crt
-          client_ca_cert_path: /etc/pki/tls/certs/ca-bundle.crt
+          cert_path: {{ if .Values.demoControl.enabled }}/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt{{ else }}/etc/pki/tls/certs/ca-bundle.crt{{ end }}
+          client_ca_cert_path: {{ if .Values.demoControl.enabled }}/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt{{ else }}/etc/pki/tls/certs/ca-bundle.crt{{ end }}
           insecure: false
         {{- end }}
     detectors:

@@ -95,6 +95,8 @@ def build_report(context, *, offline=False):
                  "login": "OpenShift login; project administrator username: cluster-admin"}]
     selections = [
         ("Chat", [(NAMESPACE, "lemonade-chat")]),
+        ("Red Team Control", [(NAMESPACE, "lemonade-chat")]),
+        ("Audience role selection", [(NAMESPACE, "lemonade-audience")]),
         ("Dashboard", [(NAMESPACE, "lemonade-dashboard")]),
         ("OpenShift AI", [("openshift-ingress", "data-science-gateway"), ("redhat-ods-applications", "rhods-dashboard")]),
         ("GitOps / Argo CD", [("openshift-gitops", "openshift-gitops-server")]),
@@ -106,6 +108,12 @@ def build_report(context, *, offline=False):
         url = next((routes[key] for key in keys if key in routes), None)
         login = ("API endpoint; use project OpenShift API authentication. The browser UI is in the ROSA console."
                  if "API" in name else "Use OpenShift sign-in where requested; no separate demo password is created.")
+        if name == "Red Team Control":
+            url = url.rstrip("/") + "/control" if url else None
+            login = "OpenShift sign-in; viewing requires get pods, execution requires create jobs in lemonade-demo."
+        if name == "Audience role selection":
+            url = url.rstrip("/") + "/join" if url else None
+            login = "Choose a persona; chat only works during an operator-opened event window."
         if name in {"Chat", "Dashboard"}:
             login = "OpenShift sign-in; requires permission to get pods in lemonade-demo. No port forwarding needed."
         services.append({"name": name, "url": url, "login": login})
@@ -140,7 +148,7 @@ def build_report(context, *, offline=False):
         "notes": [
             "AWS account/region above are recorded context, not a live STS check. Select that account in your AWS browser session.",
             "The API URL is a CLI endpoint, not the web console.",
-            "Chat and dashboard use authenticated HTTPS operator Routes; audience access is not enabled.",
+            "Chat, dashboard, and campaign controls use OpenShift sign-in. Audience chat needs an active event window.",
             "Operator-generated guardrails Routes are intentionally excluded: ingress is blocked by the demo network policy.",
             "Renew Red Hat authentication when required with: rosa login --use-device-code",
         ],

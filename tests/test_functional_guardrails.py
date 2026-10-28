@@ -243,7 +243,7 @@ class OutcomeTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(collector._sources['presenter']['active_requests'], 1)
             await response.body_iterator.aclose()
         data = collector._sources['presenter']
-        self.assertEqual(data['outcomes'], {'allowed':0,'blocked':0,'error':1,'rejected':0})
+        self.assertEqual(data['outcomes'], {'allowed':0,'blocked':0,'error':1,'rejected':0,'cancelled':0})
         self.assertEqual(data['active_requests'], 0)
 
 if __name__ == '__main__': unittest.main()

@@ -141,3 +141,13 @@ Automated red-team execution, outcome comparison/retesting, and adaptive agent s
 ## 28 October 2026 — Act 2 interface and workload design
 
 Reinspected the keynote's relevant English transcript and selected frames in response to the owner's request for a launch interface and controlled red-team load. Added docs/red-teaming.md with the campaign UI, genuine adaptation, shared provider budgets, outcome/judging distinctions, durable results, cancellation semantics and a bounded path to the audience-versus-automation stage moment. Updated both planning copies to replace the older illustrative concurrency/attempt limits. All run profiles are proposals, not measured capacity; no runner was deployed and no model, attack or load-test request was made for this design review.
+
+## 28 October 2026 — campaign controls, audience gateway and persona deck
+
+Implemented durable SQLite campaign/attempt records, six-case functional runs, three-strategy adaptive campaigns, pause/resume/stop, reviewed findings, selected-case retests with benign controls, and report export. All targets use the same protected application path. Operator APIs verify OpenShift user permissions and CSRF; execution requires create jobs in lemonade-demo. The public gateway only exposes role selection and time-limited audience chat, with immutable roles, per-session/window budgets and no operator API forwarding. Audience text is not retained in the stage report.
+
+A CPU provider-admission service is inserted between FMS/all model roles and the fixed external MaaS destination. It verifies TLS, serializes calls, paces generation starts, bounds tokens/requests, persists reservations and stops on throttling or repeated errors. Cookies and gateway keys are generated directly as a private Kubernetes Secret. New services use the existing worker nodes; no GPU or target model is provisioned.
+
+The first HTML presentation follows the portfolio Red Hat template style: product team, customers, malicious attackers, audience role-selection QR, then AgentOps/red-team release validation. Each persona has a technical architecture view and live links. All 18 slides were visually reviewed; notes and an operator runbook accompany the deck.
+
+Eighty-four offline Python checks pass. R dashboard construction and mixed-source accounting pass in the existing pinned runtime. The chart passes lint/render and cluster server-side validation. Live rollout and bounded functional verification follow; no capacity claim is made.

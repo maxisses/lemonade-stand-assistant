@@ -6,6 +6,16 @@ library(bslib)
 # Configuration
 METRICS_URL <- Sys.getenv("METRICS_URL", "http://lemonade-stand:8080/metrics")
 REFRESH_INTERVAL <- as.integer(Sys.getenv("REFRESH_INTERVAL", "1")) # seconds
+CONTROL_URL <- Sys.getenv("CONTROL_URL", "")
+
+# Sources are assigned by the application, not by browser request headers.
+empty_source <- function() list(total = 0, allowed = 0, blocked = 0, error = 0,
+                                rejected = 0, cancelled = 0, pending = 0)
+source_group <- function(source) {
+  if (!is.na(source) && startsWith(source, "audience_")) return("audience")
+  if (!is.na(source) && source %in% c("automation", "presenter")) return(source)
+  return("other")
+}
 
 # Parse Prometheus metrics format
 parse_prometheus_metrics <- function(metrics_text) {
@@ -18,6 +28,9 @@ parse_prometheus_metrics <- function(metrics_text) {
     approved_requests = 0,
     rejected_requests = 0,
     active_requests = 0,
+    cancelled_requests = 0,
+    sources = list(audience = empty_source(), automation = empty_source(),
+                   presenter = empty_source(), other = empty_source()),
     detections_by_detector = list()
   )
 
@@ -25,22 +38,33 @@ parse_prometheus_metrics <- function(metrics_text) {
     # Skip comments and empty lines
     if (grepl("^#", line) || nchar(trimws(line)) == 0) next
 
+    source <- str_match(line, 'source="([^"]+)"')[2]
+    group <- source_group(source)
+
     # Parse guardrail_requests_total
     if (grepl("^guardrail_requests_total", line)) {
       value <- as.numeric(str_extract(line, "\\d+$"))
       metrics$total_requests <- metrics$total_requests + value
+      metrics$sources[[group]]$total <- metrics$sources[[group]]$total + value
     }
 
     # Final request outcomes are independent of the number of detector hits.
     outcome_fields <- c(allowed = "approved_requests", blocked = "blocked_requests",
-                        error = "service_errors", rejected = "rejected_requests")
+                        error = "service_errors", rejected = "rejected_requests",
+                        cancelled = "cancelled_requests")
     if (grepl('^guardrail_request_outcomes_total', line)) {
       outcome <- str_match(line, 'outcome="([^"]+)"')[2]
-      field <- outcome_fields[[outcome]]
-      if (!is.null(field)) metrics[[field]] <- metrics[[field]] + as.numeric(str_extract(line, "\\d+$"))
+      field <- unname(outcome_fields[outcome])
+      value <- as.numeric(str_extract(line, "\\d+$"))
+      if (length(field) == 1 && !is.na(field)) {
+        metrics[[field]] <- metrics[[field]] + value
+        metrics$sources[[group]][[outcome]] <- metrics$sources[[group]][[outcome]] + value
+      }
     }
     if (grepl('^guardrail_active_requests', line)) {
-      metrics$active_requests <- metrics$active_requests + as.numeric(str_extract(line, "\\d+$"))
+      value <- as.numeric(str_extract(line, "\\d+$"))
+      metrics$active_requests <- metrics$active_requests + value
+      metrics$sources[[group]]$pending <- metrics$sources[[group]]$pending + value
     }
 
     # Parse guardrail_detections_by_detector
@@ -184,6 +208,20 @@ ui <- page_fluid(
       .bslib-grid {
         margin-bottom: 30px;
       }
+      .operator-link { text-align: right; margin: 12px 10px 20px; }
+      .operator-link a { color: #73BCF7; border: 1px solid #73BCF7; padding: 9px 16px; border-radius: 4px; text-decoration: none; display: inline-block; }
+      .operator-link a:hover { background: #15334d; }
+      .comparison-note { color: #C9C9C9; font-size: 15px; margin-bottom: 16px; }
+      .source-panel { background: #1F1F1F; border-top: 4px solid #EE0000; border-radius: 3px; padding: 24px; margin: 8px 0; height: 100%; }
+      .source-panel.automation { border-top-color: #8461C9; }
+      .source-panel h3 { font-size: 26px; margin: 0 0 8px; }
+      .source-total { font-size: 46px; font-weight: 600; margin: 12px 0; }
+      .source-total small { display: block; font-size: 14px; color: #C9C9C9; font-weight: 400; }
+      .source-outcomes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+      .source-outcome { border-top: 1px solid #444; padding-top: 12px; }
+      .source-outcome strong { display: block; font-size: 24px; }
+      .source-outcome span { display: block; color: #C9C9C9; font-size: 14px; }
+      @media(max-width:600px) { .source-outcomes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
       .footer {
         text-align: center;
         color: #6A6E73;
@@ -197,7 +235,10 @@ ui <- page_fluid(
 
   titlePanel("🍋 [Customer] Lemonade Division"),
 
-  div(class = "subtitle", "Demo scenario • Act 1: AgentOps • Protected assistant"),
+  div(class = "subtitle", "Demo scenario • AgentOps and red teaming • Protected assistant"),
+  if (grepl("^https://[A-Za-z0-9.-]+(?::[0-9]+)?/[^?#]*$", CONTROL_URL, perl = TRUE)) {
+    div(class = "operator-link", tags$a(href = CONTROL_URL, target = "_blank", rel = "noopener", "Open Red Team Control ↗"))
+  },
 
   layout_columns(
     col_widths = c(3, 3, 3, 3),
@@ -225,6 +266,10 @@ ui <- page_fluid(
   ),
 
   div(class = "subtitle", textOutput("request_status")),
+  h2("Audience vs Automated Red Team"),
+  p(class = "comparison-note", "Live request outcomes. Audience and automation use different prompt mixes; volume and blocks alone do not measure attack success."),
+  uiOutput("source_comparison"),
+  p(class = "comparison-note", "Presenter requests are included in the overall counters, but excluded from these two groups. Reviewed findings and durable campaign reports are available in Red Team Control."),
   h2("Policy checks triggered"),
   p("One request can trigger several checks. These hits are separate from request outcomes."),
   uiOutput("detector_bars"),
@@ -279,7 +324,28 @@ server <- function(input, output, session) {
     m <- metrics_data()
     if (is.null(m)) return("Live data unavailable")
     paste("Pending:", m$active_requests, "| Admission/length rejections:", m$rejected_requests,
-          "| Source: presenter | Mode: protected")
+          "| Cancelled:", m$cancelled_requests, "| Mode: protected")
+  })
+
+  # Compare unique final outcomes, never sums of detector hits.
+  output$source_comparison <- renderUI({
+    m <- metrics_data()
+    if (is.null(m)) return(div(class = "comparison-note", "Live data unavailable; source counters are hidden."))
+    source_card <- function(key, title, total_label) {
+      values <- m$sources[[key]]
+      labels <- c(allowed = "Allowed", blocked = "Blocked", error = "Service errors",
+                  rejected = "Rejected", cancelled = "Cancelled", pending = "Pending")
+      div(class = paste("source-panel", key),
+          h3(title),
+          div(class = "source-total", format(values$total, big.mark = ","), tags$small(total_label)),
+          div(class = "source-outcomes", lapply(names(labels), function(outcome) {
+            div(class = "source-outcome", tags$strong(format(values[[outcome]], big.mark = ",")),
+                tags$span(labels[[outcome]]))
+          })))
+    }
+    layout_columns(col_widths = c(6, 6), fill = FALSE,
+                   source_card("audience", "Audience", "Product team · Customer · Attacker"),
+                   source_card("automation", "Automated Red Team", "Protected application target attempts"))
   })
 
   # Render detector bars

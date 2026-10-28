@@ -1,0 +1,187 @@
+{{- if .Values.demoControl.enabled }}
+{{- if not .Values.operatorAccess.enabled }}
+{{- fail "Demo controls require authenticated operator access" }}
+{{- end }}
+{{- $ns := include "assistant.namespace" . }}
+{{- $files := include "assistant.filesPath" . }}
+{{- range $name := list "lemonade-campaign-data" "lemonade-provider-data" }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $name }}
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: {{ $.Values.demoControl.storageSize }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lemonade-entry-files
+  namespace: {{ $ns }}
+data:
+{{- range $name := list "provider_budget.py" "audience_gateway.py" }}
+  {{ $name }}: |
+{{ $.Files.Get (printf "%s/%s" $files $name) | indent 4 }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lemonade-provider-budget
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+    service.beta.openshift.io/serving-cert-secret-name: lemonade-provider-tls
+spec:
+  selector: {app: lemonade-provider-budget}
+  ports:
+    - name: https
+      port: 8443
+      targetPort: https
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lemonade-provider-budget
+  namespace: {{ $ns }}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: lemonade-provider-budget}
+  template:
+    metadata:
+      labels: {app: lemonade-provider-budget}
+      annotations:
+        checksum/source: {{ .Files.Get (printf "%s/provider_budget.py" $files) | sha256sum | quote }}
+    spec:
+      containers:
+        - name: budget
+          image: {{ .Values.app.image | quote }}
+          command: [python, -m, uvicorn]
+          args: ["provider_budget:app", "--host", "0.0.0.0", "--port", "8443", "--workers", "1", "--ssl-keyfile", "/etc/tls/tls.key", "--ssl-certfile", "/etc/tls/tls.crt", "--no-access-log"]
+          ports: [{name: https, containerPort: 8443}]
+          env:
+            - name: MODEL_API_KEY
+              valueFrom:
+                secretKeyRef: {name: lemonade-model, key: vllm-api-key}
+            - name: PROVIDER_MODEL
+              value: {{ .Values.model.name | quote }}
+            - name: PROVIDER_BASE_URL
+              value: {{ printf "https://%s" .Values.model.endpoint | quote }}
+          volumeMounts:
+            - {name: source, mountPath: /application/provider_budget.py, subPath: provider_budget.py, readOnly: true}
+            - {name: tls, mountPath: /etc/tls, readOnly: true}
+            - {name: state, mountPath: /data}
+          resources:
+            requests: {cpu: 50m, memory: 96Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities: {drop: [ALL]}
+            seccompProfile: {type: RuntimeDefault}
+          readinessProbe:
+            httpGet: {scheme: HTTPS, path: /health, port: https}
+          livenessProbe:
+            httpGet: {scheme: HTTPS, path: /health, port: https}
+            initialDelaySeconds: 15
+      volumes:
+        - name: source
+          configMap: {name: lemonade-entry-files}
+        - name: tls
+          secret: {secretName: lemonade-provider-tls}
+        - name: state
+          persistentVolumeClaim: {claimName: lemonade-provider-data}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lemonade-audience-gateway
+  namespace: {{ $ns }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: lemonade-audience-gateway}
+  template:
+    metadata:
+      labels: {app: lemonade-audience-gateway}
+      annotations:
+        checksum/source: {{ .Files.Get (printf "%s/audience_gateway.py" $files) | sha256sum | quote }}
+    spec:
+      containers:
+        - name: gateway
+          image: {{ .Values.app.image | quote }}
+          command: [python, -m, uvicorn]
+          args: ["audience_gateway:app", "--host", "0.0.0.0", "--port", "9090", "--workers", "1", "--no-access-log"]
+          ports: [{name: http, containerPort: 9090}]
+          env:
+            - name: APPLICATION_URL
+              value: http://{{ include "assistant.appName" . }}.{{ $ns }}.svc:8080
+            - name: AUDIENCE_GATEWAY_KEY
+              valueFrom:
+                secretKeyRef: {name: lemonade-control, key: gateway-key}
+          volumeMounts:
+            - {name: source, mountPath: /application/audience_gateway.py, subPath: audience_gateway.py, readOnly: true}
+          resources:
+            requests: {cpu: 25m, memory: 96Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities: {drop: [ALL]}
+            seccompProfile: {type: RuntimeDefault}
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            initialDelaySeconds: 15
+      volumes:
+        - name: source
+          configMap: {name: lemonade-entry-files}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lemonade-audience-gateway
+  namespace: {{ $ns }}
+spec:
+  selector: {app: lemonade-audience-gateway}
+  ports:
+    - {name: http, port: 9090, targetPort: http}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: lemonade-audience
+  namespace: {{ $ns }}
+  annotations:
+    haproxy.router.openshift.io/timeout: 150s
+spec:
+  to: {kind: Service, name: lemonade-audience-gateway}
+  port: {targetPort: http}
+  tls: {termination: edge, insecureEdgeTerminationPolicy: Redirect}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lemonade-audience-entry
+  namespace: {{ $ns }}
+spec:
+  podSelector:
+    matchLabels: {app: lemonade-audience-gateway}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: openshift-ingress}
+      ports:
+        - {protocol: TCP, port: 9090}
+{{- end }}

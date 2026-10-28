@@ -46,6 +46,8 @@ spec:
           name: http
           protocol: TCP
         env:
+        - name: CONTROL_URL
+          value: {{ printf "%s/control" .Values.demoControl.operatorUrl | quote }}
         - name: METRICS_URL
           value: {{ .Values.shinyDashboard.metrics.url | default (printf "http://%s:8080/metrics" (include "assistant.appName" .)) | quote }}
         - name: REFRESH_INTERVAL

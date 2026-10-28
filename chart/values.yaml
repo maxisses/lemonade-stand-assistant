@@ -99,3 +99,10 @@ networkPolicy:
 operatorAccess:
   enabled: false
   image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:d6623e38c4d8cb9fd3591ca04b842a1453a011fe99bb18105da5bf8a819e387b
+
+# Controlled campaigns and the time-limited public audience gateway.
+demoControl:
+  enabled: false
+  storageSize: 1Gi
+  operatorUrl: ""
+  audienceUrl: ""
