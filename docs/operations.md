@@ -79,11 +79,16 @@ In the original, now retired account, OCM and user roles were restored/linked wi
 
 The functional deployment uses FMS complete JSON responses (app.upstreamStreaming=false) and model.chatTemplateKwargs.enable_thinking=false. Keep the small 128-token budget and zero retries for this phase. The app emits a browser response only after all upstream and local output checks pass. The provider's exact checkpoint revision remains unknown; revalidate behavior after provider changes.
 
-Chat and dashboard are exposed through HTTPS Routes named lemonade-chat and lemonade-dashboard in lemonade-demo. Run scripts/show-credentials.sh locally, or python3 scripts/show_access.py without passwords, for their current URLs. Both use OpenShift sign-in and check that the authenticated user can get pods in lemonade-demo; cluster-admin satisfies this check. Ordinary authenticated cluster users without that project permission are denied. These are operator links, not anonymous event audience links.
+Chat and dashboard are exposed through HTTPS Routes named lemonade-chat and lemonade-dashboard in lemonade-demo. Current operator links:
+
+- Chat: https://lemonade-chat-lemonade-demo.apps.rosa.lemonade-demo.28s8.p3.openshiftapps.com
+- Dashboard: https://lemonade-dashboard-lemonade-demo.apps.rosa.lemonade-demo.28s8.p3.openshiftapps.com
+
+ Run scripts/show-credentials.sh locally, or python3 scripts/show_access.py without passwords, for their current URLs. Both use OpenShift sign-in and check that the authenticated user can get pods in lemonade-demo; cluster-admin satisfies this check. Ordinary authenticated cluster users without that project permission are denied. These are operator links, not anonymous event audience links.
 
 The chart creates two small CPU OAuth proxies using the exact image from the installed OpenShift release. Each Route reencrypts traffic to a service-serving certificate; TLS verification remains enabled. Only the proxy pods on port 8443 accept ingress-router traffic. Chat, dashboard, inference, and guardrails backend services retain the internal network policy. The dashboard proxy supports WebSockets. No extra nodes or public load balancers are required.
 
-Before the first GitOps sync, run python3 scripts/operator_access_secrets.py to create missing cookie-signing Secrets directly in the verified cluster. It retains existing keys, does not print their values, and writes no secret file. OpenShift generates service TLS Secrets. Keep both kinds of Secret out of Git. Apply gitops/bootstrap/controller-access.yaml for the scoped ServiceAccount and Route permissions; this does not grant cluster-admin. Setting operatorAccess.enabled=false and pruning its resources removes the operator entry path. The manually created session Secrets can then be removed if no longer needed.
+Before the first GitOps sync, run python3 scripts/operator_access_secrets.py to create missing cookie-signing Secrets directly in the verified cluster. Keys use URL-safe Base64 as required by the OpenShift OAuth proxy. It retains existing keys, does not print their values, and writes no secret file. OpenShift generates service TLS Secrets. Keep both kinds of Secret out of Git. Apply gitops/bootstrap/controller-access.yaml for the scoped ServiceAccount and Route permissions; this does not grant cluster-admin. Setting operatorAccess.enabled=false and pruning its resources removes the operator entry path. The manually created session Secrets can then be removed if no longer needed.
 
 For optional troubleshooting, the original localhost forwarding remains available. From this repository, open separate terminals:
 

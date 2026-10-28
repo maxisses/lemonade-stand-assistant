@@ -322,6 +322,16 @@
     ],
     "tls": "reencrypt with OpenShift service-serving certificates",
     "authorization": "OpenShift login and get pods in namespace lemonade-demo",
-    "audience_access_enabled": false
+    "audience_access_enabled": false,
+    "validation": {
+      "date": "2026-10-28",
+      "chat_url": "https://lemonade-chat-lemonade-demo.apps.rosa.lemonade-demo.28s8.p3.openshiftapps.com",
+      "dashboard_url": "https://lemonade-dashboard-lemonade-demo.apps.rosa.lemonade-demo.28s8.p3.openshiftapps.com",
+      "authenticated_page_status": 200,
+      "dashboard_websocket_status": 101,
+      "unauthenticated_status": 302,
+      "router_to_raw_backends": "connection timeouts for chat, dashboard, and guardrails",
+      "inference_requests": 0
+    }
   }
 }

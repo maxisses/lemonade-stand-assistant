@@ -25,7 +25,7 @@ def main():
         manifest = {
             "apiVersion": "v1", "kind": "Secret", "type": "Opaque",
             "metadata": {"name": name, "namespace": "lemonade-demo"},
-            "stringData": {"cookie-secret": base64.b64encode(secrets.token_bytes(32)).decode()},
+            "stringData": {"cookie-secret": base64.urlsafe_b64encode(secrets.token_bytes(32)).decode()},
         }
         result = subprocess.run(oc + ["create", "-f", "-"], input=json.dumps(manifest), capture_output=True, text=True, timeout=25)
         if result.returncode:

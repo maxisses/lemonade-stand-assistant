@@ -35,20 +35,22 @@ class OperatorAccessTests(unittest.TestCase):
         run.assert_not_called()
 
     def test_secret_values_only_reach_oc_stdin(self):
-        fake = b"test-only-not-a-real-secret-value"
+        fake = bytes([251]) * 32  # Distinguish URL-safe Base64 from standard Base64.
         output = io.StringIO()
         with patch.object(bootstrap, "command", side_effect=[self.context["cluster_api_url"], "", ""]), \
                 patch.object(bootstrap.secrets, "token_bytes", return_value=fake), \
                 patch.object(bootstrap.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)) as run, \
                 contextlib.redirect_stdout(output):
             bootstrap.main()
-        encoded = base64.b64encode(fake).decode()
+        encoded = base64.urlsafe_b64encode(fake).decode()
         self.assertNotIn(encoded, output.getvalue())
         self.assertEqual(run.call_count, 2)
         for call in run.call_args_list:
             self.assertNotIn(encoded, str(call.args))
             manifest = json.loads(call.kwargs["input"])
             self.assertEqual(manifest["stringData"]["cookie-secret"], encoded)
+            self.assertNotIn("+", encoded)
+            self.assertNotIn("/", encoded)
             self.assertEqual(manifest["metadata"]["namespace"], "lemonade-demo")
 
 
