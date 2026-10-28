@@ -11,8 +11,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ $name }}
   namespace: {{ $ns }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "-5"
+# Keep claims in the consumer wave: gp3 waits for the first scheduled pod.
 spec:
   accessModes: [ReadWriteOnce]
   resources:
