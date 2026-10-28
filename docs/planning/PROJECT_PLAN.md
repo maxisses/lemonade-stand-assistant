@@ -1,12 +1,12 @@
 # Project plan: launching the customer's Lemonade business unit
 
-Updated: 27 October 2026 · Event: 17 November 2026 · Time zone: Europe/Vienna
+Updated: 28 October 2026 · Event: 17 November 2026 · Time zone: Europe/Vienna
 
 ## 1. Recommendation and objective
 
 Build a two-act demonstration on OpenShift AI in AWS: **first AgentOps with guardrails, then red teaming of the protected system**. The customer's fictional new Lemonade business unit launches an AI customer assistant. Act 1 shows useful answers, business policies, input/output checks, and observable runtime behavior, including manual audience challenges. Act 2 asks how thoroughly that protection has been tested, then introduces automated attacks, findings, and the improvement/retest loop. A baseline comparison supports evaluation; it is not the opening story.
 
-There are 21 calendar days until the event. The owner has authorized the build following the prerequisite audit. The critical path is Red Hat authentication/linkage → CPU-only OpenShift AI stack → external model and guardrail integration → reliable comparison tests → rehearsal. The feature freeze remains 10 November. Earlier milestone dates below are historical and must not be read as completed work. Prioritize the working reference and rehearsals over optional extensions.
+There are 20 calendar days until the event. The owner has authorized the build following the prerequisite audit. The critical path is Red Hat authentication/linkage → CPU-only OpenShift AI stack → external model and guardrail integration → reliable comparison tests → rehearsal. The feature freeze remains 10 November. Earlier milestone dates below are historical and must not be read as completed work. Prioritize the working reference and rehearsals over optional extensions.
 
 **Confirmed:** 17 November 2026; customer event with approximately 100 attendees; stage demo with a short audience segment; resources will be arranged; Lemonade Stand presented as a new business unit of the customer; reproduce the original first, then adapt the dashboard and branding. All project artifacts, UI, prompts, evaluation content, and presentation materials are in English. Conversation with the project owner remains in German.
 
@@ -29,7 +29,7 @@ The replacement portfolio account now hosts a ready ROSA HCP 4.21.34 cluster in 
 
 Measured single-case checks: normal answer allowed (1.956 s), local topic rule blocked (0.179 s), English-only policy blocked (0.378 s), and instruction override blocked (0.806 s). Earlier failed integration requests are retained as failures. These observations do not establish detection quality across a corpus or event capacity. Browser checks also confirm the normal answer, topic block, and matching request counters.
 
-The first [Customer] Lemonade Division branding and unique request-outcome dashboard are implemented. Access remains operator-only through localhost forwarding. Counts cover the current application process and reset on restart, visibly labeled. Persistent event reporting, baseline comparison, automated evaluation/adaptive swarms, temporary audience access, and the stage package remain open. FMS is the working reference implementation; the planned NeMo assessment remains outstanding. See app/docs/build-journal.md and app/docs/version-manifest.json for evidence and exact versions.
+The first [Customer] Lemonade Division branding and unique request-outcome dashboard are implemented. Access is operator-only through authenticated HTTPS Routes as of 28 October; localhost forwarding is optional. Counts cover the current application process and reset on restart, visibly labeled. Persistent event reporting, baseline comparison, automated evaluation/adaptive swarms, temporary audience access, and the stage package remain open. FMS is the working reference implementation; the planned NeMo assessment remains outstanding. See app/docs/build-journal.md and app/docs/version-manifest.json for evidence and exact versions.
 
 ## 2. Event deliverables
 
@@ -162,7 +162,7 @@ First build a small runner against **the same application path used by the chat*
 
 Initial corpus: 30 benign questions and 60 attacks covering topic diversion, claimed authority, disguised instructions, and language-policy violations. Separate calibration examples from held-out cases. Report length errors, throttling, and infrastructure failures separately. Content is English; selected non-English probes explicitly test the English-only policy, not multilingual detector capability.
 
-The optional adaptive swarm uses 3–4 strategies, at most three revisions per case, 2–4 simultaneous target calls, and hard runtime/token budgets. Initially cap the event run at 60 attempts or 90 seconds. Run large evaluations before the event; show a short live sample and clearly identify the earlier full report.
+The proposed first adaptive run uses three strategies with at most three target attempts each, one shared active provider call, hard request/token budgets, and a 180-second limit. Target, attacker, and judge share the same provider envelope. The initial UI functional campaign uses six predefined cases. These ceilings supersede the earlier illustrative 60-attempt/90-second values; the actual event profile follows capacity measurements. A campaign control interface, durable run results, and a measured audience/automation overlap preserve the keynote race. See the 28 October design proposal in app/docs/red-teaming.md (docs/red-teaming.md within the fork).
 
 For the fuller platform demonstration, use the separate [TrustyAI/Garak quickstart](https://github.com/trustyai-explainability/trustyai-llm-demo/tree/acfcaf328b96eced637a74eee4374e5dc7d37054/garak-quickstart-demo). It adds Data Science Pipelines/Kubeflow, object storage, and depending on the scan SDG, attacker, evaluator, and judge endpoints. Roles need not each have a GPU, but must not starve stage inference.
 
@@ -183,7 +183,7 @@ Approximately 100 attendees does not mean 100 continuously active inference requ
 
 After functional testing and a separate discussion with the owner, test 10, 25, and 50 active users, plus 100 near-simultaneous submissions as a QR burst. Do not run these tests during initial integration. Start with a 10–20 request audience concurrency cap, a bounded queue, one outstanding request per session, and at most three attempts per minute. Adjust from measurements. Do not rely exclusively on IP-based limits: venue Wi-Fi may put everyone behind the same NAT address.
 
-Reserve capacity for the presenter. Audience and automation run sequentially in the baseline event flow. Allow overlap only after load testing or with a separate target-model replica. A second GPU used solely for attacker/judge models does not increase target-model capacity. Runner controls and audience-access switches are operator-only.
+Reserve capacity for the presenter. Validate audience and automation separately first, then rehearse a bounded overlap for the Audience versus Automated Red Team stage moment. Until that rehearsal passes, use sequential runs as an explicitly described fallback. Additional clients, logical agents, or a second model endpoint do not by themselves establish more capacity in the shared provider. Runner controls and audience-access switches are operator-only.
 
 Project aggregate numbers and deliberately selected examples. Do not automatically display unreviewed audience text on the main screen.
 
