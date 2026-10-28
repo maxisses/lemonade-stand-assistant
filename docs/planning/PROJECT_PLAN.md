@@ -6,11 +6,11 @@ Updated: 28 October 2026 · Event: 17 November 2026 · Time zone: Europe/Vienna
 
 Build a two-act demonstration on OpenShift AI in AWS: **first AgentOps with guardrails, then red teaming of the protected system**. The customer's fictional new Lemonade business unit launches an AI customer assistant. Act 1 shows useful answers, business policies, input/output checks, and observable runtime behavior, including manual audience challenges. Act 2 asks how thoroughly that protection has been tested, then introduces automated attacks, findings, and the improvement/retest loop. A baseline comparison supports evaluation; it is not the opening story.
 
-There are 20 calendar days until the event. The owner has authorized the build following the prerequisite audit. The critical path is Red Hat authentication/linkage → CPU-only OpenShift AI stack → external model and guardrail integration → reliable comparison tests → rehearsal. The feature freeze remains 10 November. Earlier milestone dates below are historical and must not be read as completed work. Prioritize the working reference and rehearsals over optional extensions.
+There are 20 calendar days until the event. The owner has authorized the build following the prerequisite audit. The CPU platform and original guarded inference path are working. The remaining critical path is live validation of the campaign/audience extension → reliable comparison tests → measured event profile and rehearsal. The feature freeze remains 10 November. Earlier milestone dates below are historical and must not be read as completed work. Prioritize the working reference and rehearsals over optional extensions.
 
 **Confirmed:** 17 November 2026; customer event with approximately 100 attendees; stage demo with a short audience segment; resources will be arranged; Lemonade Stand presented as a new business unit of the customer; reproduce the original first, then adapt the dashboard and branding. All project artifacts, UI, prompts, evaluation content, and presentation materials are in English. Conversation with the project owner remains in German.
 
-**Still open:** exact slot length, customer name/brand assets, audience roles, and technical owners. Assume a 15-minute slot including two minutes of audience participation until confirmed. Use [Customer] placeholders for branding.
+**Still open:** exact slot length, customer name/brand assets, and technical owners. Audience roles are confirmed as Product team, Customer and Attacker; AgentOps / Red Teaming is the operator persona in Act 2. Assume a 15-minute slot including two minutes of audience participation until confirmed. Use [Customer] placeholders for branding.
 
 The referenced keynote was streamed on **13 May 2026**, not in 2027. The repository is a suitable foundation for chat and guardrails; it does not provide the complete Summit swarm or the identical stage dashboard. See [RESEARCH.md](RESEARCH.md) for evidence and inspection limits.
 
@@ -20,16 +20,20 @@ The referenced keynote was streamed on **13 May 2026**, not in 2027. The reposit
 - Prefer the external Red Hat MaaS endpoint/model from .env. Direct ordinary and streaming requests succeeded. Run all detectors on CPU. No GPU provisioning without explicit approval.
 - Start with three CPU workers in eu-central-1, subject to platform validation. The owner confirmed service availability, Quay write access, and demo entitlements. Red Hat and registry credential reuse was authorized first; the owner subsequently authorized switching to the portfolio AWS account after the original account's ROSA cluster request failed its Marketplace billing check.
 - The owner reports no current MaaS limits. This does not establish unlimited capacity. Initial validation is strictly functional: serial requests, short outputs, no load tests or larger automated scans until separately discussed.
-- Use Terraform and GitOps conventions from the reference project. Exclude AAP, ACM, edge clusters, RDS, and a separately hosted MaaS gateway from the baseline.
+- Use Terraform and GitOps conventions from the reference project. Exclude AAP, ACM, edge clusters, RDS, and a separately hosted MaaS platform from the baseline. The new small CPU budget proxy forwards to the existing external MaaS service; it does not host a model.
 - See PREREQUISITES.md for measured results and remaining validation. The historical GPU-based budget and pre-27-October milestones below are superseded; recalculate for actual CPU hours and the remaining period.
 
-## Functional build status — 27 October 2026
+## Functional build status and extension — 28 October 2026
 
 The replacement portfolio account now hosts a ready ROSA HCP 4.21.34 cluster in eu-central-1 with three m6i.2xlarge workers and zero GPUs. OpenShift AI 3.5.2, GitOps 1.22.2, FMS, and the CPU detectors are running. The external qwen38-27b endpoint works through the complete guarded application path. Functional values use non-thinking generation, a 128-token cap, one active request, no automatic retries, and complete-response validation. The exact provider checkpoint is not exposed.
 
 Measured single-case checks: normal answer allowed (1.956 s), local topic rule blocked (0.179 s), English-only policy blocked (0.378 s), and instruction override blocked (0.806 s). Earlier failed integration requests are retained as failures. These observations do not establish detection quality across a corpus or event capacity. Browser checks also confirm the normal answer, topic block, and matching request counters.
 
-The first [Customer] Lemonade Division branding and unique request-outcome dashboard are implemented. Access is operator-only through authenticated HTTPS Routes as of 28 October; localhost forwarding is optional. Counts cover the current application process and reset on restart, visibly labeled. Persistent event reporting, baseline comparison, automated evaluation/adaptive swarms, temporary audience access, and the stage package remain open. FMS is the working reference implementation; the planned NeMo assessment remains outstanding. See app/docs/build-journal.md and app/docs/version-manifest.json for evidence and exact versions.
+The first [Customer] Lemonade Division branding and unique request-outcome dashboard are implemented. Chat/dashboard use authenticated HTTPS Routes; localhost forwarding is optional. Counts cover the current application process and reset on restart, visibly labeled.
+
+The requested Act 2 extension is implemented and deployed (GitOps e85b6f8 Synced/Healthy): an authenticated Red Team Control page; six-case Functional and three-strategy Adaptive campaigns; human review and exact-case retest; persistent SQLite run/export records on a PVC; a shared provider budget with its own persistent ledger; and a separate, time-limited public audience gateway with Product team, Customer and Attacker choices. Shiny compares audience and automation request outcomes while excluding presenter traffic from that comparison. A first 18-slide English HTML deck follows the portfolio style, with each persona followed by a technical diagram and live links. Local UI checks used synthetic fixtures and made no model calls. Subsequent bounded live checks completed: Functional 6 cases (2 allowed, 4 blocked, 0 errors); Adaptive 9 attempts in 61.86 seconds (7 blocked, 2 allowed refusal-like responses, 2 judge verdicts pending human review, no confirmed violation); and a retest of 1 selected topic case plus 2 benign controls under the same policy. OAuth Control access, missing-CSRF rejection, audience path restrictions, closed-window rejection and one immutable Customer session with exactly one source-counted topic block also passed. The audience window was closed afterward. The shared ledger observed 24 provider HTTP calls, including 7 tokenization calls; actual token usage and conservative auxiliary reservations remain separate. Restarting the application and provider preserved all three completed reports and the 24-HTTP/17-generation ledger, with no active work and the audience still closed. Audience capacity is unmeasured.
+
+Baseline/protected comparison, the broader evaluation corpus, a genuine measured policy-improvement comparison, completion of pending human reviews, audience overlap/capacity rehearsal, backup recording and final customer branding remain open. FMS is the working reference; the NeMo assessment remains outstanding. See app/docs/red-teaming.md for implemented controls and known limits, and app/docs/build-journal.md / app/docs/version-manifest.json for measured results and versions.
 
 ## 2. Event deliverables
 
@@ -52,6 +56,8 @@ Parallel replay of a fixed prompt list is an automated scan. Call it an adaptive
 **Selected scenario:** [Customer] is launching a new Lemonade business unit and wants its AI assistant to represent the new brand reliably. This is a fictional event scenario. Keep the recognizable Lemonade theme and original technical behavior as the reference; customization focuses on the launch story, visual identity, and dashboard.
 
 Working title: **[Customer] Lemonade Division — Launch Control**.
+
+**Confirmed persona story:** Product team building the assistant → Customer using it normally, making language mistakes or becoming frustrated → Attacker trying prompt manipulation → audience QR with those three choices → AgentOps / Red Teaming team checking before release. Each persona is followed by a technical architecture diagram and direct links. Roles change the challenge and source attribution, not access permissions. Product discovery is represented by Lemonade information; no catalogue API is implemented.
 
 Suggested opening: “Today, [Customer] is launching a new business unit: lemonade. Our AI sales assistant is ready. But can we trust it to represent our brand?”
 
@@ -85,26 +91,30 @@ Prefer **ROSA with Hosted Control Planes plus OpenShift AI**, provided the AWS O
 
 Planning region: eu-central-1, subject to environment restrictions and platform compatibility. Account lifetime must extend through at least 18 November; automatic sandbox expiration must not interrupt the event.
 
+Current deployed topology; initial functional control/audience checks passed, including completed-report/ledger persistence on restart; event-capacity acceptance remains outstanding:
+
 ~~~mermaid
 flowchart LR
-    P[Audience: QR and event access] --> G[HTTPS access and load limits]
-    H[Presenter: authenticated access] --> G
-    G --> A[Chat app: session, mode, request ID]
-    A --> B[Baseline: same system prompt]
+    P[Audience: QR and persona] --> G[Public HTTPS audience gateway]
+    H[Presenter and operator: OpenShift sign-in] --> X[Operator proxy]
+    X --> A[Protected single-turn application]
+    X --> C[Red Team Control]
+    G --> A
+    C --> T[Bounded campaign engine]
+    T --> A
     A --> I[Input guardrails]
-    I --> M[External target model: Red Hat MaaS]
-    B --> M
-    M --> O[Output guardrails in protected mode]
-    O --> R[Validated response]
-    M --> BR[Baseline response: presenter and tests only]
-    T[Scan or adaptive red-team runner] --> A
-    J[Attacker and judge endpoints] <--> T
-    A --> E[Outcome events and metrics]
-    E --> D[Customer-branded dashboard]
-    T --> S[S3: evaluation corpus and reports]
+    I --> B[Shared CPU provider budget]
+    B --> M[External Red Hat MaaS]
+    M --> O[Output guardrails and validated response]
+    T --> J[Attacker and judge roles]
+    J --> B
+    A --> E[Unique outcomes and detector hits]
+    E --> D[Customer dashboard]
+    T --> S[PVC: campaign reports and reviews]
+    B --> L[PVC: usage ledger]
 ~~~
 
-Both comparison paths use the same business application and target model revision. Only presenter/test access can select the baseline; the audience receives the designated event mode. Authentication, request/token limits, and resource budgets apply in both modes.
+All live roles target the protected application. Baseline/protected comparison and private S3 report backup remain planned extensions, not selectable capabilities of the current Control UI. Model keys remain server-side. The same application path performs local checks, FMS input/output checks, generation settings and final outcome recording for presenter, audience and automation. The provider checkpoint is not exposed, so its model identifier alone cannot guarantee reproducibility after provider changes.
 
 **Version decision during the first working integration:** the repository uses FMS Guardrails Orchestrator. OpenShift AI 3.5 documentation deprecates FMS and recommends NeMo, while stating FMS remains functional in 3.5. First verify the original path and assess a small NeMo implementation within the same early spike. Prefer NeMo for continued development if input/output checks, telemetry, and the app adapter work within at most two person-days. Otherwise use a specifically tested FMS configuration for the event and disclose its status. Do not update to an untested latest release.
 
@@ -118,7 +128,7 @@ NeMo is not a Helm toggle: API behavior, detector integration, and metadata diff
 | OpenShift | ROSA HCP or approved OCP deployment; operator administration | Supported OpenShift/OpenShift AI combination and installation path |
 | OpenShift AI | Entitlement, registry access, TrustyAI and model serving | CRDs, serving runtimes, FMS/NeMo version, GPU integration |
 | CPU workers | 3 × 8 vCPU / 32 GiB, e.g. m6i.2xlarge if permitted | 24 vCPU / 96 GiB gross; account separately for allocatable capacity and platform overhead |
-| Target inference | External MaaS endpoint from .env | Verified direct access; full guardrail integration still required |
+| Target inference | External MaaS endpoint from .env | Original guarded inference and bounded campaign traffic through the shared budget verified; capacity remains unmeasured |
 | Red-team models | External endpoint, initially reusing the existing provider if suitable | Validate model behavior and budgets; do not run larger scans in initial functional testing |
 | GPU components | Excluded from the initial build | Explicit owner approval required before adding GPU nodes or pools |
 | Networking | VPC/subnets, ingress, DNS, TLS, registry/model-source egress | NAT/proxy, firewall, certificate chain, venue network access |
@@ -143,10 +153,10 @@ An external model endpoint is the selected target architecture and an option for
 | Establish deployed source of truth | Helm mounts chart/files over the application image | Must |
 | Implement comparison modes | Local regex/HAP filters remain active if only orchestrator detectors are disabled | Must |
 | Record unique final outcomes | Multiple detector hits are not multiple blocked requests | Must |
-| Aggregate metrics and validate source | Counters are process-local; x-source is client-controlled; Shiny combines sources | Must |
+| Aggregate metrics and validate source | Server-assigned sources and audience/automation aggregation implemented; current-process counters are separate from persistent run reports | Must |
 | Hold protected output until checked | Streaming may expose content before a later block | Must |
 | Define failure behavior | Detector failure must not appear as safe content or successful defense | Must |
-| Add event access, limits, queue, stop | Audience bursts must not displace the presenter | Must |
+| Add event access, limits, queue, stop | Implemented bounded gateway and campaign controls; presenter preference and capacity need live rehearsal | Must |
 | Validate TLS and replace demo secrets | Upstream disables certificate checks and uses example MinIO credentials | Must |
 | Add operational checks and rollback | /health does not test dependencies; models need warm-up | Must |
 | Apply customer branding and dashboard layout | Present the new Lemonade business unit and show measured outcomes clearly | Must |
@@ -158,11 +168,11 @@ Use a small fixed set of metric dimensions: mode, source, detector, outcome. Put
 
 This is the second act of the presentation. Transition from observing individual guardrail decisions to asking whether systematic testing can expose remaining gaps. The live scan/swarm targets the already protected application. Baseline runs and policy-version comparisons provide supporting evidence; automation must not silently switch to an unprotected target to obtain more successful attacks.
 
-First build a small runner against **the same application path used by the chat**. Scanning only the raw model does not evaluate application guardrails. The app has a custom /api/chat SSE interface; Garak needs a generator/adapter or an equivalent internal evaluation endpoint. Give both modes identical inputs and generation settings.
+The implemented small runner uses **the same application path used by the chat**. Scanning only the raw model does not evaluate application guardrails. The app has a custom /api/chat SSE interface; Garak needs a generator/adapter or an equivalent internal evaluation endpoint. Give both modes identical inputs and generation settings.
 
-Initial corpus: 30 benign questions and 60 attacks covering topic diversion, claimed authority, disguised instructions, and language-policy violations. Separate calibration examples from held-out cases. Report length errors, throttling, and infrastructure failures separately. Content is English; selected non-English probes explicitly test the English-only policy, not multilingual detector capability.
+Planned broader evaluation corpus, not yet executed: 30 benign questions and 60 attacks covering topic diversion, claimed authority, disguised instructions, and language-policy violations. Separate calibration examples from held-out cases. Report length errors, throttling, and infrastructure failures separately. Content is English; selected non-English probes explicitly test the English-only policy, not multilingual detector capability.
 
-The proposed first adaptive run uses three strategies with at most three target attempts each, one shared active provider call, hard request/token budgets, and a 180-second limit. Target, attacker, and judge share the same provider envelope. The initial UI functional campaign uses six predefined cases. These ceilings supersede the earlier illustrative 60-attempt/90-second values; the actual event profile follows capacity measurements. A campaign control interface, durable run results, and a measured audience/automation overlap preserve the keynote race. See the 28 October design proposal in app/docs/red-teaming.md (docs/red-teaming.md within the fork).
+The implemented Adaptive profile uses three strategies with at most three target attempts each, one shared active provider call, hard request/token budgets, and a 180-second limit. Target, attacker, judge and auxiliary tokenization share a provider envelope: 12 generation starts/minute and rolling hourly ceilings of 240 provider requests, 120 generations and 240,000 tokens. The Functional profile uses six predefined cases with a 120-second deadline and no attacker/judge calls. Retest preserves 1–9 selected completed prompts and adds two benign controls. Judge findings require human review before inclusion in confirmed attack success. These ceilings supersede the earlier 60-attempt/90-second example; they do not imply all planned cases finish before the deadline. Control UI and durable reports are deployed; initial bounded campaigns passed. Completed reports and the provider ledger survived a restart; in-flight failure behavior and an audience/automation overlap still need rehearsal. See app/docs/red-teaming.md (docs/red-teaming.md within the fork).
 
 For the fuller platform demonstration, use the separate [TrustyAI/Garak quickstart](https://github.com/trustyai-explainability/trustyai-llm-demo/tree/acfcaf328b96eced637a74eee4374e5dc7d37054/garak-quickstart-demo). It adds Data Science Pipelines/Kubeflow, object storage, and depending on the scan SDG, attacker, evaluator, and judge endpoints. Roles need not each have a GPU, but must not starve stage inference.
 
@@ -170,7 +180,7 @@ For the fuller platform demonstration, use the separate [TrustyAI/Garak quicksta
 |---|---|
 | Attack success rate | Successful policy violations / valid evaluated attacks; also show total attempts and error rate |
 | False-block rate | Incorrectly blocked benign requests / valid benign requests |
-| Request outcome | Exactly one final outcome: allowed, input blocked, output blocked, error, aborted |
+| Request outcome | Exactly one final outcome: allowed, blocked, error, rejected or cancelled; campaign attempts may also be not sent |
 | Detector hits | Potentially several per request; separate from request outcomes |
 | User latency | p50/p95 to the complete validated response, not just the first unchecked token |
 | Load | Active requests, queue length, rejections, provider usage, detector CPU/RAM |
@@ -181,7 +191,9 @@ Use deterministic checks for clear rules and a documented judging rubric with ma
 
 Approximately 100 attendees does not mean 100 continuously active inference requests. Planning case: 30–50 active phones, one request per 20 seconds, or 1.5–2.5 requests/s. At eight seconds mean processing time, average in-flight demand would be about 12–20 requests. This is a sizing example, not a measured benchmark.
 
-After functional testing and a separate discussion with the owner, test 10, 25, and 50 active users, plus 100 near-simultaneous submissions as a QR burst. Do not run these tests during initial integration. Start with a 10–20 request audience concurrency cap, a bounded queue, one outstanding request per session, and at most three attempts per minute. Adjust from measurements. Do not rely exclusively on IP-based limits: venue Wi-Fi may put everyone behind the same NAT address.
+The implemented conservative audience window is 1–10 minutes, with two minutes selected initially: at most 60 requests per window, 200 active sessions, six requests per session, three requests/minute/session, one outstanding request/session and eight admitted audience requests. All still share one active provider call and a 100-character input limit. These are safety ceilings, not a demonstrated 100-person experience; the earlier 10–20 concurrency suggestion is superseded. The role is fixed per session/window. Closing the window rejects new submissions and expires sessions but does not cancel already admitted calls. Limits use session identity rather than a shared venue Wi-Fi IP.
+
+After functional validation and a discussion with the owner, agree a bounded capacity ramp and stop rules. Only increase the current limits after measurements support it. A possible later QR burst test must remain bounded and separately agreed; it is not part of initial integration.
 
 Reserve capacity for the presenter. Validate audience and automation separately first, then rehearse a bounded overlap for the Audience versus Automated Red Team stage moment. Until that rehearsal passes, use sequential runs as an explicitly described fallback. Additional clients, logical agents, or a second model endpoint do not by themselves establish more capacity in the shared provider. Runner controls and audience-access switches are operator-only.
 
@@ -189,7 +201,7 @@ Project aggregate numbers and deliberately selected examples. Do not automatical
 
 ## 9. Delivery schedule
 
-All dates below are in 2026. The original pre-27-October milestones were not completed; the active sequence is 27–29 October access/platform/reference, 30 October–3 November application and metrics, 4–6 November bounded evaluation and first rehearsal, then the unchanged freeze/go-no-go dates. Larger scans and load tests require prior discussion with the owner.
+All dates below are in 2026. The original pre-27-October milestones were not completed on their listed dates. The platform/reference path is now working and the campaign/audience code plus first HTML deck are implemented. The active sequence is 28 October–3 November live extension validation and comparison work, 4–6 November bounded evaluation and first rehearsal, then the unchanged freeze/go-no-go dates. Larger scans and load tests require prior discussion with the owner.
 
 | Dates | Deliverable or decision | Dependency |
 |---|---|---|
@@ -229,22 +241,20 @@ A verified pricing component: ROSA HCP lists USD 0.25 per cluster-hour plus USD 
 
 The final calculation must separate CPU-worker hours, GPU hours, ROSA charges, NAT/load balancers, root/data volumes, object storage/transfer, model APIs, and entitlement. Scaling down GPUs saves only their share; the base cluster, CPU, network, and storage continue to cost money. Keep required models warm from 16 November. Set early budget alerts; alerts are not automatic spending stops.
 
-## 11. Stage flow — 15-minute assumption
+## 11. Stage flow — slot still unconfirmed
 
-All audience-facing text and narration are English. Preserve the keynote-inspired order confirmed by the project owner: **AgentOps with guardrails → automated red teaming → improve and retest**. The following timings are our proposed adaptation, not a verified second-by-second transcript of the keynote.
+All audience-facing text and narration are English. Preserve **AgentOps with guardrails → automated red teaming → improve and retest**. The initial 18-slide HTML deck suggests 18–22 minutes; the earlier 15-minute assumption remains a compressed fallback until the owner confirms the slot. Its persona order and diagrams follow the portfolio demo style.
 
-| Minute | Action | Message |
-|---|---|---|
-| 0–2 | Announce the fictional Lemonade business unit; ask the protected assistant a normal question | “Our new business has an AI assistant. How do we operate it with control?” |
-| 2–4 | Act 1: show business policies, the input/model/output path, and the AgentOps dashboard | “We define the rules, enforce them at runtime, and observe the decisions.” |
-| 4–6 | Try prepared manual prompt hacks; show which guardrails respond and how normal questions still work | “Here is what our controls actually do.” |
-| 6–8 | Open the short QR challenge against the protected assistant; show audience outcomes | “Try to take our assistant off-brand. We can see the results live.” |
-| 8–9 | Close audience access and explicitly introduce Act 2 | “These examples show the controls working. How do we find the weaknesses we have not tried?” |
-| 9–11 | Start the bounded scan/swarm against the same protected application | “Automated red teaming tests our protection systematically.” |
-| 11–13 | Inspect findings, false blocks, and comparison reports; optionally show the pipeline | “We measure remaining gaps and preserve useful customer conversations.” |
-| 13–15 | Explain a targeted policy improvement and retest using live or clearly labeled earlier results; connect to a real customer process | “Operate with controls. Test those controls. Improve and repeat.” |
+| Persona / segment | Live action and technical follow-up |
+|---|---|
+| Product team | Introduce the fictional business unit, define usefulness/policies, ask a normal question; then show the protected application architecture and direct links |
+| Customer | Try a normal question, a language mistake and mild frustration; inspect outcomes, then the architecture |
+| Attacker | Try a synthetic prompt manipulation against the same protected assistant; show the actual result, then the architecture |
+| Audience | Open the short window and show the QR with all three role choices; show aggregate outcomes and close the window before Act 2 unless overlap was rehearsed |
+| AgentOps / Red Teaming | Ask how release checks stay repeatable, start a named bounded campaign, show real states and its architecture |
+| Review and retest | Inspect a finding or resisted attempt, record human review where required, and retest exact cases plus controls after a real policy change; label any earlier comparison |
 
-For a ten-minute slot, use one architecture slide, avoid live pipeline waits, and shorten audience participation to one minute. For twenty minutes, investigate a false positive and show a retest. Core message: **“Make AI business rules testable, then improve protection with evidence.”**
+For 15 minutes, use one short live example per persona and prioritize the Functional profile over optional adaptive waits. For ten minutes, condense the architecture discussion and audience segment; keep all persona transitions clear. Do not let an unmeasured audience/automation race become a dependency of the first pitch. The detailed slide cues and keyboard controls are in app/presentation/README.md.
 
 ## 12. Acceptance and fallback
 
@@ -252,9 +262,9 @@ For a ten-minute slot, use one architecture slide, avoid live pipeline waits, an
 - Rehearsals preserve the two-act narrative: runtime controls and observability first, systematic red teaming second. The protected application remains the default live target.
 - Test representative stage prompts ten times each, including benign answers and protected-mode guardrail decisions. For supporting comparison evidence, at least two baseline violations should be reasonably repeatable and demonstrably reduced with protection. Keep this curated demo set separate from held-out evaluation; baseline examples need not open the stage demo.
 - Target at least 80% relative reduction in successful attacks on the chosen corpus, provided the baseline has enough successes; target at most 5% false blocks on benign questions. Show absolute counts and uncertainty. These targets are not measured results.
-- Target p95 under ten seconds for complete short responses with 25 active users, under fifteen seconds with 50; reduce audience scope if needed. The QR burst must result in bounded queueing/rejection rather than a crash.
+- Agree latency and participation targets after measuring the current one-provider-call/12-generation-starts-per-minute envelope. The earlier 25/50-user latency aspirations are not supported by the functional limits. A later QR burst must produce bounded queueing/rejection rather than a crash; reduce participation to volunteers if necessary.
 - Test detector failure, model timeout, interrupted streams, and restarts. Protected mode must not label unchecked output as validated. Errors do not count as successful defense.
-- Dashboard displays unique outcomes, separates detector hits, aggregates across app replicas, and consistently distinguishes baseline/protected and audience/automation.
+- Dashboard displays unique outcomes, separates detector hits and distinguishes audience/automation with the same counter lifetime. The current single-process design does not aggregate replicas. Persistent campaign reports preserve run scope; any later baseline/protected comparison must be explicitly labeled.
 - Customer-facing screens, prompts, reports, and presentation materials use English. Branding placeholders are replaced when assets arrive; no invented operational or business KPIs.
 - Verify DNS/TLS, event-access expiry, phone usability, server-side mode controls, and stop controls. Load models/images in advance.
 - Keep a local recording of a genuine complete run, screenshots, and exported report. Label replay visibly; do not simulate live counters.
@@ -264,10 +274,9 @@ Event day: run an end-to-end check about 60 minutes beforehand; start a fresh de
 
 ## 13. Next actions
 
-1. Use the portfolio AWS account. The owner clarified that the original Open Environment was deleted, while the portfolio account remains available and its demo was removed. STS, ROSA billing, and an empty eu-central-1 VPC/NAT/instance inventory were verified before switching. No target-account cluster exists.
-2. The active .env and account context now select the verified portfolio account. Original credentials, bootstrap state, backend metadata, and plans are archived privately. Terraform uses account-specific data directories and bootstrap state, validates backend identity, and rejects saved plans for another account or region. Removal of every original-account resource was not independently verified; the owner reports environment deletion.
-3. The fork, pinned versions, CPU-only Terraform, and GitOps configuration are prepared. Deploy the cluster and original guardrail path in the verified target account. Use individual serial benign/blocked functional checks only.
-4. Record the FMS/NeMo integration decision; implement comparison modes, correct metrics, access controls, and branding placeholders.
-5. Discuss bounded evaluation/load budgets before running larger tests. Confirm slot length, owners, and brand assets ahead of rehearsals.
-
-Build authorization followed the prerequisite audit on 27 October. AWS identity and direct model calls were verified; full runtime compatibility, regional total costs, and event capacity remain unvalidated.
+1. Finish the remaining control/audience acceptance checks on the existing CPU cluster: negative viewer/executor authorization and Origin checks, in-flight stop/recovery behavior and the real phone QR. Keep subsequent functional requests short and serial; preserve the already measured OAuth, CSRF, gateway and provider accounting evidence.
+2. Review the two pending semantic verdicts from the completed Adaptive campaign and preserve/export the Functional, Adaptive and same-policy retest reports. Verify in-flight interruption/cancellation without silently repeating uncertain calls; retain the successful completed-report restart evidence. Record measurements in the build journal.
+3. Inspect the completed Adaptive campaign's feedback-driven revisions and judge behavior, then implement the remaining baseline/protected comparison, a genuine policy-improvement retest and broader held-out corpus. No large scan or load test is implied by the existing implementation.
+4. Confirm slot length, customer assets and presenter/operator ownership. Rehearse the first HTML deck's Product team → Customer → Attacker → audience QR → AgentOps / Red Teaming sequence, including a technical diagram after each persona and direct live links.
+5. Discuss a bounded capacity rehearsal before overlapping audience and automation; derive the event profile from measured headroom. Prepare a genuine labeled backup recording/report before the 10 November freeze and 13 November go/no-go.
+6. Keep FMS/NeMo assessment and the optional full pipeline separate from the working event path. Recalculate actual CPU/platform/network/storage costs, retain private report backups and use the documented teardown after the event. No GPU provisioning without explicit owner approval.

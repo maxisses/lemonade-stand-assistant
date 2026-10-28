@@ -20,7 +20,7 @@ For a consolidated URL and login overview, run from this repository:
 python3 scripts/show_access.py
 ```
 
-The helper verifies the project kubeconfig's API address before reading current Route metadata. It lists the ROSA console, OpenShift AI, GitOps, monitoring APIs, CLI downloads, cluster API, the recorded MaaS endpoint, authenticated chat/dashboard Routes, and optional local forwarding commands. It reports when live discovery fails instead of inventing URLs. The recorded AWS account is labeled as context, not a fresh STS check. It does not start forwarding processes, change cluster resources, or make model requests. Use --offline for recorded context without cluster calls, or --json for structured output without credentials.
+The helper verifies the project kubeconfig's API address before reading current Route metadata. It lists the ROSA console, OpenShift AI, GitOps, monitoring APIs, CLI downloads, cluster API, the recorded MaaS endpoint, authenticated chat/dashboard Routes, the Red Team Control path, the configured audience Route, and optional local forwarding commands. It reports when live discovery fails instead of inventing URLs. The recorded AWS account is labeled as context, not a fresh STS check. It does not start forwarding processes, change cluster resources, or make model requests. Use --offline for recorded context without cluster calls, or --json for structured output without credentials.
 
 The console administrator username is cluster-admin. To copy its password explicitly on your own Mac:
 
@@ -86,7 +86,7 @@ Chat and dashboard are exposed through HTTPS Routes named lemonade-chat and lemo
 
  Run scripts/show-credentials.sh locally, or python3 scripts/show_access.py without passwords, for their current URLs. Both use OpenShift sign-in and check that the authenticated user can get pods in lemonade-demo; cluster-admin satisfies this check. Ordinary authenticated cluster users without that project permission are denied. These are operator links, not anonymous event audience links.
 
-The chart creates two small CPU OAuth proxies using the exact image from the installed OpenShift release. Each Route reencrypts traffic to a service-serving certificate; TLS verification remains enabled. Only the proxy pods on port 8443 accept ingress-router traffic. Chat, dashboard, inference, and guardrails backend services retain the internal network policy. The dashboard proxy supports WebSockets. No extra nodes or public load balancers are required.
+The chart creates two small CPU OAuth proxies using the exact image from the installed OpenShift release. Each Route reencrypts traffic to a service-serving certificate; TLS verification remains enabled. The operator proxies accept ingress-router traffic on port 8443. With demoControl enabled, the separate audience gateway is the explicit additional ingress exception on port 9090; it cannot forward operator endpoints. Chat, dashboard, inference, and guardrails backend services retain the internal network policy. The dashboard proxy supports WebSockets. No extra nodes or public load balancers are required.
 
 Before the first GitOps sync, run python3 scripts/operator_access_secrets.py to create missing cookie-signing Secrets directly in the verified cluster. Keys use URL-safe Base64 as required by the OpenShift OAuth proxy. It retains existing keys, does not print their values, and writes no secret file. OpenShift generates service TLS Secrets. Keep both kinds of Secret out of Git. Apply gitops/bootstrap/controller-access.yaml for the scoped ServiceAccount and Route permissions; this does not grant cluster-admin. Setting operatorAccess.enabled=false and pruning its resources removes the operator entry path. The manually created session Secrets can then be removed if no longer needed.
 
@@ -102,8 +102,63 @@ oc --kubeconfig local/kubeconfig -n lemonade-demo port-forward service/shiny-das
 
 Use http://127.0.0.1:18080 for chat and http://127.0.0.1:18081 for the dashboard. Stop each forwarding process with Ctrl-C. A pod rollout can end forwarding; restart it afterward. These addresses are only for the operator's machine and are not event audience links.
 
-The TrustyAI operator generates guardrails Routes. The internal-only NetworkPolicy allows namespace-local callers, platform monitoring, and the AI application namespace, while excluding ingress-router pods. Supplemental Route IP allowlists were also set during bootstrap; the NetworkPolicy is the declarative control. Do not remove it to enable audience participation; implement a deliberately authenticated audience entry path first.
+The TrustyAI operator generates guardrails Routes. The internal-only NetworkPolicy allows namespace-local callers, platform monitoring, and the AI application namespace, while excluding ingress-router pods. Supplemental Route IP allowlists were also set during bootstrap; the NetworkPolicy is the declarative control. Do not remove it to enable audience participation. The dedicated audience gateway described below admits bounded event sessions while raw application and guardrail services stay internal.
 
-Dashboard conversations equal allowed + blocked + errors + rejected + pending. Detector hits are a separate breakdown. Metrics include requests handled by /api/chat, not malformed HTTP bodies rejected before that handler. They are in-memory, single-process counters; restarting the app resets them. The dashboard labels this limitation and hides stale values when scraping fails. Preserve reports before rollouts when durable event evidence is needed. The UI stop button cancels only its browser request; it is not an event-wide stop control.
+Dashboard conversations equal allowed + blocked + errors + rejected + cancelled + pending. Detector hits are separate. The common application execution path assigns presenter, automation and audience_product/audience_customer/audience_attacker sources on the server. Malformed HTTP bodies or audience admission failures rejected before that path are outside these counters. The audience/automation panels compare the same current-process scope; they are not attack-success benchmarks. Counters reset on application restart and stale scrape values are hidden. Persistent campaign reports have a different lifetime. The presenter chat stop button only cancels that browser request; use the operator controls below to stop campaigns and close audience admission.
 
 An additional single functional case is available as python3 scripts/functional_probe.py prompt-injection. Do not turn these helpers into a larger scan until its budget is agreed. R dashboard validation uses tests/test_dashboard.R with the deployed image's R runtime; it makes no model calls.
+
+
+## Act 2 deployment status and configuration
+
+The control UI, audience gateway and shared provider budget are deployed at GitOps revision e85b6f8 (Synced/Healthy) as of 28 October. Initial live checks completed a six-case Functional campaign, nine-attempt Adaptive campaign, same-policy selected-case retest and one audience request. Real OAuth access, missing-CSRF rejection and public gateway path restrictions were also checked. Restarting the application and provider preserved all three completed reports and the 24-request/17-generation ledger, with no active work and the audience still closed. Event capacity remains unmeasured; see the build journal and red-teaming.md for outcomes and limits.
+
+The chart default is `demoControl.enabled=false`. Functional values enable it, require `operatorAccess.enabled=true`, and configure exact operator/audience HTTPS origins. Before syncing the extension, run `python3 scripts/demo_secrets.py` with the project context available. It verifies the selected cluster and creates only the missing `lemonade-control` Secret with private `session-secret` and `gateway-key` entries; it retains existing keys and prints no values. Existing model credentials remain in `lemonade-model`. Keep these Secrets out of Git.
+
+The extension adds two small CPU services and two persistent claims, with no GPU or model-hosting change:
+
+- `lemonade-provider-budget` serializes the configured FMS target/tokenization, attacker and judge calls before the existing external model. Its internal HTTPS service uses an OpenShift serving certificate and no public Route.
+- `lemonade-audience-gateway` exposes only the role page and audience APIs. The `lemonade-audience` Route uses edge TLS with HTTP redirected to HTTPS; the gateway-to-application hop is internal HTTP. The operator Routes continue to use reencrypt TLS.
+- `lemonade-campaign-data` stores campaign and audience SQLite databases; `lemonade-provider-data` stores the budget ledger. Each requests 1 GiB in functional values. The single-worker application and provider deployments use Recreate to avoid concurrent writers on their ReadWriteOnce claims.
+
+Keep `demoControl.operatorUrl` and `demoControl.audienceUrl` aligned with actual Route origins. They participate in Origin checks. The QR must encode the audience `/join` URL, with no token. If the origin changes, update the deck configuration and regenerate its QR, then copy the validated SVG to `chart/files/lemonade/audience-qr.svg` before syncing the application. The deck checks QR metadata; the operator page serves the deployed static SVG. Test both with a phone.
+
+Extension entry points checked during initial live validation:
+
+- Control: https://lemonade-chat-lemonade-demo.apps.rosa.lemonade-demo.28s8.p3.openshiftapps.com/control
+- Audience: https://lemonade-audience-lemonade-demo.apps.rosa.lemonade-demo.28s8.p3.openshiftapps.com/join
+
+Read actual Routes with the access helper before sharing them. Port-forwarding the raw service does not supply the OAuth access token required by Control. Use its authenticated Route for browser operation.
+
+## Run a bounded campaign
+
+1. Sign into the operator chat Route, open **Red Team Control**, and confirm the model, policy fingerprint, provider state and audience window. Viewing requires `get pods` in `lemonade-demo`; changing state additionally requires `create jobs` in API group `batch` there. The controller checks these permissions through the Kubernetes API; audience role selection grants neither.
+2. Keep audience admission closed for initial functional validation. Select **Functional**, enter a meaningful name and start once. This dispatches at most six predefined cases, including two benign controls, within 120 seconds. It makes no attacker/judge model calls and does not automatically retry failures.
+3. Inspect request outcomes separately from attack verdicts. Target attempts include input-blocked calls; they are not a count of actual provider generations. Unknown semantic results remain inconclusive. Review and export the run after completion.
+4. **Pause** prevents new campaign dispatch while the current call settles. **Resume** retains the original deadline; it does not renew the budget. **Stop campaign** cancels waiting work and requests cancellation of in-flight work. Provider computation may continue until its timeout.
+5. For a later bounded Adaptive check, use the configured three strategies, at most nine target attempts and 27 role-call reservations within 180 seconds. It remains serial. Judge findings require human review before confirmed attack success includes them. Do not present this profile as a load test or as validated event capacity.
+6. To retest, select up to nine completed allowed/blocked cases. The engine preserves exact prompts and adds two benign controls, removing duplicate controls. A real policy change is a separate reviewed configuration/deployment step. A changed fingerprint during a run pauses it; stop that run and create a new one. A same-policy retest is a repeatability check, not evidence of improvement.
+
+A refreshed browser attaches to durable run state. Duplicate starts with the same idempotency key return the existing run; conflicting settings are rejected. Only one campaign can be active. Run reports contain potentially sensitive prompt/response evidence, so save exports under ignored `local/` storage and review them before sharing.
+
+## Audience and provider operation
+
+Open the audience window only when ready to invite participation. Visitors choose Product team, Customer or Attacker; the choice stays fixed for that event window. All three use the same protected, single-turn assistant. The window defaults to two minutes and permits one to ten minutes. It closes automatically; reopening expires previous sessions.
+
+Current audience ceilings: 60 requests per window, 200 active sessions, six requests per session, three requests/minute/session, one outstanding request/session, eight admitted audience requests and 100 characters per prompt. The provider budget can reject earlier. These are configured ceilings, not proof that 100 attendees can submit concurrently. Session identity is independent of venue Wi-Fi IP. Raw audience text is not automatically projected or stored in the audience database.
+
+The shared provider service permits one active request, at most eight active/waiting requests, a generation start no more often than every five seconds, and rolling hourly ceilings of 240 provider requests, 120 generations and 240,000 tokens. Auxiliary tokenization counts as provider traffic. Requests reserve a conservative token estimate before dispatch and use returned provider usage when available. Estimates remain labeled when usage is missing. These limits apply across target, attacker and judge paths, with zero retries and 60-second provider timeouts. Budget code is in `chart/files/lemonade/provider_budget.py`; it is not a browser throttle or a claim about the provider's actual quota.
+
+A provider 429, repeated provider errors or exhausted hourly budget pauses admission. Inspect the reason before using **Resume provider requests**; clearing a pause does not clear rolling usage. Campaign **Resume** checks the unchanged policy and unexpired deadline but deliberately does not clear the provider pause. Only **Resume provider requests** clears that pause; neither control clears rolling usage. Avoid repeated resume attempts against an exhausted budget or unavailable dependency. Presenter preference is best effort and cannot preempt already accepted provider work.
+
+To quiet the event, **Close audience access**, **Stop campaign**, then let already admitted requests settle. Closing audience access invalidates sessions and rejects new submissions but does not cancel accepted requests. Keep the audience/automation sequence separate until a specifically discussed overlap rehearsal passes. If the shared budget is unavailable, show the controlled error or a labeled recorded run; do not bypass it by pointing FMS directly at the provider.
+
+## Persistent evidence, restart and teardown
+
+Campaign and provider state lives on the two PVCs. Normal pod replacement preserves it. On application startup, unfinished campaigns become interrupted, pending audience events become errors and the audience window closes. No uncertain operation is silently reissued. Provider startup marks pending calls interrupted and keeps conservative reservations and pause state. Dashboard counters still reset on application restart.
+
+Export required campaign reports before a rollout or teardown. There is no automatic S3 report backup, retention cleanup or multi-replica coordination. Deleting the PVCs or namespace can destroy the remaining local evidence; do not treat pod-level persistence as a backup. Audience storage contains session hashes, persona, outcome and timing, without raw chat messages. Campaign exports do contain raw synthetic prompts/responses and reviews.
+
+Before removing the extension, close audience admission and stop the active campaign, export the desired evidence, then remove its entry points and workloads. Disabling `demoControl` with pruning can remove the PVC manifests along with the services; inspect the rendered/pruned resource list first and preserve data explicitly. Check residual EBS volumes and the StorageClass reclaim policy during teardown. The manually created `lemonade-control` Secret has a separate lifecycle and may be removed after the extension is retired. Keep existing operator proxy Secrets if operator access is still needed.
+
+The remaining acceptance checks are recorded in [red-teaming.md](red-teaming.md). The initial persona deck and its speaker cues are in [presentation/README.md](../presentation/README.md). Neither a green Helm render nor a deck preview establishes live campaign correctness or venue capacity.

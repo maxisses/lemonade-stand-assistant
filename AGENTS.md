@@ -65,8 +65,16 @@ Read docs/planning/PROJECT_PLAN.md, docs/planning/RESEARCH.md, and docs/planning
 - app/ or a clearly documented upstream checkout for the application and dashboard.
 - evals/ for test cases, runners, and judging rules.
 - docs/ for decisions, version manifests, operations, and the stage runbook.
+- presentation/ for the English HTML persona deck, local Red Hat assets and speaker notes; keep live URLs in presentation/config.js.
 - Do not commit credentials, Terraform state, model weights, or raw results without checking their suitability for source control.
 
 Create these directories only when needed.
 
 This checkout is the app/ directory referenced in the parent workspace plan. Infrastructure, GitOps, deployment values, and tests are maintained in this repository. Read docs/build-journal.md for the current implementation status.
+
+## Event extension implemented on 28 October
+
+- Control is /control on the authenticated chat Route. Public audience access uses a separate allowlisted Route and defaults to closed. Preserve the Product team → Customer → Attacker → audience QR → AgentOps / Red Teaming story, with architecture and live links after every persona.
+- Actual application modules remain in chart/files/lemonade. Campaigns use the same protected process_chat path; attacker, judge and FMS share the internal provider-budget service. Do not bypass it to make a test pass.
+- Functional/adaptive/retest integration and persistence passed within bounded serial profiles. They do not establish capacity for 100 attendees. Two model judgments remain pending operator review.
+- Provider pause requires its own explicit resume control. Campaign resume retains its original deadline and cannot clear provider throttling or rolling usage. Keep PVC claims in the consumer sync wave because gp3 uses WaitForFirstConsumer.

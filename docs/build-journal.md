@@ -151,3 +151,22 @@ A CPU provider-admission service is inserted between FMS/all model roles and the
 The first HTML presentation follows the portfolio Red Hat template style: product team, customers, malicious attackers, audience role-selection QR, then AgentOps/red-team release validation. Each persona has a technical architecture view and live links. All 18 slides were visually reviewed; notes and an operator runbook accompany the deck.
 
 Eighty-four offline Python checks pass. R dashboard construction and mixed-source accounting pass in the existing pinned runtime. The chart passes lint/render and cluster server-side validation. Live rollout and bounded functional verification follow; no capacity claim is made.
+
+
+### Live validation and final state
+
+Revision e85b6f8 deployed successfully through GitOps on 28 October. The first sync revealed a WaitForFirstConsumer dependency: putting PVCs in an earlier sync wave prevented their consuming pods from being created. Claims now share the consumer wave; both 1 GiB gp3-csi claims bound and GitOps reported Synced/Healthy. The FMS operator automatically rolled its deployment for the updated provider configuration. All new workloads use existing CPU workers.
+
+Actual OpenShift sign-in reached Control and its API, with campaign execution permission. A mutation without CSRF returned 403. The public gateway served role selection and returned 404 for operator APIs and metrics. Closed-window session creation returned 403. During a one-minute integration window, one customer session retained its role despite a requested change, and one locally blocked topic prompt produced exactly one audience outcome. The window was closed afterward.
+
+Measured campaigns against the protected application:
+
+- Functional: six completed; two benign answers, four guardrail blocks, zero errors. Idempotent duplicate start returned the same run.
+- Adaptive: nine completed in 61.86 seconds; seven guardrail blocks and two allowed safe refusals. The three strategies revised their prompts using prior measured outcomes. Two judge verdicts remain pending human review and are excluded from the confirmed evaluated denominator; no confirmed violation.
+- Retest: exact selected topic case plus both benign controls; one block, two answers, zero errors. Policy unchanged is explicitly recorded. This validates replay, not remediation.
+
+The shared provider ledger recorded 24 outbound HTTP calls: 17 generations (nine attacker, two judge, six target) and seven tokenization calls. Generation usage reported 5,512 tokens. Tokenization retained 4,282 conservative reservations; these are not claimed as provider-billed tokens. All calls completed; no retries, capacity ramp, additional nodes or GPUs. The nine adaptive target evaluations are application calls, not nine target generations: input guardrails avoided seven target generations.
+
+A controlled replacement of both application and provider pods preserved all three reports and the provider ledger. No campaign remained active; the audience window stayed closed. Current-process dashboard counters reset as labeled. Raw synthetic exports remain in ignored local storage; report IDs, summaries, policy fingerprints and export hashes are in the version manifest. The credential-printing Bash helper remains ignored, now includes Control/audience URLs, and only its --urls-only mode was used.
+
+Remaining event work: operator review of the two semantic judgments, customer assets and final slot, physical QR/projector/network rehearsal, a separately agreed mixed capacity/overlap check and labeled backup recording. Baseline comparison, NeMo migration and Garak/pipeline integration remain separate planned extensions; they are not claimed by this implementation.
