@@ -34,6 +34,9 @@ Read docs/planning/PROJECT_PLAN.md, docs/planning/RESEARCH.md, and docs/planning
 - The original application is single-turn. Do not assume conversation history exists.
 - Baseline mode must account for local regex/word-list filters as well as orchestrator detectors. Keep the system prompt, model revision, and generation settings constant.
 - Release protected responses only after complete validation, or use buffering whose safety has been tested.
+- Audience roles are client-side prompt suggestions only. Switching roles must preserve the same session, allowance, draft and displayed history; server attribution is audience_chat.
+- Model selection must use the fixed provider catalog. Concurrency is configurable from 1 to 4, defaults to 1, and settings change only while idle with audience access closed. Preserve shared provider ceilings; discuss live tests above concurrency 1 before running them.
+- Persist named campaign profiles as immutable revisions and capture effective settings in each run. Keep all targets on the protected application path.
 - Distinguish detector/model errors from allowed responses and successful blocks.
 - Record exactly one final outcome per request; count detector hits separately. Assign source/mode server-side.
 - Keep session/request IDs out of high-cardinality Prometheus labels.

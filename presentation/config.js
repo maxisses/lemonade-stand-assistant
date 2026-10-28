@@ -15,12 +15,15 @@ window.LEMONADE_DECK = {
   "readiness": {
     "chat": "Existing authenticated route; sign in before presenting.",
     "dashboard": "Existing authenticated route; sign in before presenting.",
-    "control": "Implemented operator UI and API: Start, Pause, Resume, Stop, Review, Retest and report export. Live deployment and real OpenShift authorization validated on 28 October 2026.",
-    "audience": "Implemented role selection and bounded chat; access defaults to closed and closes after restart. Live route and role/session flow validated on 28 October 2026. Physical phone/QR and event-capacity rehearsal remain pending."
+    "control": "Deployed at fa5f23f, Synced/Healthy. Saved custom Functional profile, immutable run snapshot, idempotent start and audience-open settings lock passed serial live checks on 28 October 2026.",
+    "audience": "Direct chat, same-session quota retention and real SSE progress then validated content passed serial live checks at fa5f23f. Audience closed afterward. Physical QR and capacity rehearsal remain pending."
   },
   "validation": {
     "presentation": "18 slides visually reviewed; local assets and configured QR verified.",
-    "liveIntegration": "Validated on 28 October 2026: six-case functional run, nine-case adaptive run, selected-case retest and bounded audience flow.",
-    "eventCapacity": "Pending an agreed bounded rehearsal; configured limits are not measured capacity."
+    "liveIntegration": "Initial campaigns remain historical evidence. fa5f23f passed a saved custom Functional profile: 2 allowed, 1 blocked, 0 errors; 3 new target generations total across the small check, all qwen38-27b at concurrency 1.",
+    "eventCapacity": "Pending an agreed bounded rehearsal; configured limits are not measured capacity.",
+    "audienceUxRevision": "Verified serially: direct chat entry, legacy role fields ignored with session/quota retained, allowed SSE status then validated content, blocked SSE with no answer content.",
+    "settingsScope": "Concurrency 1–4 and advertised model selection are implemented. No live concurrency above 1 or alternative-model inference validated; catalogue currently contains only qwen38-27b.",
+    "currentRestart": "Passed at fa5f23f: saved profile, run snapshot, model and concurrency retained after controlled app/provider restart; audience closed. All 12 deployments ready and both GitOps applications Synced/Healthy."
   }
 };

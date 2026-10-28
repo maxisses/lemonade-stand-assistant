@@ -543,5 +543,87 @@
       "human_review_pending": 2,
       "restart_persistence": "Passed: three completed reports and 24-call/17-generation ledger survived pod replacement; no active run; audience closed."
     }
+  },
+  "interaction_update": {
+    "date": "2026-10-28",
+    "runtime_revision": "fa5f23f",
+    "gitops": "Synced/Healthy",
+    "model_catalog": {
+      "http_status": 200,
+      "advertised_models": [
+        "qwen38-27b"
+      ],
+      "additional_model_inference_tested": false
+    },
+    "settings": {
+      "model": "qwen38-27b",
+      "concurrency": 1,
+      "supported_concurrency": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "live_concurrency_tested": [
+        1
+      ]
+    },
+    "custom_profile": {
+      "id": "9fa26d0f065e4b61a978f44aa5f8df14",
+      "name": "Stage smoke: two controls + topic",
+      "run_id": "3f39ccbb671a49dcaa53feb950ca96b3",
+      "completed": 3,
+      "allowed": 2,
+      "blocked": 1,
+      "errors": 0,
+      "snapshot_and_idempotency": "passed"
+    },
+    "audience_stream": {
+      "benign": {
+        "first_status_seconds": 0.099,
+        "validated_seconds": 6.142,
+        "event_types": [
+          "status",
+          "heartbeat",
+          "validated",
+          "chunk",
+          "chunk",
+          "chunk",
+          "done"
+        ]
+      },
+      "blocked": {
+        "first_status_seconds": 0.082,
+        "validated_seconds": null,
+        "event_types": [
+          "status",
+          "error"
+        ]
+      }
+    },
+    "validation": {
+      "offline_python_tests": 108,
+      "helm_lint_render": "passed",
+      "cluster_server_dry_run": "passed",
+      "session_reuse_and_preserved_allowance": "passed",
+      "settings_locked_with_open_audience": "passed",
+      "unadvertised_model_and_invalid_concurrency_rejected": "passed",
+      "restart_persistence": "Passed: named profile, completed report and selected model/concurrency survived application/provider replacement; audience stayed closed.",
+      "capacity_tested": false,
+      "live_audience_browser": "Passed: direct chat visible and role switching changes suggestions with the audience window closed."
+    },
+    "additional_target_generations": 3,
+    "provider_cumulative": {
+      "requests": 27,
+      "generations": 20,
+      "tokens": 11300
+    },
+    "provider_token_note": "Includes conservative auxiliary reservations; not all provider-billed usage.",
+    "final_state": {
+      "active_campaigns": 0,
+      "audience_open": false,
+      "concurrency": 1,
+      "gpu_nodes": 0
+    }
   }
 }
