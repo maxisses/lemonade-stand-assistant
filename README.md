@@ -5,9 +5,11 @@ This fork is being adapted for the 17 November 2026 customer event. Start with
 and the [build journal](docs/build-journal.md). The upstream documentation below
 is retained as reference and describes the original defaults.
 
-Run `python3 scripts/show_access.py` for current project URLs, login hints, and
-local forwarding commands. See [operations](docs/operations.md) for the optional
-manual password-copy command. The default overview never displays credentials.
+On the owner's workstation, run `./scripts/show-credentials.sh` for URLs and the
+cluster-admin password in your terminal. This Bash helper is deliberately local
+and Git-ignored. Use `--urls-only` for an overview without passwords. The portable
+`python3 scripts/show_access.py` overview is also available in Git; see
+[operations](docs/operations.md) for details.
 
 The project build uses external MaaS inference and CPU guardrail detectors.
 Install with deploy/functional-values.yaml. GPU resources require explicit owner
@@ -18,7 +20,8 @@ must be supplied through local configuration and Kubernetes Secret references.
 The CPU-only baseline is running and functionally verified as of 27 October 2026.
 Normal answers, topic blocking, English-policy blocking, and one prompt-injection
 case passed. The branded dashboard counts final request outcomes separately from
-detector hits. Access is local/operator-only; see the forwarding instructions in
+detector hits. Chat and dashboard use HTTPS Routes with OpenShift sign-in and
+project authorization; see the access instructions in
 [operations](docs/operations.md). Automated red teaming, baseline comparison,
 persistent event reporting, and audience controls remain open. This is not yet an
 event-capacity or stage-readiness claim.

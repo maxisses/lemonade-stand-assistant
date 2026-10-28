@@ -311,5 +311,17 @@
       "passed": true
     }
   ],
-  "provider_endpoint": "https://maas-rhdp.apps.maas.redhatworkshops.io/v1/chat/completions"
+  "provider_endpoint": "https://maas-rhdp.apps.maas.redhatworkshops.io/v1/chat/completions",
+  "operator_access": {
+    "configured_on": "2026-10-28",
+    "proxy_image": "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:d6623e38c4d8cb9fd3591ca04b842a1453a011fe99bb18105da5bf8a819e387b",
+    "image_source": "oauth-proxy component of platform_selected.release_image",
+    "routes": [
+      "lemonade-chat",
+      "lemonade-dashboard"
+    ],
+    "tls": "reencrypt with OpenShift service-serving certificates",
+    "authorization": "OpenShift login and get pods in namespace lemonade-demo",
+    "audience_access_enabled": false
+  }
 }

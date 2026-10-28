@@ -4,13 +4,23 @@ The initial build uses three m6i.2xlarge workers, a single-AZ ROSA HCP cluster, 
 
 ## Configuration
 
+The owner's preferred local entry point is the Git-ignored Bash script:
+
+```sh
+./scripts/show-credentials.sh
+```
+
+It prints the service URLs, cluster-admin username and password directly in the owner's terminal, with OpenShift sign-in instructions for AI and GitOps. It reuses the account/backend/cluster validation below before reading the password. It contains no embedded passwords and writes no credential report to disk. The script has owner-only executable permissions and stays local, so a fresh Git clone does not include it. From the parent workspace use ./app/scripts/show-credentials.sh.
+
+Credential output requires a terminal and disables shell tracing. Use ./scripts/show-credentials.sh --urls-only for output without passwords. Do not run its real credential-display mode through assistant tools or paste that output into chat. The owner explicitly authorized local password display on 28 October 2026. API keys, registry passwords and AWS secret values are not printed by this helper.
+
 For a consolidated URL and login overview, run from this repository:
 
 ```sh
 python3 scripts/show_access.py
 ```
 
-The helper verifies the project kubeconfig's API address before reading current Route metadata. It lists the ROSA console, OpenShift AI, GitOps, monitoring APIs, CLI downloads, cluster API, the recorded MaaS endpoint, and local chat/dashboard access commands. It reports when live discovery fails instead of inventing URLs. The recorded AWS account is labeled as context, not a fresh STS check. It does not start forwarding processes, change cluster resources, or make model requests. Use --offline for recorded context without cluster calls, or --json for structured output without credentials.
+The helper verifies the project kubeconfig's API address before reading current Route metadata. It lists the ROSA console, OpenShift AI, GitOps, monitoring APIs, CLI downloads, cluster API, the recorded MaaS endpoint, authenticated chat/dashboard Routes, and optional local forwarding commands. It reports when live discovery fails instead of inventing URLs. The recorded AWS account is labeled as context, not a fresh STS check. It does not start forwarding processes, change cluster resources, or make model requests. Use --offline for recorded context without cluster calls, or --json for structured output without credentials.
 
 The console administrator username is cluster-admin. To copy its password explicitly on your own Mac:
 
@@ -34,7 +44,7 @@ The default RHCS authentication path uses the current local ROSA refresh-token s
 
 For each stage, initialize, inspect the plan, and apply that saved plan: bootstrap, foundation, rosa. Use python3 scripts/tf.py STAGE init and the same wrapper for plan/apply. Saved plans must stay under local/ or use the ignored .tfplan extension. Bootstrap creates the private versioned encrypted state bucket; foundation creates the VPC/NAT/subnets; rosa creates the CPU-only cluster and roles. Validate current ROSA version availability before cluster creation.
 
-Use a project kubeconfig under local/. Bootstrap OpenShift GitOps, then synchronize the declared platform and application configuration. The GitOps bootstrap extends the operator's existing permissions with a DataScienceCluster-specific ClusterRole and a Role limited to application resources in lemonade-demo. It does not bind cluster-admin. An AppProject restricts this fork to the Lemonade namespace, the AI operator namespace, and the platform monitoring namespace, with explicit resource-kind allowlists. Kubernetes RBAC cannot restrict create by resource name; later DataScienceCluster updates/deletion are limited to default-dsc. The operator's pre-existing default permissions remain unchanged. Populate runtime secrets from local credentials without printing rendered secret manifests. The initial application Route is disabled; use authenticated operator access and port forwarding for functional testing.
+Use a project kubeconfig under local/. Bootstrap OpenShift GitOps, then synchronize the declared platform and application configuration. The GitOps bootstrap extends the operator's existing permissions with a DataScienceCluster-specific ClusterRole and a Role limited to application resources in lemonade-demo. It does not bind cluster-admin. An AppProject restricts this fork to the Lemonade namespace, the AI operator namespace, and the platform monitoring namespace, with explicit resource-kind allowlists. Kubernetes RBAC cannot restrict create by resource name; later DataScienceCluster updates/deletion are limited to default-dsc. The operator's pre-existing default permissions remain unchanged. Populate runtime secrets from local credentials without printing rendered secret manifests. Direct application Routes stay disabled. The functional values enable separate authenticated operator Routes through the proxies described below.
 
 ## Functional testing
 
@@ -69,7 +79,13 @@ In the original, now retired account, OCM and user roles were restored/linked wi
 
 The functional deployment uses FMS complete JSON responses (app.upstreamStreaming=false) and model.chatTemplateKwargs.enable_thinking=false. Keep the small 128-token budget and zero retries for this phase. The app emits a browser response only after all upstream and local output checks pass. The provider's exact checkpoint revision remains unknown; revalidate behavior after provider changes.
 
-From this repository, open two separate terminals for the local-only operator views:
+Chat and dashboard are exposed through HTTPS Routes named lemonade-chat and lemonade-dashboard in lemonade-demo. Run scripts/show-credentials.sh locally, or python3 scripts/show_access.py without passwords, for their current URLs. Both use OpenShift sign-in and check that the authenticated user can get pods in lemonade-demo; cluster-admin satisfies this check. Ordinary authenticated cluster users without that project permission are denied. These are operator links, not anonymous event audience links.
+
+The chart creates two small CPU OAuth proxies using the exact image from the installed OpenShift release. Each Route reencrypts traffic to a service-serving certificate; TLS verification remains enabled. Only the proxy pods on port 8443 accept ingress-router traffic. Chat, dashboard, inference, and guardrails backend services retain the internal network policy. The dashboard proxy supports WebSockets. No extra nodes or public load balancers are required.
+
+Before the first GitOps sync, run python3 scripts/operator_access_secrets.py to create missing cookie-signing Secrets directly in the verified cluster. It retains existing keys, does not print their values, and writes no secret file. OpenShift generates service TLS Secrets. Keep both kinds of Secret out of Git. Apply gitops/bootstrap/controller-access.yaml for the scoped ServiceAccount and Route permissions; this does not grant cluster-admin. Setting operatorAccess.enabled=false and pruning its resources removes the operator entry path. The manually created session Secrets can then be removed if no longer needed.
+
+For optional troubleshooting, the original localhost forwarding remains available. From this repository, open separate terminals:
 
 ```sh
 oc --kubeconfig local/kubeconfig -n lemonade-demo port-forward service/lemonade-stand 18080:8080 --address 127.0.0.1

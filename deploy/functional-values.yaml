@@ -49,3 +49,7 @@ modelStorage:
 # Keep operator-generated Routes unreachable during functional validation.
 networkPolicy:
   internalOnly: true
+
+# Publish only authenticated operator proxies, not the raw application services.
+operatorAccess:
+  enabled: true

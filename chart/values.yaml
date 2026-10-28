@@ -94,3 +94,8 @@ modelStorage:
 # Keep operator-generated Routes unreachable during functional validation.
 networkPolicy:
   internalOnly: true
+
+# Authenticated operator entry points; independent of the original direct Routes.
+operatorAccess:
+  enabled: false
+  image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:d6623e38c4d8cb9fd3591ca04b842a1453a011fe99bb18105da5bf8a819e387b

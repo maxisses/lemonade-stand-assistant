@@ -94,6 +94,8 @@ def build_report(context, *, offline=False):
     services = [{"name": "ROSA console", "url": routes.get(("openshift-console", "console"), context["console_url"]),
                  "login": "OpenShift login; project administrator username: cluster-admin"}]
     selections = [
+        ("Chat", [(NAMESPACE, "lemonade-chat")]),
+        ("Dashboard", [(NAMESPACE, "lemonade-dashboard")]),
         ("OpenShift AI", [("openshift-ingress", "data-science-gateway"), ("redhat-ods-applications", "rhods-dashboard")]),
         ("GitOps / Argo CD", [("openshift-gitops", "openshift-gitops-server")]),
         ("Metrics API / Thanos", [("openshift-monitoring", "thanos-querier")]),
@@ -104,6 +106,8 @@ def build_report(context, *, offline=False):
         url = next((routes[key] for key in keys if key in routes), None)
         login = ("API endpoint; use project OpenShift API authentication. The browser UI is in the ROSA console."
                  if "API" in name else "Use OpenShift sign-in where requested; no separate demo password is created.")
+        if name in {"Chat", "Dashboard"}:
+            login = "OpenShift sign-in; requires permission to get pods in lemonade-demo. No port forwarding needed."
         services.append({"name": name, "url": url, "login": login})
     try:
         manifest = json.loads((ROOT / "docs/version-manifest.json").read_text())
@@ -136,18 +140,15 @@ def build_report(context, *, offline=False):
         "notes": [
             "AWS account/region above are recorded context, not a live STS check. Select that account in your AWS browser session.",
             "The API URL is a CLI endpoint, not the web console.",
-            "The application and dashboard have no public entry enabled in the current functional deployment.",
+            "Chat and dashboard use authenticated HTTPS operator Routes; audience access is not enabled.",
             "Operator-generated guardrails Routes are intentionally excluded: ingress is blocked by the demo network policy.",
             "Renew Red Hat authentication when required with: rosa login --use-device-code",
         ],
     }
 
 
-def copy_admin_password(context):
-    """Copy one password only on an explicit local invocation, after account/state checks."""
-    clipboard = shutil.which("pbcopy") if sys.platform == "darwin" else None
-    if not clipboard:
-        raise AccessError("Password copying requires macOS pbcopy. Use scripts/cluster_login.py for CLI login.")
+def read_admin_password(context):
+    """Read the project password after account/state checks; never print it here."""
     env = terraform_environment("rosa")
     verify_backend("rosa", env)
     if env["TF_VAR_expected_account_id"] != context["aws_account_id"] or env["TF_VAR_region"] != context["region"]:
@@ -162,6 +163,15 @@ def copy_admin_password(context):
     password = command(terraform + ["admin_password"], env=env, strip=False)
     if not password:
         raise AccessError("The cluster admin password is unavailable; clipboard was unchanged.")
+    return password
+
+
+def copy_admin_password(context):
+    """Copy one password only on an explicit local invocation, after account/state checks."""
+    clipboard = shutil.which("pbcopy") if sys.platform == "darwin" else None
+    if not clipboard:
+        raise AccessError("Password copying requires macOS pbcopy. Use scripts/cluster_login.py for CLI login.")
+    password = read_admin_password(context)
     # Password travels through stdin, never command arguments, reports, or files.
     command([clipboard], input=password)
 
@@ -178,7 +188,7 @@ def print_report(report):
         if service["url"]:
             print("    " + service["login"])
     print("  Cluster API: " + context["cluster_api_url"])
-    print("\nChat and dashboard (run each forwarding command in a separate terminal)")
+    print("\nOptional local forwarding for troubleshooting (not required for the HTTPS Routes)")
     for access in report["local_access"]:
         print(f"  {access['name']}: {access['url']}")
         print("    " + access["status"])

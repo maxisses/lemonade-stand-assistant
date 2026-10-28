@@ -1,0 +1,169 @@
+{{- if .Values.operatorAccess.enabled }}
+{{- if or .Values.app.publicRoute .Values.shinyDashboard.route.enabled }}
+{{- fail "Operator access requires the original unauthenticated application Routes to stay disabled" }}
+{{- end }}
+{{- if not .Values.networkPolicy.internalOnly }}
+{{- fail "Operator access requires the internal-only network policy" }}
+{{- end }}
+{{- $ns := include "assistant.namespace" . }}
+{{- $root := . }}
+{{- $targets := list (dict "name" "lemonade-chat" "service" (include "assistant.appName" .) "port" 8080) (dict "name" "lemonade-dashboard" "service" "shiny-dashboard" "port" .Values.shinyDashboard.service.port) }}
+{{- range $target := $targets }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $target.name }}-proxy
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+    serviceaccounts.openshift.io/oauth-redirectreference.primary: {{ dict "kind" "OAuthRedirectReference" "apiVersion" "v1" "reference" (dict "kind" "Route" "name" $target.name) | toJson | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $target.name }}-proxy
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+    service.beta.openshift.io/serving-cert-secret-name: {{ $target.name }}-proxy-tls
+spec:
+  selector:
+    app: {{ $target.name }}-proxy
+  ports:
+    - name: https
+      port: 443
+      targetPort: https
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $target.name }}-proxy
+  namespace: {{ $ns }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $target.name }}-proxy
+  template:
+    metadata:
+      labels:
+        app: {{ $target.name }}-proxy
+        app.kubernetes.io/component: operator-proxy
+    spec:
+      serviceAccountName: {{ $target.name }}-proxy
+      containers:
+        - name: oauth-proxy
+          image: {{ $root.Values.operatorAccess.image | quote }}
+          args:
+            - --provider=openshift
+            - --proxy-prefix=/oauth2
+            - --openshift-service-account={{ $target.name }}-proxy
+            - {{ printf "--openshift-sar=%s" (dict "namespace" $ns "resource" "pods" "verb" "get" | toJson) | quote }}
+            - --https-address=:8443
+            - --http-address=
+            - --upstream=http://{{ $target.service }}.{{ $ns }}.svc:{{ $target.port }}
+            - --upstream-timeout=120s
+            - --proxy-websockets=true
+            - --tls-cert=/etc/proxy-tls/tls.crt
+            - --tls-key=/etc/proxy-tls/tls.key
+            - --cookie-secret-file=/etc/proxy-session/cookie-secret
+            - --cookie-name={{ $target.name }}-session
+            - --cookie-secure=true
+            - --cookie-httponly=true
+            - --cookie-samesite=lax
+            - --cookie-expire=8h
+            - --cookie-refresh=5m
+            - --skip-provider-button=true
+            - --pass-basic-auth=false
+            - --pass-access-token=false
+            - --pass-user-bearer-token=false
+            - --request-logging=false
+          ports:
+            - name: https
+              containerPort: 8443
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /oauth2/healthz
+              port: https
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /oauth2/healthz
+              port: https
+            initialDelaySeconds: 20
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: [ALL]
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: tls
+              mountPath: /etc/proxy-tls
+              readOnly: true
+            - name: session
+              mountPath: /etc/proxy-session
+              readOnly: true
+      volumes:
+        - name: tls
+          secret:
+            secretName: {{ $target.name }}-proxy-tls
+        - name: session
+          secret:
+            secretName: {{ $target.name }}-proxy-session
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ $target.name }}
+  namespace: {{ $ns }}
+  labels:
+    app.kubernetes.io/component: operator-proxy
+  annotations:
+    haproxy.router.openshift.io/timeout: 180s
+    haproxy.router.openshift.io/timeout-tunnel: 1h
+spec:
+  to:
+    kind: Service
+    name: {{ $target.name }}-proxy
+  port:
+    targetPort: https
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lemonade-operator-entry
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: operator-proxy
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+      ports:
+        - protocol: TCP
+          port: 8443
+{{- end }}

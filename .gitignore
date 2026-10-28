@@ -7,6 +7,8 @@ local/
 auth.json
 kubeconfig*
 *pull-secret*.json
+# Owner-local credential display helper; never publish this script.
+/scripts/show-credentials.sh
 
 # Infrastructure state and generated plans
 **/.terraform/

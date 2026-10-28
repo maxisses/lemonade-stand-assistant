@@ -25,6 +25,7 @@ class AccessTests(unittest.TestCase):
         command.assert_not_called()
         terraform.assert_not_called()
         self.assertIsNone(next(s["url"] for s in report["services"] if s["name"] == "OpenShift AI"))
+        self.assertIsNone(next(s["url"] for s in report["services"] if s["name"] == "Chat"))
 
     def test_other_cluster_is_not_queried(self):
         with patch.object(access, "command", return_value="https://api.other.example") as command:
@@ -33,11 +34,13 @@ class AccessTests(unittest.TestCase):
         self.assertIn("another cluster", report["discovery"])
 
     def test_live_urls_use_allowlisted_services_and_exclude_guardrails(self):
-        routes = "openshift-ingress\tdata-science-gateway\tai.demo.example\t\treencrypt\nlemonade-demo\tguardrails-orchestrator\tguardrails.demo.example\t\treencrypt"
+        routes = "openshift-ingress\tdata-science-gateway\tai.demo.example\t\treencrypt\nlemonade-demo\tguardrails-orchestrator\tguardrails.demo.example\t\treencrypt\nlemonade-demo\tlemonade-chat\tchat.demo.example\t\treencrypt\nlemonade-demo\tlemonade-dashboard\tdashboard.demo.example\t\treencrypt"
         with patch.object(access, "command", side_effect=[CONTEXT["cluster_api_url"], routes]):
             report = access.build_report(CONTEXT)
         self.assertIn("https://ai.demo.example", json.dumps(report))
         self.assertNotIn("guardrails.demo.example", json.dumps(report))
+        self.assertEqual(next(s["url"] for s in report["services"] if s["name"] == "Chat"), "https://chat.demo.example")
+        self.assertEqual(next(s["url"] for s in report["services"] if s["name"] == "Dashboard"), "https://dashboard.demo.example")
 
     def test_credential_bearing_or_unsafe_urls_are_rejected(self):
         for url in ["https://user:fake-password@example.com", "https://example.com?token=fake-token", "https://example.com/#fake-token", "http://example.com", "https://example.com/\ninjected", None]:
