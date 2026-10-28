@@ -4,7 +4,8 @@ Updated: 28 October 2026 · Event: 17 November 2026 · Time zone: Europe/Vienna
 
 ## Temporary operational status — 28 October
 
-The owner requested a four-day shutdown. Source and reproducible rebuild steps are saved; three SQLite databases and all infrastructure states are privately backed up. Application entry points are stopped, but AWS resources remain running because the Red Hat login expired and prevents the supported ROSA teardown. An additional private S3 checkpoint upload awaits explicit approval; no archive has been uploaded. See app/docs/shutdown.md for the current status and app/docs/rebuild.md for restart. No automatic restart is scheduled.
+The four-day shutdown is complete. ROSA, all three workers, all six volumes, the load balancer, NAT/EIP/VPC, project IAM/OIDC and cluster DNS resources are removed. The ROSA and foundation Terraform states are empty. Only the private encrypted/versioned Terraform state bucket is retained, with small storage costs. Code and rebuild helpers are saved in the fork; profiles, campaign reports and settings are preserved in verified local-only SQLite backups. No application backup was uploaded to S3. See app/docs/shutdown.md for measured completion and app/docs/rebuild.md for recovery. No automatic restart is scheduled. The live-build descriptions below are historical validation evidence.
+
 
 ## 1. Recommendation and objective
 

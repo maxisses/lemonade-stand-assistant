@@ -86,3 +86,7 @@ This checkout is the app/ directory referenced in the parent workspace plan. Inf
 ## Temporary shutdown requested on 28 October
 
 The owner requested a four-day shutdown, durable backup and reproducible restart. Read docs/shutdown.md (app/docs/shutdown.md from the parent) before cloud work: it records actual completion versus blocked steps. Do not assume closed application entry points mean AWS compute is stopped. Preserve the verified private SQLite checkpoint and retained bootstrap/state bucket; never commit them. Use scripts/shutdown.py for account-scoped delete-only plans and docs/rebuild.md / scripts/rebuild.py for rebuilding. Do not restart automatically after four days.
+
+The owner explicitly chose local-only database checkpoints. Do not upload campaign, audience or provider backup archives to S3. The existing Terraform remote-state bucket remains part of the infrastructure backend.
+
+The 28 October shutdown is now complete: ROSA and foundation are destroyed, only the bootstrap/state bucket remains. Historical live URLs no longer work. Do not provision or resume automatically; follow the owner's next instruction and docs/rebuild.md.

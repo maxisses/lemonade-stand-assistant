@@ -629,12 +629,11 @@
   "shutdown": {
     "date": "2026-10-28",
     "requested_duration_days": 4,
-    "status": "entrypoints_stopped_cloud_teardown_blocked_by_expired_red_hat_login",
+    "status": "completed_cluster_and_network_destroyed",
     "account": "058264461741",
     "region": "eu-central-1",
     "cluster_id": "2tn4c1sto6l3cj13je431lqenalg0f38",
-    "entrypoint_replicas": 0,
-    "cloud_compute_still_running": true,
+    "cloud_compute_still_running": false,
     "private_checkpoint": "local/backups/2026-10-28-ooo-final",
     "local_restore_hash_verified": true,
     "archive_sha256": "015b46a1ebc9f519d064d103dabbb4eb8e21f8d562c1d447b6ef2601310d546a",
@@ -642,8 +641,48 @@
     "custom_profiles": 1,
     "provider_call_records": 54,
     "s3_checkpoint_uploaded": false,
-    "s3_upload_pending_owner_approval": true,
+    "s3_upload_pending_owner_approval": false,
     "targeted_recovery_tests_passed": 13,
-    "automatic_restart_scheduled": false
+    "automatic_restart_scheduled": false,
+    "checkpoint_storage_decision": "local_only_by_owner",
+    "completed_audit_at": "2026-10-28T20:38:53.079320+00:00",
+    "rosa_cluster_absent": true,
+    "terraform_destroyed_resources": {
+      "rosa": 32,
+      "foundation": 15
+    },
+    "terraform_remaining_managed_resources": {
+      "rosa": 0,
+      "foundation": 0,
+      "bootstrap": 4
+    },
+    "retained_project_cloud_resources": [
+      "lemonade-demo-tfstate-058264461741"
+    ],
+    "remaining_project_resources": {
+      "running_workers": 0,
+      "volumes": 0,
+      "snapshots": 0,
+      "load_balancers": 0,
+      "active_nat_gateways": 0,
+      "elastic_ips": 0,
+      "vpcs": 0,
+      "network_interfaces": 0,
+      "vpc_endpoints": 0,
+      "auto_scaling_groups": 0,
+      "project_security_groups": 0,
+      "project_iam_roles": 0,
+      "project_iam_policies": 0,
+      "oidc_providers": 0,
+      "project_hosted_zones": 0,
+      "project_log_groups": 0
+    },
+    "residual_security_group_cleanup": {
+      "id": "sg-048724403d7df46f7",
+      "ownership_and_zero_dependencies_verified": true
+    },
+    "private_state_bucket_verified": true,
+    "audit_incomplete_queries": [],
+    "retained_cost_note": "Small S3 state-storage/request charges remain possible; not an account-wide billing claim."
   }
 }
