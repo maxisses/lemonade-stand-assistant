@@ -344,6 +344,117 @@ class CampaignTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(calls), 1)
         self.assertEqual(run["reason"], "campaign_budget_exhausted")
 
+    async def test_custom_profiles_preserve_controls_and_freeze_idempotent_settings(self):
+        engine=self.engine()
+        options={"case_ids":["instruction-marker"],"max_seconds":45}
+        run=await engine.start("functional","custom-profile-run",options=options,concurrency=2)
+        options["case_ids"].append("topic-apples")
+        run=await self.settled(engine,run["id"])
+        self.assertEqual([a["case_id"] for a in run["attempts"]],["benign-lemons","benign-picnic","instruction-marker"])
+        self.assertEqual(run["budget"]["concurrency"],2)
+        self.assertEqual(run["budget"]["max_seconds"],45)
+        self.assertEqual(run["profile_definition"]["options"]["case_ids"],["benign-lemons","benign-picnic","instruction-marker"])
+        with self.assertRaises(CampaignConflict):
+            await engine.start("functional","custom-profile-run",options={"case_ids":["instruction-marker"],"max_seconds":45},concurrency=3)
+        for invalid in [{"case_ids":["invented"]},{"max_seconds":29},{"max_seconds":181},{"endpoint":"https://other.example"}]:
+            with self.assertRaises(CampaignError):engine.validate_profile("functional",invalid)
+        for invalid in [{"strategies":[]},{"strategies":["topic","topic"]},{"rounds":4},{"rounds":True}]:
+            with self.assertRaises(CampaignError):engine.validate_profile("adaptive",invalid)
+
+    async def test_parallel_functional_pool_honors_limit_and_pause(self):
+        release,entered=asyncio.Event(),asyncio.Event()
+        active=0;peak=0;calls=[]
+        async def evaluate(*args):
+            nonlocal active,peak
+            calls.append(args)
+            active+=1;peak=max(peak,active)
+            if len(calls)==2:entered.set()
+            try:
+                await release.wait()
+                await asyncio.sleep(.001)
+                return await benign_or_block(*args)
+            finally:active-=1
+        engine=self.engine(evaluate)
+        run=await engine.start("functional","parallel-pause-run",concurrency=2)
+        await asyncio.wait_for(entered.wait(),1)
+        await engine.pause(run["id"])
+        release.set()
+        for _ in range(100):
+            if engine.get(run["id"])["summary"]["completed"]==2:break
+            await asyncio.sleep(.001)
+        self.assertEqual(len(calls),2)
+        self.assertEqual(active,0)
+        await engine.resume(run["id"])
+        result=await self.settled(engine,run["id"])
+        self.assertEqual(result["summary"]["completed"],6)
+        self.assertEqual(peak,2)
+
+    async def test_parallel_stop_joins_children_before_return_and_never_dispatches_more(self):
+        entered=asyncio.Event();calls=[];cancelled=[]
+        async def evaluate(*args):
+            calls.append(args)
+            if len(calls)==4:entered.set()
+            try:await asyncio.Event().wait()
+            finally:cancelled.append(args)
+        engine=self.engine(evaluate)
+        run=await engine.start("functional","parallel-stop-run",concurrency=4)
+        await asyncio.wait_for(entered.wait(),1)
+        stopped=await engine.stop(run["id"])
+        self.assertEqual(stopped["status"],"stopped")
+        self.assertEqual(len(cancelled),4)
+        self.assertEqual(len(calls),4)
+        self.assertEqual(stopped["summary"]["request_outcomes"]["cancelled"],4)
+        self.assertTrue(engine._tasks[run["id"]].done())
+
+    async def test_parallel_adaptive_chains_use_only_their_previous_completed_result(self):
+        generated=[];completed=set();active=0;peak=0
+        async def generate(role,payload,max_tokens,run_id):
+            nonlocal active,peak
+            self.assertEqual(role,"attacker")
+            category,round_number=payload["strategy"],payload["round"]
+            if round_number>1:
+                self.assertIn((category,round_number-1),completed)
+                self.assertEqual(payload["previous_attempt"]["prompt"],f"{category} round {round_number-1}")
+            generated.append((category,round_number))
+            active+=1;peak=max(peak,active)
+            await asyncio.sleep(.003)
+            active-=1
+            return {"text":json.dumps({"prompt":f"{category} round {round_number}"})}
+        async def evaluate(message,*args):
+            category,_,round_number=message.split()
+            await asyncio.sleep(.001)
+            completed.add((category,int(round_number)))
+            return {"outcome":"blocked","response":"","detectors":["policy"]}
+        engine=self.engine(evaluate,generate)
+        run=await engine.start("adaptive","parallel-adaptive",options={"strategies":["topic","instruction"],"rounds":2,"max_seconds":60},concurrency=3)
+        result=await self.settled(engine,run["id"])
+        self.assertEqual(result["summary"]["completed"],4)
+        self.assertEqual(peak,2)
+        self.assertEqual({a["total_rounds"] for a in result["agents"]},{2})
+        self.assertEqual(result["budget"]["max_calls"],12)
+        self.assertEqual(result["usage"]["attacker_calls"],4)
+        self.assertEqual(result["usage"]["target_calls"],4)
+
+    async def test_parallel_deadline_cancels_every_inflight_child(self):
+        clock=[100.0];entered=asyncio.Event();cancelled=[];calls=[]
+        async def evaluate(*args):
+            calls.append(args)
+            if len(calls)==3:entered.set()
+            try:
+                if args[0]==FUNCTIONAL_CASES[0]['prompt']:
+                    await asyncio.sleep(.02)
+                    clock[0]=131.0
+                    return await benign_or_block(*args)
+                await asyncio.Event().wait()
+            finally:cancelled.append(args)
+        engine=self.engine(evaluate,clock=lambda:clock[0])
+        run=await engine.start("functional","parallel-deadline",options={"max_seconds":30},concurrency=3)
+        await entered.wait()
+        result=await self.settled(engine,run["id"])
+        self.assertEqual(result["status"],"expired")
+        self.assertEqual(len(calls),3)
+        self.assertEqual(len(cancelled),3)
+
 
 if __name__ == "__main__":
     unittest.main()

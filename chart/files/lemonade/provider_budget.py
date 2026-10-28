@@ -3,6 +3,7 @@ import asyncio
 import hmac
 import json
 import os
+import re
 import sqlite3
 import time
 from contextlib import asynccontextmanager
@@ -22,12 +23,25 @@ class Ledger:
             (id INTEGER PRIMARY KEY, started REAL, role TEXT, generation INTEGER,
              tokens INTEGER, estimated INTEGER, status TEXT);
             CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY,value TEXT);''')
+        if 'model' not in {row[1] for row in self.db.execute('PRAGMA table_info(calls)')}:
+            self.db.execute("ALTER TABLE calls ADD COLUMN model TEXT NOT NULL DEFAULT ''")
         self.db.execute("UPDATE calls SET status='interrupted' WHERE status='pending'")
         self.db.commit()
 
     def paused(self):
         row = self.db.execute("SELECT value FROM state WHERE key='paused'").fetchone()
         return row[0] if row else ''
+
+    def settings(self):
+        rows=dict(self.db.execute("SELECT key,value FROM state WHERE key IN ('model','concurrency')"))
+        return {'model':rows.get('model',os.getenv('PROVIDER_MODEL','qwen38-27b')),
+                'concurrency':int(rows.get('concurrency','1'))}
+
+    def configure(self,model,concurrency):
+        self.db.executemany('INSERT OR REPLACE INTO state VALUES (?,?)',
+                            [('model',model),('concurrency',str(concurrency))])
+        self.db.commit()
+        return self.settings()
 
     def pause(self, reason):
         self.db.execute("INSERT OR REPLACE INTO state VALUES ('paused',?)", (reason,))
@@ -44,8 +58,8 @@ class Ledger:
         if usage['requests'] >= 240 or usage['generations'] >= 120 or usage['tokens'] + tokens > 240000:
             self.pause('hourly_budget')
             raise HTTPException(429, 'Provider hourly budget reached.')
-        cursor = self.db.execute('INSERT INTO calls(started,role,generation,tokens,estimated,status) VALUES(?,?,?,?,1,?)',
-                                 (time.time(),role,int(generation),tokens,'pending'))
+        cursor = self.db.execute('INSERT INTO calls(started,role,generation,tokens,estimated,status,model) VALUES(?,?,?,?,1,?,?)',
+                                 (time.time(),role,int(generation),tokens,'pending',self.settings()['model']))
         self.db.commit()
         return cursor.lastrowid
 
@@ -62,6 +76,10 @@ async def lifespan(app):
     app.state.ledger = Ledger(os.getenv('PROVIDER_DB','/data/provider.sqlite'))
     app.state.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=60,connect=5))
     app.state.lock = asyncio.Lock()
+    app.state.slots = asyncio.Semaphore(app.state.ledger.settings()['concurrency'])
+    app.state.configuring = False
+    app.state.models_lock = asyncio.Lock()
+    app.state.model_catalog = None
     app.state.waiting = 0
     app.state.last_generation = 0.0
     app.state.errors = 0
@@ -89,8 +107,10 @@ async def health():
 @app.get('/budget')
 async def budget(request: Request):
     authorize(request)
+    settings=app.state.ledger.settings()
     return {'paused':app.state.ledger.paused(), 'last_minute':app.state.ledger.usage(60),
-            'last_hour':app.state.ledger.usage(3600),'concurrency':1,'generation_starts_per_minute':12,
+            'last_hour':app.state.ledger.usage(3600),'concurrency':settings['concurrency'],'settings':settings,
+            'generation_starts_per_minute':12,
             'hourly_request_limit':240,'hourly_generation_limit':120,'hourly_token_limit':240000,
             'waiting':app.state.waiting,'token_accounting':'Provider usage where present; conservative reservations otherwise'}
 
@@ -101,6 +121,68 @@ async def resume(request: Request):
     app.state.ledger.pause('')
     app.state.errors=0
     return {'paused':''}
+
+
+async def discover_models():
+    """Read only model identifiers from the fixed provider; cache discovery for five minutes."""
+    async with app.state.models_lock:
+        cached=app.state.model_catalog
+        if cached and time.time()-cached['checked_at']<300:
+            return {**cached,'selected_model':app.state.ledger.settings()['model']}
+        current=app.state.ledger.settings()['model']
+        result={'models':[{'id':current,'advertised':False}],'selected_model':current,
+                'discovered_at':None,'checked_at':time.time(),'discovery_error':None}
+        try:
+            base=os.environ['PROVIDER_BASE_URL'].rstrip('/')
+            if not base.startswith('https://'):raise RuntimeError('Provider requires HTTPS')
+            async with app.state.session.request('GET',base+'/v1/models',
+                headers={'Authorization':'Bearer '+os.environ['MODEL_API_KEY']},
+                allow_redirects=False,timeout=aiohttp.ClientTimeout(total=12,connect=5)) as response:
+                if response.status!=200:raise RuntimeError('Model discovery unavailable')
+                data=await response.json()
+                rows=data.get('data',[]) if isinstance(data,dict) else []
+                ids=sorted({row['id'] for row in rows if isinstance(row,dict) and isinstance(row.get('id'),str)
+                            and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}',row['id'])})[:100]
+                if not ids:raise RuntimeError('No advertised chat model identifiers')
+                result.update(models=[{'id':identifier,'advertised':True} for identifier in ids],discovered_at=time.time())
+        except Exception:
+            result['discovery_error']='Model discovery is unavailable; the current configured model remains selected.'
+        app.state.model_catalog=result
+        return result
+
+
+@app.get('/models')
+async def models(request: Request):
+    authorize(request)
+    return await discover_models()
+
+
+@app.post('/budget/settings')
+async def configure(request: Request):
+    authorize(request)
+    raw=await request.body()
+    if len(raw)>2048:raise HTTPException(413,'Settings are too large.')
+    try:body=json.loads(raw)
+    except (ValueError,TypeError):raise HTTPException(400,'Invalid settings.') from None
+    if not isinstance(body,dict) or set(body)!={'model','concurrency'}:
+        raise HTTPException(400,'Provide a model and concurrency.')
+    model,concurrency=body['model'],body['concurrency']
+    if not isinstance(model,str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}',model):
+        raise HTTPException(400,'Choose a provider model identifier.')
+    if type(concurrency) is not int or not 1<=concurrency<=4:
+        raise HTTPException(400,'Concurrency must be between one and four.')
+    if app.state.waiting or app.state.configuring:
+        raise HTTPException(409,'Wait for provider work to finish before changing settings.')
+    app.state.configuring=True
+    try:
+        if model!=app.state.ledger.settings()['model']:
+            catalog=await discover_models()
+            if catalog['discovery_error'] or model not in {r['id'] for r in catalog['models'] if r.get('advertised')}:
+                raise HTTPException(400,'Choose an advertised model from the configured provider.')
+        settings=app.state.ledger.configure(model,concurrency)
+        app.state.slots=asyncio.Semaphore(concurrency)
+        return {'settings':settings,'applied':True}
+    finally:app.state.configuring=False
 
 
 @app.post('/{path:path}')
@@ -115,7 +197,7 @@ async def forward(path: str, request: Request):
         body=json.loads(raw)
     except (ValueError,TypeError):
         raise HTTPException(400,'Invalid request.') from None
-    if not isinstance(body,dict) or body.get('model') != os.getenv('PROVIDER_MODEL','qwen38-27b'):
+    if not isinstance(body,dict) or body.get('model') != app.state.ledger.settings()['model']:
         raise HTTPException(400,'Only the configured demo model is allowed.')
     generation='completions' in path
     if generation:
@@ -127,6 +209,8 @@ async def forward(path: str, request: Request):
         body['chat_template_kwargs']={'enable_thinking':False}
     else:
         cap=0
+    if app.state.configuring:
+        raise HTTPException(503,'Provider settings are being updated; no request was sent.')
     if app.state.waiting>=8:
         raise HTTPException(429,'Provider queue is full.')
     role=request.headers.get('x-demo-role','target')
@@ -134,13 +218,14 @@ async def forward(path: str, request: Request):
     app.state.waiting+=1
     identifier=None
     try:
-        async with app.state.lock:
-            if generation:
-                last=app.state.ledger.db.execute('SELECT max(started) FROM calls WHERE generation=1').fetchone()[0] or 0
-                await asyncio.sleep(max(0,5-(time.time()-last)))
-            # UTF-8 byte count plus framing allowance is intentionally conservative.
-            identifier=app.state.ledger.reserve(role,generation,len(raw)+512+cap)
-            if generation:app.state.last_generation=time.monotonic()
+        async with app.state.slots:
+            async with app.state.lock:
+                if generation:
+                    last=app.state.ledger.db.execute('SELECT max(started) FROM calls WHERE generation=1').fetchone()[0] or 0
+                    await asyncio.sleep(max(0,5-(time.time()-last)))
+                # All concurrent roles share pacing and atomic reservations.
+                identifier=app.state.ledger.reserve(role,generation,len(raw)+512+cap)
+                if generation:app.state.last_generation=time.monotonic()
             base=os.environ['PROVIDER_BASE_URL'].rstrip('/')
             if not base.startswith('https://'):
                 raise RuntimeError('Provider requires HTTPS')

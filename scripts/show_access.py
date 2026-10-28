@@ -96,7 +96,7 @@ def build_report(context, *, offline=False):
     selections = [
         ("Chat", [(NAMESPACE, "lemonade-chat")]),
         ("Red Team Control", [(NAMESPACE, "lemonade-chat")]),
-        ("Audience role selection", [(NAMESPACE, "lemonade-audience")]),
+        ("Audience chat", [(NAMESPACE, "lemonade-audience")]),
         ("Dashboard", [(NAMESPACE, "lemonade-dashboard")]),
         ("OpenShift AI", [("openshift-ingress", "data-science-gateway"), ("redhat-ods-applications", "rhods-dashboard")]),
         ("GitOps / Argo CD", [("openshift-gitops", "openshift-gitops-server")]),
@@ -111,9 +111,9 @@ def build_report(context, *, offline=False):
         if name == "Red Team Control":
             url = url.rstrip("/") + "/control" if url else None
             login = "OpenShift sign-in; viewing requires get pods, execution requires create jobs in lemonade-demo."
-        if name == "Audience role selection":
+        if name == "Audience chat":
             url = url.rstrip("/") + "/join" if url else None
-            login = "Choose a persona; chat only works during an operator-opened event window."
+            login = "Opens directly in chat; roles change prompt suggestions only. Requires an operator-opened event window."
         if name in {"Chat", "Dashboard"}:
             login = "OpenShift sign-in; requires permission to get pods in lemonade-demo. No port forwarding needed."
         services.append({"name": name, "url": url, "login": login})

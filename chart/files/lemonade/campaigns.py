@@ -158,17 +158,41 @@ class CampaignEngine:
             "adaptive": case.get("adaptive", False),
         }
 
-    def _cases(self, profile, selected_cases, parent_run_id):
+    def validate_profile(self, profile, options=None):
+        if options is None:options={}
+        if not isinstance(options,dict):
+            raise CampaignError("Profile options must be an object.")
+        allowed={"functional":{"case_ids","max_seconds"},"adaptive":{"strategies","rounds","max_seconds"},"retest":set()}
+        if not isinstance(profile,str) or profile not in allowed or set(options)-allowed[profile]:
+            raise CampaignError("Unknown profile or unsupported profile options.")
+        if profile=="retest":return {}
+        seconds=options.get("max_seconds",120 if profile=="functional" else 180)
+        if type(seconds) is not int or not 30<=seconds<=180:
+            raise CampaignError("Campaign duration must be 30 to 180 seconds.")
+        field="case_ids" if profile=="functional" else "strategies"
+        available=[case["case_id"] for case in FUNCTIONAL_CASES] if profile=="functional" else list(STRATEGIES)
+        selected=options.get(field,available)
+        if not isinstance(selected,list) or any(not isinstance(item,str) or item not in available for item in selected) or len(selected)!=len(set(selected)):
+            raise CampaignError("Choose unique cases or strategies from the available profile.")
+        if profile=="functional":
+            selected=[item for item in available if item in selected or item in {case["case_id"] for case in FUNCTIONAL_CASES[:2]}]
+            return {"case_ids":selected,"max_seconds":seconds}
+        rounds=options.get("rounds",3)
+        if not 1<=len(selected)<=3 or type(rounds) is not int or not 1<=rounds<=3:
+            raise CampaignError("Choose one to three strategies and one to three rounds.")
+        return {"strategies":[item for item in available if item in selected],"rounds":rounds,"max_seconds":seconds}
+
+    def _cases(self, profile, selected_cases, parent_run_id, options):
         if profile in {"functional", "adaptive"} and (selected_cases is not None or parent_run_id is not None):
             raise CampaignError("Selections and parent campaign are only valid for a retest.")
         if profile == "functional":
-            return deepcopy(FUNCTIONAL_CASES), 120, None
+            return [deepcopy(case) for case in FUNCTIONAL_CASES if case["case_id"] in options["case_ids"]], options["max_seconds"], None
         if profile == "adaptive":
             if self.generate is None:
                 raise CampaignError("Adaptive generation is not configured.")
             return [{"case_id": f"{category}-{round_number}", "category": category, "kind": "attack",
                      "round": round_number, "adaptive": True}
-                    for round_number in range(1, 4) for category in STRATEGIES], 180, None
+                    for round_number in range(1, options["rounds"]+1) for category in options["strategies"]], options["max_seconds"], None
         if profile != "retest":
             raise CampaignError("Unknown campaign profile.")
         if not parent_run_id or not isinstance(selected_cases, list) or not 1 <= len(selected_cases) <= 9:
@@ -191,20 +215,29 @@ class CampaignEngine:
                 selected.append(deepcopy(case))
         return selected, 180, parent
 
-    async def start(self, profile, idempotency_key, selected_cases=None, parent_run_id=None, name=None):
+    async def start(self, profile, idempotency_key, selected_cases=None, parent_run_id=None, name=None, *, options=None, concurrency=1, profile_definition=None):
         if self._closed:
             raise CampaignError("Campaign worker is shutting down.")
         if not isinstance(idempotency_key, str) or not re.fullmatch(r"[A-Za-z0-9._:-]{8,128}", idempotency_key):
             raise CampaignError("Provide an idempotency key of 8 to 128 safe characters.")
         if name is not None and (not isinstance(name, str) or not 1 <= len(name.strip()) <= 100):
             raise CampaignError("Campaign names must contain between one and 100 characters.")
-        identity = _json({"profile": profile, "selected_cases": selected_cases, "parent_run_id": parent_run_id, "name": name})
+        if type(concurrency) is not int or not 1<=concurrency<=4:
+            raise CampaignError("Campaign concurrency must be one to four.")
+        options=self.validate_profile(profile,options)
+        definition={"profile":profile,"options":options}
+        if profile_definition is not None:
+            if not isinstance(profile_definition,dict):raise CampaignError("Invalid profile definition.")
+            definition={**profile_definition,**definition}
+        definition=json.loads(_json(definition))
+        identity = _json({"profile": profile, "selected_cases": selected_cases, "parent_run_id": parent_run_id, "name": name,
+                          "options":options,"concurrency":concurrency,"profile_definition":definition})
         previous = self.db.execute("SELECT id,request_identity FROM campaigns WHERE idempotency_key=?", (idempotency_key,)).fetchone()
         if previous:
             if previous["request_identity"] != identity:
                 raise CampaignConflict("The idempotency key was already used with different settings.")
             return self.get(previous["id"])
-        cases, seconds, parent = self._cases(profile, selected_cases, parent_run_id)
+        cases, seconds, parent = self._cases(profile, selected_cases, parent_run_id, options)
         if any(len(case.get("prompt", "")) > self.max_input_chars for case in cases):
             raise CampaignError("A selected prompt exceeds the current application input limit.")
         now = self.clock()
@@ -213,18 +246,18 @@ class CampaignEngine:
         output_cap = len(cases) * (416 if profile == "adaptive" else (224 if profile == "retest" and self.generate else 128))
         run = {
             "id": uuid.uuid4().hex, "name": name.strip() if name else {"functional": "Functional checks", "adaptive": "Adaptive red team", "retest": "Selected-case retest"}[profile],
-            "profile": profile, "status": "queued", "policy": policy, "parent_run_id": parent_run_id,
+            "profile": profile, "profile_definition":definition, "status": "queued", "policy": policy, "parent_run_id": parent_run_id,
             "created_at": now, "started_at": None, "finished_at": None, "deadline_at": now + seconds,
             "reason": None, "consecutive_errors": 0,
             "budget": {"max_attempts": len(cases), "max_seconds": seconds, "max_calls": max_calls,
                        "max_output_token_reservations": output_cap, "max_input_chars": self.max_input_chars,
-                       "attacker_max_tokens": 192, "target_max_tokens": 128, "judge_max_tokens": 96},
+                       "attacker_max_tokens": 192, "target_max_tokens": 128, "judge_max_tokens": 96,"concurrency":concurrency},
             "usage": {"target_calls": 0, "attacker_calls": 0, "judge_calls": 0, "call_reservations": 0,
                       "output_token_reservations": 0, "reported_input_tokens": 0, "reported_output_tokens": 0,
                       "usage_complete": True},
             "agents": [{"id": category, "name": values[0], "status": "queued", "round": 0,
-                        "total_rounds": 3, "last_outcome": None, "last_verdict": None, "attempt_id": None}
-                       for category, values in STRATEGIES.items()] if profile == "adaptive" else [],
+                        "total_rounds": options["rounds"], "last_outcome": None, "last_verdict": None, "attempt_id": None}
+                       for category, values in STRATEGIES.items() if category in options.get("strategies",[])] if profile == "adaptive" else [],
             "attempts": [self._new_attempt(case, index) for index, case in enumerate(cases, 1)],
             "comparison": {"parent_run_id": parent_run_id, "previous_policy": parent["policy"],
                            "policy_changed": parent["policy"] != policy} if parent else None,
@@ -332,8 +365,8 @@ class CampaignEngine:
             task = self._tasks.get(run_id)
             if task is not None and not task.done():
                 task.cancel()
-                # Allow the worker to record cancellation; do not await a provider forever.
-                await asyncio.sleep(0)
+                # The root worker cancels and joins every child before finalizing.
+                await asyncio.gather(task,return_exceptions=True)
             elif task is None:
                 self._finish(run_id, "stopped", "operator_stopped")
         return self.get(run_id)
@@ -567,27 +600,50 @@ class CampaignEngine:
             self._failure(run_id, attempt_id, error.code, phase)
 
     async def _run(self, run_id):
+        children=set()
+        status,reason,pending_status="completed",None,"cancelled"
         try:
             def began(run):
                 if run["status"] == "queued":
                     run["status"] = "running"
                 run["started_at"] = run["started_at"] or self.clock()
             self._mutate(run_id, began)
-            for attempt in self.get(run_id)["attempts"]:
-                await self._checkpoint(run_id)
-                await self._execute(run_id, attempt["id"])
+            pending=[attempt["id"] for attempt in self.get(run_id)["attempts"]]
+            while pending or children:
+                remaining=await self._checkpoint(run_id)
+                run=self.get(run_id)
+                attempts=run["attempts"]
+                capacity=run["budget"].get("concurrency",1)-len(children)
+                for attempt in attempts:
+                    if capacity<=0:break
+                    if attempt["id"] not in pending:continue
+                    if attempt["adaptive"] and any(previous["category"]==attempt["category"] and previous["sequence"]<attempt["sequence"] and previous["status"]!="completed" for previous in attempts):
+                        continue
+                    pending.remove(attempt["id"])
+                    children.add(asyncio.create_task(self._execute(run_id,attempt["id"])))
+                    capacity-=1
+                if not children:raise RuntimeError("No eligible campaign attempt.")
+                done,_=await asyncio.wait(children,timeout=remaining,return_when=asyncio.FIRST_COMPLETED)
+                if not done:raise _Expired()
+                for child in done:
+                    children.remove(child)
+                    child.result()
             await self._checkpoint(run_id)
-            self._finish(run_id, "completed", None)
         except _Stop:
-            self._finish(run_id, "stopped", "operator_stopped")
+            status,reason="stopped","operator_stopped"
         except _Expired:
-            self._finish(run_id, "expired", "time_budget_exhausted")
+            status,reason="expired","time_budget_exhausted"
         except _BudgetExceeded:
-            self._finish(run_id, "stopped", "campaign_budget_exhausted")
+            status,reason="stopped","campaign_budget_exhausted"
         except asyncio.CancelledError:
             if self._closed:
-                self._finish(run_id, "interrupted", "worker_shutdown", pending_status="interrupted")
+                status,reason,pending_status="interrupted","worker_shutdown","interrupted"
             else:
-                self._finish(run_id, "stopped", "operator_stopped")
+                status,reason="stopped","operator_stopped"
         except Exception:
-            self._finish(run_id, "failed", "campaign_worker_error", pending_status="interrupted")
+            status,reason,pending_status="failed","campaign_worker_error","interrupted"
+        finally:
+            for child in children:
+                if not child.done():child.cancel()
+            if children:await asyncio.gather(*children,return_exceptions=True)
+            self._finish(run_id,status,reason,pending_status=pending_status)
