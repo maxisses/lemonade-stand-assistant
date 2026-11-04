@@ -1,5 +1,5 @@
 {
-  "recorded": "2026-10-28",
+  "recorded": "2026-11-04",
   "upstream_commit": "5c0f65f07e4773c9770dde866bb877fe727e3391",
   "provider_model": "qwen38-27b",
   "provider_model_revision": "not exposed by provider; behavior must be revalidated",
@@ -8,7 +8,7 @@
     "rhoai_channel": "stable-3.5",
     "gitops_channel": "gitops-1.22"
   },
-  "runtime_validation": "Functional CPU-only path validated on 2026-10-27; serial requests only, no capacity claim",
+  "runtime_validation": "Rebuilt and functionally revalidated on 2026-11-04; see rebuild_2026_11_04 for current runtime. Earlier dated sections are historical; no capacity claim.",
   "images": [
     {
       "image": "quay.io/ckavili/lemon-fastapi:1.0.26",
@@ -684,5 +684,341 @@
     "private_state_bucket_verified": true,
     "audit_incomplete_queries": [],
     "retained_cost_note": "Small S3 state-storage/request charges remain possible; not an account-wide billing claim."
+  },
+  "rebuild_2026_11_04": {
+    "status": "completed_functional_acceptance_passed",
+    "recorded_at": "2026-11-04T09:09:30.272249+00:00",
+    "cluster_id": "2ts9ru3jvhafk5h0q1bvhlfqe1d9icqs",
+    "account": "058264461741",
+    "region": "eu-central-1",
+    "openshift": {
+      "version": "4.21.34",
+      "release_image": "quay.io/openshift-release-dev/ocp-release@sha256:b6bdbb9508197e3ca704994cfae3441d1ad3526a6569793919b8e3938dfc559a"
+    },
+    "workers": [
+      {
+        "instance_type": "m6i.2xlarge",
+        "ready": true,
+        "gpu_count": 0
+      },
+      {
+        "instance_type": "m6i.2xlarge",
+        "ready": true,
+        "gpu_count": 0
+      },
+      {
+        "instance_type": "m6i.2xlarge",
+        "ready": true,
+        "gpu_count": 0
+      }
+    ],
+    "operators": [
+      {
+        "namespace": "openshift-gitops-operator",
+        "installed_csvs": [
+          {
+            "csv": "openshift-gitops-operator.v1.22.2",
+            "version": "1.22.2",
+            "phase": "Succeeded",
+            "operator_images": [
+              {
+                "deployment": "openshift-gitops-operator-controller-manager",
+                "container": "manager",
+                "image": "registry.redhat.io/openshift-gitops-1/gitops-rhel9-operator@sha256:f5773d35e496a55999590024d1d8290e916c05d77ebdadcdc3263c29ea1a434a"
+              }
+            ]
+          }
+        ],
+        "installplans": [
+          {
+            "name": "install-h8gl4",
+            "csvs": [
+              "openshift-gitops-operator.v1.22.2"
+            ],
+            "phase": "Complete",
+            "approved": true,
+            "bundles": [
+              {
+                "csv": "openshift-gitops-operator.v1.22.2",
+                "image": "registry.redhat.io/openshift-gitops-1/gitops-operator-bundle@sha256:2ba58c50f771c08bbc5a1d8572c7b058df55bc71667cc66026d42840eb4bee6d"
+              }
+            ]
+          },
+          {
+            "name": "install-nznkr",
+            "csvs": [
+              "openshift-gitops-operator.v1.22.3"
+            ],
+            "phase": "RequiresApproval",
+            "approved": false,
+            "bundles": [
+              {
+                "csv": "openshift-gitops-operator.v1.22.3",
+                "image": "registry.redhat.io/openshift-gitops-1/gitops-operator-bundle@sha256:53525a2ad1ebf4434b0fbaba49a130822cebd9675c814953eb8d62ba60fc64d6"
+              }
+            ]
+          }
+        ],
+        "cross_namespace_csv_copies_excluded": [
+          "rhods-operator.3.5.2"
+        ]
+      },
+      {
+        "namespace": "redhat-ods-operator",
+        "installed_csvs": [
+          {
+            "csv": "rhods-operator.3.5.2",
+            "version": "3.5.2",
+            "phase": "Succeeded",
+            "operator_images": [
+              {
+                "deployment": "rhods-operator",
+                "container": "rhods-operator",
+                "image": "registry.redhat.io/rhoai/odh-rhel9-operator@sha256:ae88dfb2323a386f9d50512234a93f21e8028ab28b194ddb42e1f324eee965cd"
+              }
+            ]
+          }
+        ],
+        "installplans": [
+          {
+            "name": "install-85jtw",
+            "csvs": [
+              "rhods-operator.3.5.2"
+            ],
+            "phase": "Complete",
+            "approved": true,
+            "bundles": [
+              {
+                "csv": "rhods-operator.3.5.2",
+                "image": "registry.redhat.io/rhoai/odh-operator-bundle@sha256:f9f91ae8a34bde6bae77c97dfa3c231d29d5fa3cd00145fbe72be1a9da71d705"
+              }
+            ]
+          }
+        ],
+        "cross_namespace_csv_copies_excluded": [
+          "openshift-gitops-operator.v1.22.2"
+        ]
+      }
+    ],
+    "ready_deployments": 12,
+    "ready_container_images": [
+      {
+        "pod": "chunker-service-65f477b9fb-hkxbb",
+        "name": "chunker",
+        "image_id": "quay.io/rh-ee-mmisiura/chunkers@sha256:3037978e0f23c633cafc6bf226f6c269514677ff3cbb660c46a7b017c573afcd",
+        "restart_count": 0
+      },
+      {
+        "pod": "guardrails-detector-ibm-hap-predictor-745fd9549f-tt5zg",
+        "name": "kserve-container",
+        "image_id": "quay.io/trustyai/guardrails-detector-huggingface-runtime@sha256:3d052b86f8c857d62a26b9827900bbf922c6e584af8f83ae3c0dd83f17b74f43",
+        "restart_count": 0
+      },
+      {
+        "pod": "guardrails-detector-ibm-hap-predictor-745fd9549f-tt5zg",
+        "name": "kube-rbac-proxy",
+        "image_id": "registry.redhat.io/rhoai/odh-kube-rbac-proxy-rhel9@sha256:ce8eb36be58b878376e64146c0a4ec281666da63b0f13765689a77117f1771c2",
+        "restart_count": 0
+      },
+      {
+        "pod": "guardrails-orchestrator-5978db5bdb-s87fc",
+        "name": "guardrails-orchestrator",
+        "image_id": "registry.redhat.io/rhoai/odh-fms-guardrails-orchestrator-rhel9@sha256:14676b485653b7f0bdfc8be62b7f3d112aa2f1817a3dc0eed1dd8a1586b45789",
+        "restart_count": 0
+      },
+      {
+        "pod": "guardrails-orchestrator-5978db5bdb-s87fc",
+        "name": "guardrails-orchestrator-detectors",
+        "image_id": "registry.redhat.io/rhoai/odh-built-in-detector-rhel9@sha256:06d7602d6f0aa5f22c4daaa744baf627f24a136a7ba1d3bc23720b0267d45cc8",
+        "restart_count": 0
+      },
+      {
+        "pod": "lemonade-audience-gateway-6475d78c68-qrnsz",
+        "name": "gateway",
+        "image_id": "quay.io/ckavili/lemon-fastapi@sha256:a62dc3333a0dc5890498b23991538ccda9517c4a591ba1c762f8ae962748fd1c",
+        "restart_count": 0
+      },
+      {
+        "pod": "lemonade-chat-proxy-57446dd65-gbrvr",
+        "name": "oauth-proxy",
+        "image_id": "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:1c0403f1eb89076cb6407881c24e88663e2bc49add51b53fe5baec47c601ab1a",
+        "restart_count": 0
+      },
+      {
+        "pod": "lemonade-dashboard-proxy-5988886f84-dntm8",
+        "name": "oauth-proxy",
+        "image_id": "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:1c0403f1eb89076cb6407881c24e88663e2bc49add51b53fe5baec47c601ab1a",
+        "restart_count": 0
+      },
+      {
+        "pod": "lemonade-provider-budget-56c869cfbc-tqswf",
+        "name": "budget",
+        "image_id": "quay.io/ckavili/lemon-fastapi@sha256:a62dc3333a0dc5890498b23991538ccda9517c4a591ba1c762f8ae962748fd1c",
+        "restart_count": 0
+      },
+      {
+        "pod": "lemonade-stand-54c545d7bd-7kxhn",
+        "name": "lemonade-stand",
+        "image_id": "quay.io/ckavili/lemon-fastapi@sha256:a62dc3333a0dc5890498b23991538ccda9517c4a591ba1c762f8ae962748fd1c",
+        "restart_count": 0
+      },
+      {
+        "pod": "lingua-detector-5db8845bd5-8sz87",
+        "name": "lingua-detector",
+        "image_id": "quay.io/ckavili/lingua-language-detector@sha256:582fd311bd2d426185c04cfbf7813f63bb1a40658ddb28a521f86a0c7e133af8",
+        "restart_count": 0
+      },
+      {
+        "pod": "minio-storage-guardrail-detectors-74d47f9cf7-f46mk",
+        "name": "minio",
+        "image_id": "quay.io/trustyai/modelmesh-minio-examples@sha256:65cb22335574b89af15d7409f62feffcc52cc0e870e9419d63586f37706321a5",
+        "restart_count": 0
+      },
+      {
+        "pod": "prompt-injection-detector-predictor-689f89d684-dtqpj",
+        "name": "kserve-container",
+        "image_id": "quay.io/trustyai/guardrails-detector-huggingface-runtime@sha256:3d052b86f8c857d62a26b9827900bbf922c6e584af8f83ae3c0dd83f17b74f43",
+        "restart_count": 0
+      },
+      {
+        "pod": "prompt-injection-detector-predictor-689f89d684-dtqpj",
+        "name": "kube-rbac-proxy",
+        "image_id": "registry.redhat.io/rhoai/odh-kube-rbac-proxy-rhel9@sha256:ce8eb36be58b878376e64146c0a4ec281666da63b0f13765689a77117f1771c2",
+        "restart_count": 0
+      },
+      {
+        "pod": "shiny-dashboard-5cfb978687-tdl4r",
+        "name": "shiny",
+        "image_id": "quay.io/sara_banderby/shinydashboard@sha256:6a0106c1173b9c91fad773dff06a21f9366094a4f846edb9643cb89290256242",
+        "restart_count": 0
+      }
+    ],
+    "application_revision_tested": "b6b2c6ccdea3cd3b178b36bfedb2e40b2323c363",
+    "urls": {
+      "chat": "https://lemonade-chat-lemonade-demo.apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com",
+      "dashboard": "https://lemonade-dashboard-lemonade-demo.apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com",
+      "control": "https://lemonade-chat-lemonade-demo.apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com/control",
+      "audience": "https://lemonade-audience-lemonade-demo.apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com/join",
+      "console": "https://console-openshift-console.apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com",
+      "ai": "https://rh-ai.apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com",
+      "source": "https://github.com/maxisses/lemonade-stand-assistant"
+    },
+    "checkpoint": "local/backups/2026-10-28-ooo-final",
+    "checkpoint_storage": "local_only",
+    "restored_records": {
+      "campaigns": {
+        "total": 6,
+        "preserved": 6
+      },
+      "profiles": {
+        "total": 1,
+        "preserved": 1
+      },
+      "sessions": {
+        "total": 5,
+        "preserved": 5
+      },
+      "events": {
+        "total": 8,
+        "preserved": 8
+      },
+      "calls": {
+        "total": 54,
+        "preserved": 54
+      }
+    },
+    "records_after_probes": {
+      "campaigns": {
+        "total": 6,
+        "preserved": 6
+      },
+      "profiles": {
+        "total": 1,
+        "preserved": 1
+      },
+      "sessions": {
+        "total": 5,
+        "preserved": 5
+      },
+      "events": {
+        "total": 8,
+        "preserved": 8
+      },
+      "calls": {
+        "total": 56,
+        "preserved": 54
+      }
+    },
+    "functional_results": [
+      {
+        "timestamp": "2026-11-04T09:08:31.848184+00:00",
+        "cluster_id": "2ts9ru3jvhafk5h0q1bvhlfqe1d9icqs",
+        "case": "local-block",
+        "requests": 1,
+        "retries": 0,
+        "outcome": "blocked",
+        "detectors": [
+          "regex"
+        ],
+        "seconds": 0.093,
+        "response_characters": 0,
+        "event_types": [
+          "error"
+        ],
+        "response_sha256": null,
+        "passed": true
+      },
+      {
+        "timestamp": "2026-11-04T09:08:34.423118+00:00",
+        "cluster_id": "2ts9ru3jvhafk5h0q1bvhlfqe1d9icqs",
+        "case": "benign",
+        "requests": 1,
+        "retries": 0,
+        "outcome": "allowed",
+        "detectors": [],
+        "seconds": 2.037,
+        "response_characters": 111,
+        "event_types": [
+          "chunk",
+          "done"
+        ],
+        "response_sha256": "151d26c28ab7b7748771054841f01486871d5730101d29df6665fcb38e3b672e",
+        "passed": true
+      },
+      {
+        "timestamp": "2026-11-04T09:08:35.553787+00:00",
+        "cluster_id": "2ts9ru3jvhafk5h0q1bvhlfqe1d9icqs",
+        "case": "language-policy",
+        "requests": 1,
+        "retries": 0,
+        "outcome": "blocked",
+        "detectors": [
+          "language"
+        ],
+        "seconds": 0.597,
+        "response_characters": 0,
+        "event_types": [
+          "error"
+        ],
+        "response_sha256": null,
+        "passed": true
+      }
+    ],
+    "operator_routes_and_dashboard_websocket": true,
+    "public_operator_paths_denied": true,
+    "audience_closed": true,
+    "active_campaign": false,
+    "model": "qwen38-27b",
+    "concurrency": 1,
+    "new_campaigns": 0,
+    "load_test_performed": false,
+    "event_capacity": "unmeasured",
+    "terraform_drift_check": "No changes after verified cluster import and reconciliation",
+    "recovery_notes": [
+      "Cluster POST response was lost; verified ready cluster imported instead of creating a duplicate.",
+      "RHCS 1.7.9 omitted immutable tags/admin credentials on import. Private state reconciliation and administrator credential rotation completed; fresh login passed.",
+      "Restore helper required explicit namespace-derived fsGroup under the OpenShift AI SCC. Corrected code passed 12 checkpoint tests and live restore.",
+      "Detector storage initializers retried before MinIO was ready; both recovered naturally and all pinned runtime images became ready."
+    ]
   }
 }

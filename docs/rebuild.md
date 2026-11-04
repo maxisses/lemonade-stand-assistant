@@ -1,5 +1,7 @@
 # Rebuild after the October break
 
+**Latest execution: 4 November 2026 — completed.** The rebuilt cluster uses ingress domain `apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com`. All 12 deployments are ready; the local checkpoint was restored and three serial functional probes passed. Audience admission remains closed and concurrency remains one. Run `scripts/show-credentials.sh` locally for current URLs and the renewed administrator password, or `python3 scripts/show_access.py` for URLs without secrets. See the build journal and version manifest for the measured results and recovery fixes. The procedure below applies to a future rebuild; do not recreate the currently running cluster.
+
 The application, CPU infrastructure, operator versions, model revisions, routes, guardrails, presentation and limits are stored in this fork. Persistent reports/settings and credentials need the private backup described below. Rebuilding a deleted ROSA HCP cluster provisions a new cluster; it is not an instant power-on. The new cluster receives new hostnames, so refresh all links and QR assets before use. Rebuild duration has not been benchmarked.
 
 Run commands from the `app/` checkout. Keep the AWS Open Environment account available while away. No automatic restart or scheduled model traffic is configured. Do not use `scripts/deploy.sh` or `scripts/undeploy.sh` for this environment: those are upstream variant helpers with different namespaces and unguarded contexts.
@@ -11,7 +13,7 @@ Run commands from the `app/` checkout. Keep the AWS Open Environment account ava
 - Private shutdown backup under `local/backups/`: campaign, audience and provider SQLite databases plus checksums and context. Campaign data includes saved profile revisions, attempts, reviews and reports. Audience data contains session metadata; its sessions must not be reopened on restore. Provider data retains settings and budget history.
 - The retained encrypted/versioned Terraform state bucket and local bootstrap state. Do not import the retired account's state or use the portfolio project's Terraform files.
 
-The shutdown is complete: ROSA and foundation have no managed resources; bootstrap/state storage remains. The final shutdown record identifies what was actually retained. A manifest and checksum alone are not a backup: verify the database files exist and `PRAGMA integrity_check` passes. The verified local checkpoint is `local/backups/2026-10-28-ooo-final`; its isolated restore matched all three original database hashes. The existing private state bucket is retained for recovery. The owner chose local-only checkpoint storage; no database archive has been uploaded to S3. Check [shutdown.md](shutdown.md) for the latest status. Do not place the `.env` or registry credentials in Git.
+At the completed 28 October shutdown, ROSA and foundation had no managed resources; bootstrap/state storage remained. That final shutdown record identifies the retained recovery inputs. A manifest and checksum alone are not a backup: verify the database files exist and `PRAGMA integrity_check` passes. The verified local checkpoint is `local/backups/2026-10-28-ooo-final`; its isolated restore matched all three original database hashes and its cluster restore passed on 4 November. The existing private state bucket is retained for recovery. The owner chose local-only checkpoint storage; no database archive has been uploaded to S3. See [shutdown.md](shutdown.md) for the historical shutdown inventory. Do not place the `.env` or registry credentials in Git.
 
 ## 1. Check access and recreate infrastructure
 
@@ -33,6 +35,8 @@ python3 scripts/tf.py foundation apply "$PWD/local/rebuild-foundation.tfplan"
 Repeat with `rosa` after the network has been applied. Keep OpenShift 4.21.34 and the pinned provider/module versions unless the service no longer offers them; review and record any required version change. The desired topology is three `m6i.2xlarge` CPU workers, no GPU resources and no cluster autoscaling. Saved plans/state contain sensitive material and stay under ignored `local/`.
 
 Do not blindly apply a plan that replaces resources in a different account or includes unexpected resources. Keep the shared account/organization ROSA roles that were reused from the portfolio environment outside this teardown/rebuild lifecycle.
+
+If a cluster-creation request loses its response, inspect the ROSA inventory before retrying: the service may have created the cluster successfully. Verify its account, region, subnet IDs, version and CPU topology before importing that exact cluster into the declared Terraform resource. RHCS 1.7.9 imports the ID but does not recover the user-declared tags or administrator credentials; a subsequent apply can reject those missing immutable fields. The provider's diagnostic can contain credential values, so capture such output privately and never paste it into chat or Git. The 4 November recovery used a private state backup, verified existing values and a narrow state reconciliation without `-force`, followed by fresh login and a zero-drift plan. Never accept cluster replacement to work around this import limitation. See the [pinned provider implementation](https://github.com/terraform-redhat/terraform-provider-rhcs/blob/v1.7.9/provider/clusterrosa/hcp/resource.go).
 
 ```sh
 python3 scripts/cluster_login.py
@@ -78,6 +82,8 @@ helm lint chart -f deploy/functional-values.yaml
 git diff -- deploy/functional-values.yaml presentation/config.js presentation/assets/audience-qr.json
 ```
 
+If `uv` is unavailable, create the environment with `python3 -m venv local/qr-venv` and install the same pinned dependency with `local/qr-venv/bin/python -m pip install 'segno==1.6.6'`.
+
 Review and commit the public URL and QR changes, then push the declared branch. The application phase verifies that the working tree is clean and this exact commit is present in the configured fork. Old printed QR codes must be replaced if the hostname changed.
 
 ```sh
@@ -96,6 +102,8 @@ python3 scripts/rebuild.py status
 The application phase checks pinned OpenShift AI readiness, current URL origins and the published Git revision, then requests a non-pruning sync. It starts no inference, audience window or campaign. Initial model downloads use pinned artifacts and require external network/registry access; they are not MaaS inference.
 
 Restore the validated private database backup before normal operation. The required files are `campaigns.sqlite` and `audience.sqlite` on `lemonade-campaign-data`, and `provider.sqlite` on `lemonade-provider-data`. The checkpoint helper uses SQLite's backup API, including committed WAL content. Its restore validates all checksums/integrity and the AWS account, requires all three public entry points and both writers to be stopped with their pods gone, and refuses to overwrite existing campaign/profile/request evidence. It mounts the two PVCs in a temporary pod with the pinned application image and restricted security context. The application GitOps definition uses manual sync, so do not request another sync during this restore.
+
+The helper explicitly derives its user ID and filesystem group from the new namespace's allocated ranges. OpenShift AI can select a different SCC for the helper than for the application; matching the user ID alone does not grant write access to the volume directories. Never reuse numeric IDs from the deleted namespace or loosen directory permissions to bypass this check.
 
 Wait until the initial application sync operation has succeeded and both `lemonade-campaign-data` and `lemonade-provider-data` PVCs are `Bound` before quiescing the application. Close audience admission and do not send test requests. Run:
 

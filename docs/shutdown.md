@@ -1,5 +1,7 @@
 # Four-day shutdown checkpoint — 28 October 2026
 
+**Historical shutdown record:** the owner requested a rebuild on 4 November 2026. The new CPU-only cluster is running and passed data-restoration and bounded functional acceptance. The completed shutdown inventory below describes 28 October, not current resource usage. Current details and URLs are in [build-journal.md](build-journal.md), [version-manifest.json](version-manifest.json) and [rebuild.md](rebuild.md). The original verified checkpoint remains local-only and unchanged.
+
 The owner requested a cost-saving shutdown and reproducible rebuild while away for four days. No automatic restart is scheduled. The retained AWS account is `058264461741`, region `eu-central-1`, former ROSA HCP cluster `lemonade-demo` (`2tn4c1sto6l3cj13je431lqenalg0f38`). Never use the retired account or the portfolio project's Terraform state.
 
 ## Current measured status — shutdown completed

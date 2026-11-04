@@ -159,6 +159,38 @@ class CheckpointTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'terminate'):
                 checkpoint.require_stopped(('entry',))
 
+    def test_restore_security_context_uses_allocated_user_and_supplemental_group(self):
+        namespace = {'metadata': {'annotations': {
+            'openshift.io/sa.scc.uid-range': '1000860000/10000',
+            'openshift.io/sa.scc.supplemental-groups': '1000870000/10000',
+        }}}
+        self.assertEqual(checkpoint.restore_security_context(namespace), {
+            'runAsUser': 1000860000, 'runAsNonRoot': True, 'fsGroup': 1000870000,
+            'seccompProfile': {'type': 'RuntimeDefault'},
+        })
+
+    def test_restore_security_context_falls_back_only_when_group_annotation_is_missing(self):
+        namespace = {'metadata': {'annotations': {'openshift.io/sa.scc.uid-range': '1000860000/10000'}}}
+        self.assertEqual(checkpoint.restore_security_context(namespace)['fsGroup'], 1000860000)
+        namespace['metadata']['annotations']['openshift.io/sa.scc.supplemental-groups'] = ''
+        with self.assertRaises(RuntimeError):
+            checkpoint.restore_security_context(namespace)
+
+    def test_restore_security_context_rejects_missing_malformed_and_invalid_ranges(self):
+        for value in (None, '', '1000860000', '1000860000-1000869999', 'abc/10000',
+                      '-1/10000', '0/10000', '1000860000/0', '4294967295/1',
+                      '4294967294/2', 1000860000):
+            with self.subTest(value=value):
+                namespace = {'metadata': {'annotations': {'openshift.io/sa.scc.uid-range': value}}}
+                with self.assertRaises(RuntimeError):
+                    checkpoint.restore_security_context(namespace)
+        namespace = {'metadata': {'annotations': {
+            'openshift.io/sa.scc.uid-range': '1000860000/10000',
+            'openshift.io/sa.scc.supplemental-groups': 'invalid',
+        }}}
+        with self.assertRaises(RuntimeError):
+            checkpoint.restore_security_context(namespace)
+
 
 if __name__ == '__main__':
     unittest.main()

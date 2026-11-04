@@ -89,4 +89,13 @@ The owner requested a four-day shutdown, durable backup and reproducible restart
 
 The owner explicitly chose local-only database checkpoints. Do not upload campaign, audience or provider backup archives to S3. The existing Terraform remote-state bucket remains part of the infrastructure backend.
 
-The 28 October shutdown is now complete: ROSA and foundation are destroyed, only the bootstrap/state bucket remains. Historical live URLs no longer work. Do not provision or resume automatically; follow the owner's next instruction and docs/rebuild.md.
+The 28 October shutdown completed: ROSA and foundation were destroyed, and only the bootstrap/state bucket remained. The old 28s8 cluster URLs remain retired. No automatic restart occurred; the owner's explicit rebuild request on 4 November authorized the restoration recorded below.
+
+
+## Current runtime — restored on 4 November 2026
+
+The owner authorized rebuilding the environment on 4 November. ROSA HCP 4.21.34 is running again in eu-central-1 with three ready m6i.2xlarge CPU workers, zero GPUs, GitOps 1.22.2 and OpenShift AI 3.5.2. All 12 application deployments are ready. The active ingress domain is apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com; deployment origins, presentation links and QR assets use the new domain.
+
+The verified local checkpoint restored six campaign reports, one saved profile, five audience sessions, eight audience events and 54 historical provider calls. These historical records are separate from new probe traffic and current-process counters. Three serial functional checks passed after restoration: local topic blocked (0.093 s), benign response allowed (2.037 s, 111 characters), and English-only policy blocked (0.597 s), with no retries or new campaigns. Audience admission remains closed and provider concurrency remains one. Event capacity, live concurrency above one and broader scans remain unmeasured and require the previously agreed discussion before execution.
+
+The shutdown history and recovery instructions above remain applicable to future planned shutdowns; they no longer describe the current running state. Keep database checkpoints local-only and keep credentials, state and raw private reports outside Git. There are 13 days until the event and six days until the 10 November feature freeze. No GPU provisioning is authorized.

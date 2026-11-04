@@ -7,6 +7,7 @@ import inspect
 import json
 import os
 from pathlib import Path
+import re
 import sqlite3
 import subprocess
 import sys
@@ -173,6 +174,30 @@ def require_stopped(deployments):
             raise RuntimeError('Wait for deployment pods to terminate: ' + deployment)
 
 
+def restore_security_context(namespace):
+    """Use the namespace's allocated UID/group even when another SCC is selected."""
+    annotations = namespace.get('metadata', {}).get('annotations', {})
+    if not isinstance(annotations, dict):
+        raise RuntimeError('Namespace security allocations are missing or invalid')
+
+    def range_start(value):
+        match = re.fullmatch(r'([0-9]+)/([0-9]+)', value) if isinstance(value, str) else None
+        if match is None:
+            raise RuntimeError('Namespace security allocation must use start/length notation')
+        start, length = map(int, match.groups())
+        # Linux reserves UID/GID 0 for root and the all-ones value as a sentinel.
+        maximum = (1 << 32) - 2
+        if start < 1 or length < 1 or start > maximum or length - 1 > maximum - start:
+            raise RuntimeError('Namespace security allocation is outside the valid numeric range')
+        return start
+
+    uid_range = annotations.get('openshift.io/sa.scc.uid-range')
+    user = range_start(uid_range)
+    group = range_start(annotations.get('openshift.io/sa.scc.supplemental-groups', uid_range))
+    return {'runAsUser': user, 'runAsNonRoot': True, 'fsGroup': group,
+            'seccompProfile': {'type': 'RuntimeDefault'}}
+
+
 def private_write(path, data):
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(fd, 'wb') as output:
@@ -218,8 +243,10 @@ def restore(directory):
     image = json.loads(oc('get', 'deployment', 'lemonade-stand', '-o', 'json'))['spec']['template']['spec']['containers'][0]['image']
     if '@sha256:' not in image:
         raise RuntimeError('Restore requires the pinned application image')
+    security_context = restore_security_context(json.loads(oc('get', 'namespace', NAMESPACE, '-o', 'json')))
     pod = {'apiVersion':'v1', 'kind':'Pod', 'metadata':{'name':'lemonade-checkpoint-restore','namespace':NAMESPACE},
            'spec':{'restartPolicy':'Never','automountServiceAccountToken':False,
+                   'securityContext':security_context,
                    'containers':[{'name':'restore','image':image,'command':['python','-c','import time; time.sleep(900)'],
                                   'securityContext':{'allowPrivilegeEscalation':False,'runAsNonRoot':True,'capabilities':{'drop':['ALL']},'seccompProfile':{'type':'RuntimeDefault'}},
                                   'resources':{'requests':{'cpu':'10m','memory':'64Mi'},'limits':{'cpu':'500m','memory':'256Mi'}},

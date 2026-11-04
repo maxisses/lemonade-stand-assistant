@@ -1,17 +1,23 @@
 # Project plan: launching the customer's Lemonade business unit
 
-Updated: 28 October 2026 · Event: 17 November 2026 · Time zone: Europe/Vienna
+Updated: 4 November 2026 · Event: 17 November 2026 · Time zone: Europe/Vienna
 
-## Temporary operational status — 28 October
+## Current operational status — restored on 4 November
 
-The four-day shutdown is complete. ROSA, all three workers, all six volumes, the load balancer, NAT/EIP/VPC, project IAM/OIDC and cluster DNS resources are removed. The ROSA and foundation Terraform states are empty. Only the private encrypted/versioned Terraform state bucket is retained, with small storage costs. Code and rebuild helpers are saved in the fork; profiles, campaign reports and settings are preserved in verified local-only SQLite backups. No application backup was uploaded to S3. See app/docs/shutdown.md for measured completion and app/docs/rebuild.md for recovery. No automatic restart is scheduled. The live-build descriptions below are historical validation evidence.
+The owner explicitly authorized rebuilding the environment on 4 November. ROSA HCP 4.21.34 is running in eu-central-1 with three ready m6i.2xlarge CPU workers and zero GPUs. OpenShift AI 3.5.2, GitOps 1.22.2 and all 12 application deployments are ready. The active ingress domain is apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com; application origins, presentation links and QR assets have been refreshed. CPU, platform, network and storage resources are running again.
+
+The verified local checkpoint restored six campaign reports, one saved profile, five audience sessions, eight audience events and 54 historical provider calls. The selected model remains qwen38-27b at concurrency one. Three small serial post-restore checks passed with no retries: local topic blocked (0.093 s), benign response allowed (2.037 s, 111 characters), and English-only policy blocked (0.597 s). No new campaign was started and audience admission remains closed. Historical evidence is preserved separately from these new probe requests and current-process counters. These checks do not establish event capacity or broader detection quality.
+
+## Historical shutdown — 28 October
+
+The requested shutdown completed on 28 October. ROSA, all three workers, all six volumes, the load balancer, NAT/EIP/VPC, project IAM/OIDC and cluster DNS resources were removed. The ROSA and foundation Terraform states were empty; only the private encrypted/versioned Terraform state bucket was retained, with small storage costs. Code and rebuild helpers were saved in the fork; profiles, campaign reports and settings were preserved in verified local-only SQLite backups. No application backup was uploaded to S3. See app/docs/shutdown.md for measured shutdown evidence and app/docs/rebuild.md for recovery. No automatic restart occurred: the explicit 4 November request authorized the current rebuild. Application backups remain local-only. The 28 October live-build descriptions below remain historical validation evidence.
 
 
 ## 1. Recommendation and objective
 
 Build a two-act demonstration on OpenShift AI in AWS: **first AgentOps with guardrails, then red teaming of the protected system**. The customer's fictional new Lemonade business unit launches an AI customer assistant. Act 1 shows useful answers, business policies, input/output checks, and observable runtime behavior, including manual audience challenges. Act 2 asks how thoroughly that protection has been tested, then introduces automated attacks, findings, and the improvement/retest loop. A baseline comparison supports evaluation; it is not the opening story.
 
-There are 20 calendar days until the event. The owner has authorized the build following the prerequisite audit. The CPU platform and original guarded inference path are working. The remaining critical path is live validation of the campaign/audience extension → reliable comparison tests → measured event profile and rehearsal. The feature freeze remains 10 November. Earlier milestone dates below are historical and must not be read as completed work. Prioritize the working reference and rehearsals over optional extensions.
+There are 13 calendar days until the event and six days until the 10 November feature freeze. The owner authorized the initial build following the prerequisite audit and the rebuild on 4 November. The CPU platform and guarded inference path have been restored and checked with three serial functional requests. The remaining critical path is the outstanding control/audience acceptance work → reliable comparison tests → an agreed, measured event profile and rehearsal. Earlier milestone dates below are historical and must not be read as completed work. Prioritize the working reference and rehearsals over optional extensions.
 
 **Confirmed:** 17 November 2026; customer event with approximately 100 attendees; stage demo with a short audience segment; resources will be arranged; Lemonade Stand presented as a new business unit of the customer; reproduce the original first, then adapt the dashboard and branding. All project artifacts, UI, prompts, evaluation content, and presentation materials are in English. Conversation with the project owner remains in German.
 
@@ -28,9 +34,9 @@ The referenced keynote was streamed on **13 May 2026**, not in 2027. The reposit
 - Use Terraform and GitOps conventions from the reference project. Exclude AAP, ACM, edge clusters, RDS, and a separately hosted MaaS platform from the baseline. The new small CPU budget proxy forwards to the existing external MaaS service; it does not host a model.
 - See PREREQUISITES.md for measured results and remaining validation. The historical GPU-based budget and pre-27-October milestones below are superseded; recalculate for actual CPU hours and the remaining period.
 
-## Functional build status and extension — 28 October 2026
+## Historical functional build and extension — 28 October 2026
 
-The replacement portfolio account now hosts a ready ROSA HCP 4.21.34 cluster in eu-central-1 with three m6i.2xlarge workers and zero GPUs. OpenShift AI 3.5.2, GitOps 1.22.2, FMS, and the CPU detectors are running. The external qwen38-27b endpoint works through the complete guarded application path. Functional values use non-thinking generation, a 128-token cap, one active request, no automatic retries, and complete-response validation. The exact provider checkpoint is not exposed.
+On 28 October, the replacement portfolio account hosted a ready ROSA HCP 4.21.34 cluster in eu-central-1 with three m6i.2xlarge workers and zero GPUs. OpenShift AI 3.5.2, GitOps 1.22.2, FMS, and the CPU detectors were running. The external qwen38-27b endpoint works through the complete guarded application path. Functional values use non-thinking generation, a 128-token cap, one active request, no automatic retries, and complete-response validation. The exact provider checkpoint is not exposed.
 
 Measured single-case checks: normal answer allowed (1.956 s), local topic rule blocked (0.179 s), English-only policy blocked (0.378 s), and instruction override blocked (0.806 s). Earlier failed integration requests are retained as failures. These observations do not establish detection quality across a corpus or event capacity. Browser checks also confirm the normal answer, topic block, and matching request counters.
 
@@ -123,7 +129,7 @@ flowchart LR
     B --> L[PVC: usage ledger]
 ~~~
 
-All live roles target the protected application. Baseline/protected comparison and private S3 report backup remain planned extensions, not selectable capabilities of the current Control UI. Model keys remain server-side. The same application path performs local checks, FMS input/output checks, generation settings and final outcome recording for presenter, audience and automation. The provider checkpoint is not exposed, so its model identifier alone cannot guarantee reproducibility after provider changes.
+All live roles target the protected application. Baseline/protected comparison remains a planned extension, not a selectable capability of the current Control UI. The owner chose local-only application checkpoints; the existing S3 bucket is retained for Terraform state, not campaign, audience or provider backup archives. Model keys remain server-side. The same application path performs local checks, FMS input/output checks, generation settings and final outcome recording for presenter, audience and automation. The provider checkpoint is not exposed, so its model identifier alone cannot guarantee reproducibility after provider changes.
 
 **Version decision during the first working integration:** the repository uses FMS Guardrails Orchestrator. OpenShift AI 3.5 documentation deprecates FMS and recommends NeMo, while stating FMS remains functional in 3.5. First verify the original path and assess a small NeMo implementation within the same early spike. Prefer NeMo for continued development if input/output checks, telemetry, and the app adapter work within at most two person-days. Otherwise use a specifically tested FMS configuration for the event and disclose its status. Do not update to an untested latest release.
 
@@ -142,7 +148,7 @@ NeMo is not a Helm toggle: API behavior, detector integration, and metadata diff
 | GPU components | Excluded from the initial build | Explicit owner approval required before adding GPU nodes or pools |
 | Networking | VPC/subnets, ingress, DNS, TLS, registry/model-source egress | NAT/proxy, firewall, certificate chain, venue network access |
 | Storage | Upstream 50 GiB model PVC plus images, reports, monitoring | Initially 100–200 GiB application data plus node root volumes; gp3 StorageClass |
-| Artifacts | Private S3 buckets for reports and optionally models; registry projects | Lifecycle, appropriate versioning, least-required service access |
+| Artifacts | Private local application checkpoints, existing S3 Terraform backend and registry projects | Verify local backup integrity; never upload application backup archives to S3 |
 | Operator tools | aws, rosa or openshift-install, oc, Helm, Git, container builder | Versions and access; no credentials in the repository |
 | Event equipment | Presenter laptop, display adapter, LAN/hotspot, local backup, second operator | Resolution, typography, firewall, QR access from phones |
 
@@ -210,14 +216,14 @@ Project aggregate numbers and deliberately selected examples. Do not automatical
 
 ## 9. Delivery schedule
 
-All dates below are in 2026. The original pre-27-October milestones were not completed on their listed dates. The platform/reference path is now working and the campaign/audience code plus first HTML deck are implemented. The active sequence is 28 October–3 November live extension validation and comparison work, 4–6 November bounded evaluation and first rehearsal, then the unchanged freeze/go-no-go dates. Larger scans and load tests require prior discussion with the owner.
+All dates below are in 2026. The original pre-27-October milestones were not completed on their listed dates. The platform, guarded application, campaign/audience code and first HTML deck were preserved during the shutdown and restored on 4 November. The current sequence is 4 November rebuild and small serial acceptance checks, then outstanding comparison/acceptance work and first rehearsal on 5–6 November, followed by the unchanged 10 November freeze and 13 November go/no-go. The shutdown displaced the earlier 28 October–3 November work assumption. Larger scans and load tests still require prior discussion with the owner.
 
 | Dates | Deliverable or decision | Dependency |
 |---|---|---|
 | 19–21 October | Confirm slot/owners, request branding assets, verify account lifetime/rights/quotas/capacity, arrange platform | Environment owner |
 | 22–23 October | OpenShift AI, GPU, and original path work; record FMS/NeMo decision and versions | AWS access and entitlements |
 | 26–30 October | Comparison modes, customer branding, correct metrics, access controls, initial regression tests | Working reference |
-| 2–6 November | Automated comparison, optional adaptive swarm, load/failure tests, first rehearsal | Stable application and measurements |
+| 4–6 November | Rebuild and serial acceptance on 4 November; remaining comparison/acceptance work and first rehearsal on 5–6 November | Restored application; larger scans/load tests require prior discussion |
 | 9–11 November | Final stage layout, English narration, backup recording; feature freeze on 10 November | Complete working flow |
 | 12–13 November | Second rehearsal with venue network/projector and phones; go/no-go on 13 November | Acceptance checks |
 | 16 November | Repeat rehearsal and smoke test; keep models/images warm; no platform migration | Frozen release |
@@ -283,7 +289,7 @@ Event day: run an end-to-end check about 60 minutes beforehand; start a fresh de
 
 ## 13. Next actions
 
-1. Finish the remaining control/audience acceptance checks on the existing CPU cluster: negative viewer/executor authorization and Origin checks, in-flight stop/recovery behavior and the real phone QR. Keep subsequent functional requests short and serial; preserve the already measured OAuth, CSRF, gateway and provider accounting evidence.
+1. Finish the remaining control/audience acceptance checks on the rebuilt CPU cluster and new 6abk routes: negative viewer/executor authorization and Origin checks, in-flight stop/recovery behavior and the real phone QR. Keep subsequent functional requests short and serial; preserve the already measured OAuth, CSRF, gateway and provider accounting evidence.
 2. Review the two pending semantic verdicts from the completed Adaptive campaign and preserve/export the Functional, Adaptive and same-policy retest reports. Verify in-flight interruption/cancellation without silently repeating uncertain calls; retain the successful completed-report restart evidence. Record measurements in the build journal.
 3. Inspect the completed Adaptive campaign's feedback-driven revisions and judge behavior, then implement the remaining baseline/protected comparison, a genuine policy-improvement retest and broader held-out corpus. No large scan or load test is implied by the existing implementation.
 4. Confirm slot length, customer assets and presenter/operator ownership. Rehearse the first HTML deck's Product team → Customer → Attacker → audience QR → AgentOps / Red Teaming sequence, including a technical diagram after each persona and direct live links.
