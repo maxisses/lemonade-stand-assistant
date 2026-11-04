@@ -97,7 +97,7 @@ The application phase checks pinned OpenShift AI readiness, current URL origins 
 
 Restore the validated private database backup before normal operation. The required files are `campaigns.sqlite` and `audience.sqlite` on `lemonade-campaign-data`, and `provider.sqlite` on `lemonade-provider-data`. The checkpoint helper uses SQLite's backup API, including committed WAL content. Its restore validates all checksums/integrity and the AWS account, requires all three public entry points and both writers to be stopped with their pods gone, and refuses to overwrite existing campaign/profile/request evidence. It mounts the two PVCs in a temporary pod with the pinned application image and restricted security context. The application GitOps definition uses manual sync, so do not request another sync during this restore.
 
-After the initial application sync has created and bound the claims, close audience admission and do not send test requests. Run:
+Wait until the initial application sync operation has succeeded and both `lemonade-campaign-data` and `lemonade-provider-data` PVCs are `Bound` before quiescing the application. Close audience admission and do not send test requests. Run:
 
 ```sh
 python3 scripts/checkpoint.py verify local/backups/2026-10-28-ooo-final
@@ -113,11 +113,12 @@ python3 scripts/checkpoint.py restore local/backups/2026-10-28-ooo-final
 oc --kubeconfig local/kubeconfig -n lemonade-demo wait --for=delete pod/lemonade-checkpoint-restore --timeout=60s
 oc --kubeconfig local/kubeconfig -n lemonade-demo scale deployment/lemonade-stand deployment/lemonade-provider-budget --replicas=1
 oc --kubeconfig local/kubeconfig -n lemonade-demo rollout status deployment/lemonade-stand --timeout=180s
+oc --kubeconfig local/kubeconfig -n lemonade-demo rollout status deployment/lemonade-provider-budget --timeout=180s
 oc --kubeconfig local/kubeconfig -n lemonade-demo scale deployment/lemonade-audience-gateway deployment/lemonade-chat-proxy deployment/lemonade-dashboard-proxy --replicas=1
 python3 scripts/rebuild.py status
 ```
 
-The helper leaves writers stopped even after a successful restore; restart them only after it reports success. If it refuses existing evidence, preserve that new evidence separately and resolve the conflict instead of deleting databases to force the restore.
+The helper leaves writers stopped even after a successful restore; restart them only after it reports success. Wait for both the application and provider rollouts to complete successfully before restarting the public entry points. If it refuses existing evidence, preserve that new evidence separately and resolve the conflict instead of deleting databases to force the restore.
 
 On startup, incomplete campaigns become interrupted, uncertain pending events become errors, and audience admission closes. Do not replay interrupted requests automatically. Check saved profile names/revisions, run/attempt counts, model and concurrency in Control after restore; keep concurrency at one. Historical reports and settings persist, while current-process dashboard counters start from zero as labeled.
 
