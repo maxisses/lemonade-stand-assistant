@@ -65,6 +65,13 @@
   document.querySelectorAll('[data-link]').forEach(el => {
     const url = new URL(config.links[el.dataset.link]);
     if (url.protocol !== 'https:') throw new Error('Live links must use HTTPS.');
+    // Keep chapter views attached to the base URL refreshed by the rebuild helper.
+    if (el.dataset.dashboardView) {
+      if (el.dataset.link !== 'dashboard' || !['agentops', 'red-team'].includes(el.dataset.dashboardView)) {
+        throw new Error('Unknown dashboard chapter view.');
+      }
+      url.hash = el.dataset.dashboardView;
+    }
     el.href = url.href;
   });
   // Verify the locally generated QR is still consistent with the configured URL.

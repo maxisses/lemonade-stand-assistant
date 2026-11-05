@@ -248,3 +248,11 @@ Rollout of `158f556` completed: all 12 application deployments were ready, both 
 ## 5 November 2026 — customer name confirmed
 
 The owner selected **Snemeis**. Replaced the active customer placeholders with **Snemeis Lemonade Division** in presenter chat, audience chat, both dashboard/control views and the HTML deck. Updated current planning and project instructions; logos and additional brand assets remain pending. Historical prerequisite/journal references retain their original placeholder context. This is a branding-only change with no policy, model, budget or access-control changes.
+
+## 5 November 2026 — clearer presentation chapters
+
+Applied the owner's requested keynote comparison to the existing 18-slide HTML deck. The overview and dividers now explicitly distinguish AgentOps with runtime guardrails from automated red teaming before release. Persona order and all five technical diagrams remain. The adaptive-method slide and campaign architecture show each strategy using its own measured feedback; optional model judging and separate human review remain distinct. Campaign-control detail moved into the existing speaker notes, while the stage slide focuses on scope, progress and pause/stop. The runbook keeps Functional as a preflight check and requires an agreed, rehearsed Adaptive run or a visibly labeled Previous run for the second chapter.
+
+All 11 dashboard links now choose the appropriate AgentOps or Red teaming view. Their hashes derive from the single configured dashboard base URL, so rebuilding the cluster continues to refresh them. Versioned stylesheet/script URLs prevent stale local browser assets from masking the update.
+
+Validation: JavaScript syntax and Git whitespace checks passed. The changed visual layouts were reviewed at 1280×720; a DOM bounds check across all 18 slides found no inspected text outside a slide, all chapter-specific URLs resolved correctly, and browser warning/error logs were empty. This presentation-only change made no model request, campaign start, audience admission or cluster modification.

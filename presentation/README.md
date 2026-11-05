@@ -1,6 +1,6 @@
-# Lemonade customer event — first HTML deck
+# Lemonade customer event — HTML stage deck
 
-The 18-slide English deck follows the portfolio demo's 1920 × 1080 Red Hat design: expressive cover, dark persona dividers, story rows, technical SVG diagrams and live-link chips. It is editable HTML/CSS, with no presentation runtime or external font dependency. The deck does not send model requests or start campaigns.
+The 18-slide English deck follows the portfolio demo's 1920 × 1080 Red Hat design: expressive cover, dark persona dividers, story rows, technical SVG diagrams and live-link chips. It is editable HTML/CSS, with no presentation runtime or external font dependency. The deck does not send model requests or start campaigns. Chapter 1 is **AgentOps: guardrails at runtime**. Chapter 2 is **Automated red teaming: evidence before release**. The customer, attacker and audience segments stay in Chapter 1; the release team opens Chapter 2 with the model-change question.
 
 ## Open and present
 
@@ -25,7 +25,7 @@ Move the pointer to reveal the controls, jump to any slide with the picker, or u
 
 ## Configure the customer and live links
 
-Edit **config.js** only for customer name, event date, presenter and route URLs. It contains public information only. Add customer logos only after the owner provides approved assets. The owner confirmed the customer name **Snemeis** on 5 November 2026; this is configured in the deck and application. Logo and other brand assets remain pending.
+Edit **config.js** only for customer name, event date, presenter and route URLs. Dashboard links derive `/#agentops` or `/#red-team` from that one configured base URL using `data-dashboard-view` in the HTML. The rebuild helper therefore updates both chapter destinations without duplicating cluster domains. It contains public information only. Add customer logos only after the owner provides approved assets. The owner confirmed the customer name **Snemeis** on 5 November 2026; this is configured in the deck and application. Logo and other brand assets remain pending.
 
 The chat and dashboard URLs are existing authenticated routes. Red Team Control and the initial audience flow are implemented, including their deployment definitions. Their public URLs are configured here. **The initial live deployment, real OpenShift authorization, functional/adaptive campaigns, retesting and fixed-role audience session flow were validated on 28 October 2026. The subsequent fa5f23f direct-chat/SSE and saved-profile checks also passed at concurrency 1 with qwen38-27b. Higher-concurrency live behavior, other-model inference and event capacity have not been validated.** `readiness` and `validation` in config.js record these distinctions and are not live endpoint monitors. Before showing the QR, verify the audience route with its window **closed by default**. Source-code implementation and deck rendering do not establish live readiness.
 
@@ -45,14 +45,16 @@ Suggested pacing is 18–22 minutes. Confirm the actual slot before freezing the
 
 | Slides | Suggested time | Action / transition |
 | --- | --- | --- |
-| 1–2 | 1 minute | Introduce the customer's new Lemonade business unit and the two acts. |
+| 1–2 | 1 minute | Introduce Snemeis' new Lemonade business unit and name both chapters: runtime guardrails, then automated red teaming. |
 | 3–5 | 3 minutes | Product team: define useful behavior and business rules; ask one benign question in protected chat; show its outcome; then the technical path. |
 | 6–7 | 3 minutes | Customer: normal question, language mistake and mild frustration. Let actual behavior drive the explanation. Show the architecture after the persona. |
 | 8–9 | 2 minutes | Attacker: use a prepared synthetic probe against the same protected app. Read the response; an allowed safe refusal is not an attack success. Then show the architecture. |
-| 10 | 2 minutes | Open a short audience window and display the QR. Participants land in chat and can switch the role suggestions there. Close the window before Act 2 unless overlap was rehearsed. |
-| 11–13 | 3 minutes | AgentOps / Red Teaming: ask what happens after a model update. Start a named functional campaign, observe real work and show its architecture. |
-| 14–16 | 4 minutes | Explain bounds, inspect one actual result, review it, and retest selected exact cases plus benign controls after a genuine versioned change. |
+| 10 | 2 minutes | Open a short audience window and display the QR. Participants land in chat and can switch the role suggestions there. Close the window before Chapter 2 unless overlap was rehearsed. |
+| 11–13 | 3 minutes | Open Chapter 2 with the model-change question. Switch to `/#red-team`, explain the adaptive feedback loop, and show an agreed, rehearsed Adaptive run or a clearly labeled Previous run. Then show its architecture. |
+| 14–16 | 4 minutes | Briefly show scope, progress and stop control. Inspect one actual result, review it, and retest selected exact cases plus benign controls after a genuine versioned change. Keep detailed budgets in Control and the speaker notes. |
 | 17–18 | 1–2 minutes | Summarize the platform and discuss the customer's release criteria. Close audience access and stop any remaining run. |
+
+Complete the small Functional smoke test before presenting. It is a fixed corpus with benign controls and does not demonstrate adaptive attacks. The adaptive explanation shows each strategy using its own measured result to generate its next probe. Human review follows as a separate release-evidence step; it is not required before every adaptive round. A recorded or previous run must remain visibly labeled, and the source-comparison dashboard is not a fair attack-success benchmark.
 
 Every persona has its own technical diagram and direct live links. Speaker notes on each slide contain exact cues, caveats and transitions. Customer-facing slides contain no invented outcome metrics, sales or revenue KPIs. Business rules are named; underlying technology appears in the technical views.
 
