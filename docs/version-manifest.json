@@ -1020,5 +1020,49 @@
       "Restore helper required explicit namespace-derived fsGroup under the OpenShift AI SCC. Corrected code passed 12 checkpoint tests and live restore.",
       "Detector storage initializers retried before MinIO was ready; both recovered naturally and all pinned runtime images became ready."
     ]
+  },
+  "dashboard_redesign_2026_11_05": {
+    "initial_deployment_revision": "158f556a898b75034e3ba6f3cc8d72c44ba9d3cc",
+    "source": "Selected keynote frames around44minutes and48:40, reinspected5November2026",
+    "stage_views": [
+      "AgentOps",
+      "Audience vs. Red Team"
+    ],
+    "operator_views": [
+      "Campaign",
+      "Audience",
+      "Review",
+      "Settings"
+    ],
+    "validation": {
+      "python_application_tests": 112,
+      "python_checkpoint_tests_system_runtime": 12,
+      "javascript_interaction_tests": 5,
+      "r_dashboard_checks": "Passed in pinned dashboard image",
+      "helm": "Lint/render and server dry-run passed",
+      "visual_viewports": [
+        "1280x800",
+        "1920x1080",
+        "390x844"
+      ],
+      "authenticated_https_and_websocket": true,
+      "ready_deployments": 12,
+      "preserved_records": {
+        "campaigns": 8,
+        "profiles": 2,
+        "sessions": 6,
+        "events": 12,
+        "provider_calls": 96
+      },
+      "new_model_calls": 0,
+      "audience_open": false,
+      "provider_concurrency": 1
+    },
+    "private_checkpoint": "local/backups/2026-11-05-before-dashboard",
+    "notes": [
+      "Policy bars use a shared scale across sources; detector hits remain separate from unique request outcomes.",
+      "Dashboard process totals reset on application rollout; durable campaign reports retain their original dates.",
+      "Python3.11/SQLite3.51 fails the existing WAL snapshot test; systemPython3.14/SQLite3.53 passes all12 checkpoint tests. Backup implementation unchanged."
+    ]
   }
 }

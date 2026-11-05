@@ -129,7 +129,7 @@ policy_rows <- function(detectors, available = TRUE, compact = FALSE, scale_max 
         div(class = "policy-label", labels[[key]]),
         div(class = "policy-track", `aria-hidden` = "true",
             div(class = "policy-fill", style = sprintf("width: %.2f%%", if (available) counts[[key]] / maximum * 100 else 0))),
-        div(class = "policy-count live-value", if (available) format(counts[[key]], big.mark = ",") else "—"))
+        div(class = "policy-count live-value", if (available) format(counts[[key]], big.mark = ",") else "--"))
     }))
 }
 
@@ -280,7 +280,7 @@ server <- function(input, output, session) {
     id <- name; field <- fields[[name]]
     output[[id]] <- renderText({
       m <- metrics_data()
-      if (is.null(m)) "—" else format(m[[field]], big.mark = ",")
+      if (is.null(m)) "--" else format(m[[field]], big.mark = ",")
     })
   })
   status_badge <- function() {
@@ -303,7 +303,7 @@ server <- function(input, output, session) {
     comparison_max <- if (available) max(c(1, policy_hits(m$source_detections$audience), policy_hits(m$source_detections$automation))) else 1
     source_card <- function(key, title) {
       values <- if (available) m$sources[[key]] else empty_source()
-      show <- function(field) if (available) format(values[[field]], big.mark = ",") else "—"
+      show <- function(field) if (available) format(values[[field]], big.mark = ",") else "--"
       div(class = paste("source-panel", key), h2(title),
         div(class = "source-main",
           div(class = "requests", div(class = "metric-label", "Requests"), div(class = "metric-value live-value", show("total"))),
