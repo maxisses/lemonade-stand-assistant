@@ -144,7 +144,7 @@ ui <- page_fluid(
   theme = bs_theme(bg = "#151515", fg = "#f5f5f5", primary = "#ee0000",
                    base_font = "system-ui", heading_font = "system-ui"),
   tags$head(
-    tags$title("Lemonade Division · Live guardrails"),
+    tags$title("Snemeis Lemonade Division · Live guardrails"),
     tags$style(HTML("
       :root { --paper:#151515; --panel:#202020; --line:#414141; --muted:#c7c7c7; --blue:#92c5f9; --green:#a9d792; --red:#ff8389; --purple:#c4b1ed; --gold:#f9df73; }
       * { box-sizing:border-box; } body { margin:0; background:var(--paper); font-family:'Red Hat Text','Helvetica Neue',Arial,sans-serif; }
@@ -228,7 +228,7 @@ ui <- page_fluid(
   ),
   div(class = "stage",
     div(class = "masthead",
-      div(class = "brand", "[Customer] Lemonade Division", tags$small("Demo scenario")),
+      div(class = "brand", "Snemeis Lemonade Division", tags$small("Demo scenario")),
       div(class = "toolbar",
         if (grepl("^https://[A-Za-z0-9.-]+(?::[0-9]+)?/[^?#]*$", CONTROL_URL, perl = TRUE))
           tags$a(href = CONTROL_URL, target = "_blank", rel = "noopener", "Operator controls ↗"),

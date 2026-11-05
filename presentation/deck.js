@@ -39,7 +39,7 @@
     });
     picker.value = current;
     document.getElementById('counter').textContent = `${current + 1} / ${slides.length}`;
-    document.title = `${current + 1} · ${slides[current].dataset.title} | Lemonade`;
+    document.title = `${current + 1} · ${slides[current].dataset.title} | ${config.customer} Lemonade`;
     updateNotes();
     if (updateHash) history.replaceState(null, '', `#${current + 1}`);
   }

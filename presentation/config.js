@@ -1,6 +1,6 @@
 /* Public presentation links only. Never add credentials or access tokens. */
 window.LEMONADE_DECK = {
-  "customer": "[Customer]",
+  "customer": "Snemeis",
   "eventDate": "17 November 2026",
   "presenter": "Max Dargatz · Red Hat",
   "links": {

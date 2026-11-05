@@ -21,7 +21,7 @@ There are 13 calendar days until the event and six days until the 10 November fe
 
 **Confirmed:** 17 November 2026; customer event with approximately 100 attendees; stage demo with a short audience segment; resources will be arranged; Lemonade Stand presented as a new business unit of the customer; reproduce the original first, then adapt the dashboard and branding. All project artifacts, UI, prompts, evaluation content, and presentation materials are in English. Conversation with the project owner remains in German.
 
-**Still open:** exact slot length, customer name/brand assets, and technical owners. Audience roles are confirmed as Product team, Customer and Attacker; AgentOps / Red Teaming is the operator persona in Act 2. Assume a 15-minute slot including two minutes of audience participation until confirmed. Use [Customer] placeholders for branding.
+**Still open:** exact slot length, customer logo/brand assets, and technical owners. Audience roles are confirmed as Product team, Customer and Attacker; AgentOps / Red Teaming is the operator persona in Act 2. Assume a 15-minute slot including two minutes of audience participation until confirmed. The owner confirmed the customer name **Snemeis** on 5 November 2026.
 
 The referenced keynote was streamed on **13 May 2026**, not in 2027. The repository is a suitable foundation for chat and guardrails; it does not provide the complete Summit swarm or the identical stage dashboard. See [RESEARCH.md](RESEARCH.md) for evidence and inspection limits.
 
@@ -68,13 +68,13 @@ Parallel replay of a fixed prompt list is an automated scan. Call it an adaptive
 
 ## 3. Customer scenario, branding, and dashboard
 
-**Selected scenario:** [Customer] is launching a new Lemonade business unit and wants its AI assistant to represent the new brand reliably. This is a fictional event scenario. Keep the recognizable Lemonade theme and original technical behavior as the reference; customization focuses on the launch story, visual identity, and dashboard.
+**Selected scenario:** Snemeis is launching a new Lemonade business unit and wants its AI assistant to represent the new brand reliably. This is a fictional event scenario. Keep the recognizable Lemonade theme and original technical behavior as the reference; customization focuses on the launch story, visual identity, and dashboard.
 
-Working title: **[Customer] Lemonade Division — Launch Control**.
+Working title: **Snemeis Lemonade Division — Launch Control**.
 
 **Confirmed persona story:** Product team building the assistant → Customer using it normally, making language mistakes or becoming frustrated → Attacker trying prompt manipulation → audience QR opening chat with those three suggestion modes → AgentOps / Red Teaming team checking before release. Each persona is followed by a technical architecture diagram and direct links. The role control changes prompt suggestions within the same chat session; it does not change the model, protection policy or access permissions, and does not reset allowance or displayed history. Product discovery is represented by Lemonade information; no catalogue API is implemented.
 
-Suggested opening: “Today, [Customer] is launching a new business unit: lemonade. Our AI sales assistant is ready. But can we trust it to represent our brand?”
+Suggested opening: “Today, Snemeis is launching a new business unit: lemonade. Our AI sales assistant is ready. But can we trust it to represent our brand?”
 
 Start with the original three policies, phrased for the new business:
 
@@ -96,7 +96,7 @@ Dashboard design brief:
 - Operator view: latency, queue, detector/model health, audience access, mode selection, and start/stop controls. Keep these details out of the main view unless they support the presentation.
 - Responsive audience chat and a simple QR/countdown view; use large type and concise labels for the projector.
 
-Customer name, logo, colors, and final business-unit name are pending inputs. Use explicit placeholders now. Display measured AI/request outcomes; invented revenue or sales figures would distract from the evidence. A lightweight branding pass is included in the application work estimate, provided assets arrive in time and no major visual redesign is added.
+Customer name is confirmed as Snemeis. Logo, colors, and a final business-unit name remain pending; use Snemeis Lemonade Division for the event scenario. Display measured AI/request outcomes; invented revenue or sales figures would distract from the evidence. A lightweight branding pass is included in the application work estimate, provided assets arrive in time and no major visual redesign is added.
 
 Reproduce the English original first. Then apply customer branding and the launch narrative, add automated evaluation, and harden event operation. Use synthetic data and text responses. RAG, CRM, ordering, payments, and real customer records are outside the event baseline.
 

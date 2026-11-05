@@ -2,7 +2,7 @@
 
 This workspace contains the plan and implementation of an OpenShift AI guardrails demo for a customer event on **17 November 2026**. Expect approximately 100 attendees, a stage demo, and a short audience participation segment. AWS resources can be arranged.
 
-The agreed scenario is the **Lemonade Stand as the customer's new business unit**. Preserve the Lemonade theme and adapt the dashboard/application branding after reproducing the original demo. Customer name, logo, and brand assets are pending; use explicit [Customer] placeholders.
+The agreed scenario is the **Lemonade Stand as the customer's new business unit**. Preserve the Lemonade theme and adapt the dashboard/application branding after reproducing the original demo. The owner confirmed the customer name **Snemeis** on 5 November 2026. Use **Snemeis Lemonade Division** in the application, dashboards and presentation. Customer logo and other brand assets remain pending.
 
 **Language:** all project files, code comments, UI, prompts, test cases, dashboards, and presentation materials must be in English. Communicate with the user in German. German localization is outside the current scope.
 

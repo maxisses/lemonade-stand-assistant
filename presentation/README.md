@@ -25,7 +25,7 @@ Move the pointer to reveal the controls, jump to any slide with the picker, or u
 
 ## Configure the customer and live links
 
-Edit **config.js** only for customer name, event date, presenter and route URLs. It contains public information only. Add customer logos only after the owner provides approved assets. The default is the explicit `[Customer]` placeholder.
+Edit **config.js** only for customer name, event date, presenter and route URLs. It contains public information only. Add customer logos only after the owner provides approved assets. The owner confirmed the customer name **Snemeis** on 5 November 2026; this is configured in the deck and application. Logo and other brand assets remain pending.
 
 The chat and dashboard URLs are existing authenticated routes. Red Team Control and the initial audience flow are implemented, including their deployment definitions. Their public URLs are configured here. **The initial live deployment, real OpenShift authorization, functional/adaptive campaigns, retesting and fixed-role audience session flow were validated on 28 October 2026. The subsequent fa5f23f direct-chat/SSE and saved-profile checks also passed at concurrency 1 with qwen38-27b. Higher-concurrency live behavior, other-model inference and event capacity have not been validated.** `readiness` and `validation` in config.js record these distinctions and are not live endpoint monitors. Before showing the QR, verify the audience route with its window **closed by default**. Source-code implementation and deck rendering do not establish live readiness.
 
