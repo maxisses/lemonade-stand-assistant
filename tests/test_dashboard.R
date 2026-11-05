@@ -67,3 +67,18 @@ stopifnot(m$total_requests == 31, audience$total == 12, automation$total == 9,
           m$total_requests == m$approved_requests + m$blocked_requests + m$service_errors +
             m$rejected_requests + m$cancelled_requests + m$active_requests)
 cat("Audience/automation source aggregation, cancellations, and unknown-outcome handling passed.\n")
+
+# Policy bars group detector aliases, retain empty rows, and isolate sources.
+stopifnot(m$source_detections$presenter$hap == 2,
+          m$source_detections$automation$hap == 8,
+          length(m$source_detections$audience) == 0,
+          scope$policy_hits(m$detections_by_detector)[["conduct"]] == 10,
+          all(scope$policy_hits(list()) == 0))
+aliases <- list(regex_fruit = 2, `regex-competitor` = 3, language_detection = 1,
+                `prompt-injection` = 4, unknown_detector = 99)
+stopifnot(identical(unname(scope$policy_hits(aliases)), c(0, 1, 4, 5)))
+small_panel <- as.character(scope$policy_rows(list(hap = 1), scale_max = 100))
+large_panel <- as.character(scope$policy_rows(list(hap = 100), scale_max = 100))
+stopifnot(grepl("width: 1.00%", small_panel, fixed = TRUE),
+          grepl("width: 100.00%", large_panel, fixed = TRUE))
+cat("Policy alias grouping, empty groups, shared bar scale and source isolation passed.\n")

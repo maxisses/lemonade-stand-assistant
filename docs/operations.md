@@ -180,3 +180,12 @@ Export required campaign reports before a rollout or teardown. There is no autom
 Before removing the extension, close audience admission and stop the active campaign, export the desired evidence, then remove its entry points and workloads. Disabling `demoControl` with pruning can remove the PVC manifests along with the services; inspect the rendered/pruned resource list first and preserve data explicitly. Check residual EBS volumes and the StorageClass reclaim policy during teardown. The manually created `lemonade-control` Secret has a separate lifecycle and may be removed after the extension is retired. Keep existing operator proxy Secrets if operator access is still needed.
 
 The remaining acceptance checks are recorded in [red-teaming.md](red-teaming.md). The initial persona deck and its speaker cues are in [presentation/README.md](../presentation/README.md). Neither a green Helm render nor a deck preview establishes live campaign correctness or venue capacity.
+
+
+## Stage dashboard views — 5 November 2026
+
+Use the authenticated dashboard Route with `/#agentops` for Act 1 and `/#red-team` for Act 2. The two navigation buttons change the displayed view only; they do not start work or reset counters. Full screen uses the browser's full-screen control. On laptop and projector displays, the main story fits one screen; phones stack the comparison panels.
+
+AgentOps shows Requests, Allowed, Blocked and Service errors, then four stable business-policy rows. Red teaming shows Audience and Automated Red Team side by side. Policy bars share a scale across comparison panels; they count detector hits, not successful attacks or unique blocks. Presenter traffic remains outside the comparison. Live-data failures hide values, and the footer states the current-process/reset scope. Technical definitions are under “How to read these numbers.”
+
+Control has four sections: Campaign, Audience, Review and Settings. Model/concurrency and custom profiles are under Settings. Review retains report date, evidence, human review and exact-case retest. A running campaign has an always-accessible control bar, even when a different saved report is selected. Audience includes the enlarged QR and open/close controls. Changing sections preserves unsubmitted form values. The existing access permissions, CSRF requirements, budgets and idle-only settings rules still apply.
