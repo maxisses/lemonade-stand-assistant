@@ -92,10 +92,17 @@ The owner explicitly chose local-only database checkpoints. Do not upload campai
 The 28 October shutdown completed: ROSA and foundation were destroyed, and only the bootstrap/state bucket remained. The old 28s8 cluster URLs remain retired. No automatic restart occurred; the owner's explicit rebuild request on 4 November authorized the restoration recorded below.
 
 
-## Current runtime — restored on 4 November 2026
+## Historical runtime — restored on 4 November 2026
 
-The owner authorized rebuilding the environment on 4 November. ROSA HCP 4.21.34 is running again in eu-central-1 with three ready m6i.2xlarge CPU workers, zero GPUs, GitOps 1.22.2 and OpenShift AI 3.5.2. All 12 application deployments are ready. The active ingress domain is apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com; deployment origins, presentation links and QR assets use the new domain.
+The owner authorized rebuilding the environment on 4 November. At that time, ROSA HCP 4.21.34 was running again in eu-central-1 with three ready m6i.2xlarge CPU workers, zero GPUs, GitOps 1.22.2 and OpenShift AI 3.5.2. All 12 application deployments were ready. The ingress domain was apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com; deployment origins, presentation links and QR assets were updated to that domain.
 
 The verified local checkpoint restored six campaign reports, one saved profile, five audience sessions, eight audience events and 54 historical provider calls. These historical records are separate from new probe traffic and current-process counters. Three serial functional checks passed after restoration: local topic blocked (0.093 s), benign response allowed (2.037 s, 111 characters), and English-only policy blocked (0.597 s), with no retries or new campaigns. Audience admission remains closed and provider concurrency remains one. Event capacity, live concurrency above one and broader scans remain unmeasured and require the previously agreed discussion before execution.
 
-The shutdown history and recovery instructions above remain applicable to future planned shutdowns; they no longer describe the current running state. Keep database checkpoints local-only and keep credentials, state and raw private reports outside Git. There are 13 days until the event and six days until the 10 November feature freeze. No GPU provisioning is authorized.
+The 4 November results above are historical; the current shutdown state is recorded below. Keep database checkpoints local-only and keep credentials, state and raw private reports outside Git. At that restoration, there were 13 days until the event and six days until the 10 November feature freeze. No GPU provisioning is authorized.
+
+
+## Current state — weekend shutdown completed on 6 November 2026
+
+The owner requested shutting down immediately for the weekend and renewed ROSA login. The current cluster and foundation are fully removed; their Terraform states contain zero managed resources. The final account-scoped audit found no active Lemonade compute, volumes, load balancers, network, project IAM/OIDC or cluster DNS resources. Only the private encrypted/versioned state bucket remains, with four bootstrap resources. Shared account resources were preserved. Both the 28s8 and 6abk URLs are retired.
+
+The latest verified local-only checkpoint is app/local/backups/2026-11-06-weekend-final from the parent (local/backups/2026-11-06-weekend-final inside app). It preserves eight campaigns, two profiles, six sessions, twelve events and 96 provider calls; isolated restore reproduced all three hashes. Do not use the older October checkpoint/counts for the next restore. No database archive was uploaded to S3. Read docs/shutdown.md and docs/rebuild.md before any subsequent cloud work. Rebuild only after an explicit owner request; no automatic restart is scheduled. No GPU or load-test authorization was added by this shutdown request.

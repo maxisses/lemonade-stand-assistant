@@ -1,5 +1,5 @@
 {
-  "recorded": "2026-11-04",
+  "recorded": "2026-11-06",
   "upstream_commit": "5c0f65f07e4773c9770dde866bb877fe727e3391",
   "provider_model": "qwen38-27b",
   "provider_model_revision": "not exposed by provider; behavior must be revalidated",
@@ -8,7 +8,7 @@
     "rhoai_channel": "stable-3.5",
     "gitops_channel": "gitops-1.22"
   },
-  "runtime_validation": "Rebuilt and functionally revalidated on 2026-11-04; see rebuild_2026_11_04 for current runtime. Earlier dated sections are historical; no capacity claim.",
+  "runtime_validation": "Offline after completed weekend shutdown on 2026-11-06. See shutdown_2026_11_06; earlier rebuild and validation sections are historical. Rebuild only on explicit owner request.",
   "images": [
     {
       "image": "quay.io/ckavili/lemon-fastapi:1.0.26",
@@ -1064,5 +1064,72 @@
       "Dashboard process totals reset on application rollout; durable campaign reports retain their original dates.",
       "Python3.11/SQLite3.51 fails the existing WAL snapshot test; systemPython3.14/SQLite3.53 passes all12 checkpoint tests. Backup implementation unchanged."
     ]
+  },
+  "shutdown_2026_11_06": {
+    "date": "2026-11-06",
+    "status": "completed_cluster_and_network_destroyed",
+    "account": "058264461741",
+    "region": "eu-central-1",
+    "cluster_id": "2ts9ru3jvhafk5h0q1bvhlfqe1d9icqs",
+    "vpc_id": "vpc-055157230688f4ec8",
+    "recorded_at": "2026-11-06T14:49:07.071433+00:00",
+    "cloud_compute_still_running": false,
+    "rosa_cluster_absent": true,
+    "private_checkpoint": "local/backups/2026-11-06-weekend-final",
+    "local_restore_hash_verified": true,
+    "archive_sha256": "8e27ad2a0d3af55ebe4b99e8908161edb36032c5815156cc360943e5394fa93b",
+    "archive_bytes": 12943,
+    "records": {
+      "campaigns": 8,
+      "custom_profiles": 2,
+      "audience_sessions": 6,
+      "audience_events": 12,
+      "provider_calls": 96
+    },
+    "checkpoint_storage_decision": "local_only_by_owner",
+    "s3_checkpoint_uploaded": false,
+    "automatic_restart_scheduled": false,
+    "terraform_destroyed_resources": {
+      "rosa": 32,
+      "foundation": 15
+    },
+    "terraform_remaining_managed_resources": {
+      "rosa": 0,
+      "foundation": 0,
+      "bootstrap": 4
+    },
+    "rosa_cluster_deletion_seconds": 1085,
+    "remaining_project_resources": {
+      "running_workers": 0,
+      "volumes": 0,
+      "snapshots": 0,
+      "load_balancers": 0,
+      "active_nat_gateways": 0,
+      "elastic_ips": 0,
+      "vpcs": 0,
+      "network_interfaces": 0,
+      "vpc_endpoints": 0,
+      "auto_scaling_groups": 0,
+      "project_security_groups": 0,
+      "project_iam_roles": 0,
+      "project_iam_policies": 0,
+      "oidc_providers": 0,
+      "project_hosted_zones": 0,
+      "project_log_groups": 0
+    },
+    "retained_project_cloud_resources": [
+      "lemonade-demo-tfstate-058264461741"
+    ],
+    "residual_security_group_cleanup": {
+      "id": "sg-06f110db08a214170",
+      "ownership_and_zero_dependencies_verified": true
+    },
+    "private_state_bucket_verified": true,
+    "checkpoint_prefix_empty": true,
+    "audit_incomplete_queries": [],
+    "audit_scope": "Selected regional services plus global IAM, S3 and Route53; not an account-wide cost audit.",
+    "private_audit": "local/shutdown-audit-2026-11-06.json",
+    "retained_cost_note": "Small S3 state-storage/request charges remain possible; not an account-wide billing claim.",
+    "audit_started_at": "2026-11-06T14:47:23.003385+00:00"
   }
 }
