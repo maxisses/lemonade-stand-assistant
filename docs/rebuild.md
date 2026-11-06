@@ -1,6 +1,6 @@
-# Rebuild after the October break
+# Rebuild after a planned shutdown
 
-**Latest execution: 4 November 2026 — completed.** The rebuilt cluster uses ingress domain `apps.rosa.lemonade-demo.6abk.p3.openshiftapps.com`. All 12 deployments are ready; the local checkpoint was restored and three serial functional probes passed. Audience admission remains closed and concurrency remains one. Run `scripts/show-credentials.sh` locally for current URLs and the renewed administrator password, or `python3 scripts/show_access.py` for URLs without secrets. See the build journal and version manifest for the measured results and recovery fixes. The procedure below applies to a future rebuild; do not recreate the currently running cluster.
+**Latest request: weekend shutdown on 6 November 2026 — in progress.** ROSA deletion is running; network teardown and residual-resource checks are pending. The latest verified local-only checkpoint is `local/backups/2026-11-06-weekend-final`, with eight campaigns, two profiles, six audience sessions, twelve events and 96 provider calls. Follow [shutdown.md](shutdown.md) for actual completion. Do not rebuild until the owner explicitly asks. The earlier 4 November rebuild remains historical acceptance evidence, not a statement that the environment is currently available. The `6abk` URLs are being retired.
 
 The application, CPU infrastructure, operator versions, model revisions, routes, guardrails, presentation and limits are stored in this fork. Persistent reports/settings and credentials need the private backup described below. Rebuilding a deleted ROSA HCP cluster provisions a new cluster; it is not an instant power-on. The new cluster receives new hostnames, so refresh all links and QR assets before use. Rebuild duration has not been benchmarked.
 
@@ -13,7 +13,7 @@ Run commands from the `app/` checkout. Keep the AWS Open Environment account ava
 - Private shutdown backup under `local/backups/`: campaign, audience and provider SQLite databases plus checksums and context. Campaign data includes saved profile revisions, attempts, reviews and reports. Audience data contains session metadata; its sessions must not be reopened on restore. Provider data retains settings and budget history.
 - The retained encrypted/versioned Terraform state bucket and local bootstrap state. Do not import the retired account's state or use the portfolio project's Terraform files.
 
-At the completed 28 October shutdown, ROSA and foundation had no managed resources; bootstrap/state storage remained. That final shutdown record identifies the retained recovery inputs. A manifest and checksum alone are not a backup: verify the database files exist and `PRAGMA integrity_check` passes. The verified local checkpoint is `local/backups/2026-10-28-ooo-final`; its isolated restore matched all three original database hashes and its cluster restore passed on 4 November. The existing private state bucket is retained for recovery. The owner chose local-only checkpoint storage; no database archive has been uploaded to S3. See [shutdown.md](shutdown.md) for the historical shutdown inventory. Do not place the `.env` or registry credentials in Git.
+At the completed 28 October shutdown, ROSA and foundation had no managed resources; bootstrap/state storage remained. That final shutdown record identifies the retained recovery inputs. A manifest and checksum alone are not a backup: verify the database files exist and `PRAGMA integrity_check` passes. The historical October checkpoint restored successfully on 4 November. For the next rebuild, use `local/backups/2026-11-06-weekend-final`; its local isolated restore matched all three database hashes. Its future cluster restoration still requires the acceptance checks below. The existing private state bucket is retained for recovery. The owner chose local-only checkpoint storage; no database archive has been uploaded to S3. See [shutdown.md](shutdown.md) for the historical shutdown inventory. Do not place the `.env` or registry credentials in Git.
 
 ## 1. Check access and recreate infrastructure
 
@@ -108,7 +108,7 @@ The helper explicitly derives its user ID and filesystem group from the new name
 Wait until the initial application sync operation has succeeded and both `lemonade-campaign-data` and `lemonade-provider-data` PVCs are `Bound` before quiescing the application. Close audience admission and do not send test requests. Run:
 
 ```sh
-python3 scripts/checkpoint.py verify local/backups/2026-10-28-ooo-final
+python3 scripts/checkpoint.py verify local/backups/2026-11-06-weekend-final
 oc --kubeconfig local/kubeconfig -n lemonade-demo scale deployment/lemonade-audience-gateway deployment/lemonade-chat-proxy deployment/lemonade-dashboard-proxy deployment/lemonade-stand deployment/lemonade-provider-budget --replicas=0
 oc --kubeconfig local/kubeconfig -n lemonade-demo get pods -l app=lemonade-stand
 oc --kubeconfig local/kubeconfig -n lemonade-demo get pods -l app=lemonade-provider-budget
@@ -117,7 +117,7 @@ oc --kubeconfig local/kubeconfig -n lemonade-demo get pods -l app=lemonade-provi
 Also check `oc --kubeconfig local/kubeconfig -n lemonade-demo get pods -l 'app in (lemonade-audience-gateway,lemonade-chat-proxy,lemonade-dashboard-proxy)'`. Wait until all five pod selections are empty, then restore:
 
 ```sh
-python3 scripts/checkpoint.py restore local/backups/2026-10-28-ooo-final
+python3 scripts/checkpoint.py restore local/backups/2026-11-06-weekend-final
 oc --kubeconfig local/kubeconfig -n lemonade-demo wait --for=delete pod/lemonade-checkpoint-restore --timeout=60s
 oc --kubeconfig local/kubeconfig -n lemonade-demo scale deployment/lemonade-stand deployment/lemonade-provider-budget --replicas=1
 oc --kubeconfig local/kubeconfig -n lemonade-demo rollout status deployment/lemonade-stand --timeout=180s
@@ -131,6 +131,8 @@ The helper leaves writers stopped even after a successful restore; restart them 
 On startup, incomplete campaigns become interrupted, uncertain pending events become errors, and audience admission closes. Do not replay interrupted requests automatically. Check saved profile names/revisions, run/attempt counts, model and concurrency in Control after restore; keep concurrency at one. Historical reports and settings persist, while current-process dashboard counters start from zero as labeled.
 
 ## 5. Acceptance before inviting users
+
+Before generating new traffic, compare every saved record ID and table count against the selected checkpoint. The latest checkpoint contains eight campaigns, two profiles, six sessions, twelve events and 96 provider calls. Do not reuse the October acceptance helper's hard-coded six/one/five/eight/54 baseline without updating it to the selected checkpoint.
 
 Check both GitOps Applications are Synced/Healthy, all desired application deployments are ready, the provider is not unexpectedly paused and audience admission is closed. Run `python3 scripts/show_access.py` for the new links. Sign in once and confirm Control, chat, dashboard and its WebSocket work. Verify the public audience route does not expose Control or metrics, and the QR resolves to the new `/join` URL.
 

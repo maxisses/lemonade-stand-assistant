@@ -18,7 +18,15 @@ def run_private(args, env, log):
         raise RuntimeError('Command failed; private diagnostics: ' + str(log))
 
 
-def inspect_plan(stage, path, env):
+def verify_checkpoint_context(saved, recorded):
+    """An older cluster in the same AWS account is not a current data backup."""
+    for name in ('aws_account_id', 'region', 'cluster_id'):
+        expected = recorded.get(name)
+        if not isinstance(expected, str) or not expected or saved.get('context', {}).get(name) != expected:
+            raise RuntimeError('Checkpoint account, region or cluster mismatch')
+
+
+def inspect_plan(stage, path, env, *, recorded=None):
     result = subprocess.run(['terraform', '-chdir=' + str(ROOT / 'infra' / stage), 'show', '-json', str(path)],
                             env=env, capture_output=True)
     if result.returncode:
@@ -28,6 +36,7 @@ def inspect_plan(stage, path, env):
         if plan.get('variables', {}).get(name, {}).get('value') != env['TF_VAR_' + name]:
             raise RuntimeError('Teardown plan account or region mismatch')
     resources = []
+    cluster_resources = 0
     for change in plan.get('resource_changes', []):
         if change.get('mode') == 'data':
             continue
@@ -39,6 +48,23 @@ def inspect_plan(stage, path, env):
                  if stage == 'rosa' else address.startswith('module.vpc.'))
         if not valid:
             raise RuntimeError('Unexpected resource outside the project teardown scope')
+        if change.get('type') == 'rhcs_cluster_rosa_hcp' or '.rhcs_cluster_rosa_hcp.' in address:
+            cluster_resources += 1
+            if cluster_resources > 1:
+                raise RuntimeError('Teardown plan contains multiple ROSA clusters')
+            if recorded is None:
+                recorded = json.loads((ROOT / 'local/context.json').read_text())
+            if (recorded.get('aws_account_id') != env['TF_VAR_expected_account_id'] or
+                    recorded.get('region') != env['TF_VAR_region'] or
+                    not isinstance(recorded.get('cluster_id'), str) or not recorded['cluster_id']):
+                raise RuntimeError('Current cluster context differs from teardown environment')
+            expected = {'id': recorded['cluster_id'],
+                        'aws_account_id': recorded['aws_account_id'],
+                        'cloud_region': recorded['region'],
+                        'name': recorded.get('cluster_name', 'lemonade-demo')}
+            before = change['change'].get('before')
+            if not isinstance(before, dict) or any(before.get(key) != value for key, value in expected.items()):
+                raise RuntimeError('Teardown plan ROSA identity differs from the current project cluster')
         if actions == ['delete']:
             resources.append(address)
     return resources
@@ -56,9 +82,7 @@ def main():
         raise RuntimeError('Use a private checkpoint under local/')
     saved = checkpoint.verify(folder)
     recorded = checkpoint.context()
-    for name in ('aws_account_id', 'region'):
-        if saved['context'].get(name) != recorded.get(name):
-            raise RuntimeError('Checkpoint account or region mismatch')
+    verify_checkpoint_context(saved, recorded)
     env = terraform_environment(args.stage)
     verify_backend(args.stage, env)
     # Foundation may only be removed after the ROSA stage is genuinely empty.
@@ -74,7 +98,7 @@ def main():
     if args.action == 'plan':
         run_private([sys.executable, str(ROOT / 'scripts/tf.py'), args.stage, 'plan', '-destroy',
                      '-out=' + str(path), '-no-color', '-input=false'], env, log)
-    resources = inspect_plan(args.stage, path, env)
+    resources = inspect_plan(args.stage, path, env, recorded=recorded)
     print('Verified delete-only plan:', args.stage, len(resources), 'managed resources', flush=True)
     if args.action == 'apply':
         print('Applying saved teardown plan; progress is recorded privately in ' + str(log), flush=True)

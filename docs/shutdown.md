@@ -1,4 +1,25 @@
-# Four-day shutdown checkpoint — 28 October 2026
+# Weekend shutdown — 6 November 2026
+
+**In progress:** the owner requested an immediate shutdown for the weekend. Audience access is closed, no campaign or provider work was active, and all three entry points plus both database writers are stopped. A fresh verified checkpoint and infrastructure baseline are local-only. The exact current cluster's delete-only Terraform plan has been applied; ROSA deletion is running. Foundation/network deletion and the final residual-resource audit remain pending. Closed application routes alone do not mean AWS compute is stopped.
+
+Current scope: AWS account `058264461741`, region `eu-central-1`, cluster `lemonade-demo` (`2ts9ru3jvhafk5h0q1bvhlfqe1d9icqs`), VPC `vpc-055157230688f4ec8`. The `6abk` URLs are being retired. No automatic restart is scheduled.
+
+The new checkpoint is `local/backups/2026-11-06-weekend-final/`. All three database hashes, schemas, idle-state checks and SQLite integrity checks passed. An isolated restore reproduced their hashes. It contains eight campaigns, two saved profiles, six audience sessions, twelve audience events and 96 provider calls. No inference or new campaign was started during shutdown. The private archive has SHA-256 `8e27ad2a0d3af55ebe4b99e8908161edb36032c5815156cc360943e5394fa93b` and is 12,943 bytes. Nothing was uploaded to S3.
+
+Private pre-deletion infrastructure state and ownership evidence are in `local/backups/2026-11-06-weekend-infrastructure/`. The baseline identifies the current VPC, three worker instances and six owned EBS volumes. Use these inputs for the final read-only audit, never the old October identifiers:
+
+```sh
+python3 scripts/audit_shutdown.py \
+  --infrastructure-backup local/backups/2026-11-06-weekend-infrastructure \
+  --baseline-inventory local/backups/2026-11-06-weekend-infrastructure/baseline-inventory.json \
+  --output local/shutdown-audit-2026-11-06.json
+```
+
+Retain the private, encrypted, versioned Terraform state bucket. Database checkpoints remain local-only. Rebuild only on an explicit owner request and restore the latest verified checkpoint above. Historical October evidence follows.
+
+---
+
+# Historical four-day shutdown — 28 October 2026
 
 **Historical shutdown record:** the owner requested a rebuild on 4 November 2026. The new CPU-only cluster is running and passed data-restoration and bounded functional acceptance. The completed shutdown inventory below describes 28 October, not current resource usage. Current details and URLs are in [build-journal.md](build-journal.md), [version-manifest.json](version-manifest.json) and [rebuild.md](rebuild.md). The original verified checkpoint remains local-only and unchanged.
 
@@ -36,9 +57,9 @@ python3 scripts/shutdown.py foundation plan --checkpoint local/backups/2026-10-2
 python3 scripts/shutdown.py foundation apply --checkpoint local/backups/2026-10-28-ooo-final
 ```
 
-The helper verifies account/region/backend, requires a verified checkpoint, accepts only delete/no-op changes inside the expected Terraform modules, and saves diagnostic output privately. The foundation stage refuses to proceed until the ROSA state has no managed resources. Inspect the resource addresses from each plan before applying. The standard Terraform module owns the Lemonade-specific cluster/IAM/OIDC lifecycle. Shared account/organization ROSA roles remain outside this teardown.
+The helper verifies account/region/backend and the exact current ROSA identity, requires a verified checkpoint from that same cluster, accepts only delete/no-op changes inside the expected Terraform modules, and saves diagnostic output privately. The foundation stage refuses to proceed until the ROSA state has no managed resources. Inspect the resource addresses from each plan before applying. The standard Terraform module owns the Lemonade-specific cluster/IAM/OIDC lifecycle. Shared account/organization ROSA roles remain outside this teardown.
 
-Retain `bootstrap`: the private, encrypted, versioned S3 state bucket and its local Terraform state. Do not purge state versions. Retained storage has small ongoing charges; zero total cost is not claimed. After deletion, inspect remaining EC2 instances, NAT/EIPs, load balancers, ENIs, EBS volumes, logs and project IAM/OIDC resources. Remove only confirmed Lemonade leftovers, preserving the private state bucket. The measured completed inventory is recorded above. Use `python3 scripts/audit_shutdown.py` to repeat the read-only audit for this recorded shutdown; it writes only under ignored `local/`.
+Retain `bootstrap`: the private, encrypted, versioned S3 state bucket and its local Terraform state. Do not purge state versions. Retained storage has small ongoing charges; zero total cost is not claimed. After deletion, inspect remaining EC2 instances, NAT/EIPs, load balancers, ENIs, EBS volumes, logs and project IAM/OIDC resources. Remove only confirmed Lemonade leftovers, preserving the private state bucket. The measured completed inventory is recorded above. The current audit helper requires explicit pre-deletion state and baseline inputs that match the current project context. Use the invocation in the latest shutdown record above; it writes only under ignored `local/`. Do not use the historical October scope to classify a rebuilt cluster.
 
 Do not delete data volumes independently before cluster removal unless backup verification is complete. The SQLite backup preserves the durable application evidence; the pinned 50-GiB detector-model cache may be downloaded again. A cloud snapshot is optional, not part of the current completed checkpoint.
 

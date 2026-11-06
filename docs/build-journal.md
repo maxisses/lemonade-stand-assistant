@@ -256,3 +256,10 @@ Applied the owner's requested keynote comparison to the existing 18-slide HTML d
 All 11 dashboard links now choose the appropriate AgentOps or Red teaming view. Their hashes derive from the single configured dashboard base URL, so rebuilding the cluster continues to refresh them. Versioned stylesheet/script URLs prevent stale local browser assets from masking the update.
 
 Validation: JavaScript syntax and Git whitespace checks passed. The changed visual layouts were reviewed at 1280×720; a DOM bounds check across all 18 slides found no inspected text outside a slide, all chapter-specific URLs resolved correctly, and browser warning/error logs were empty. This presentation-only change made no model request, campaign start, audience admission or cluster modification.
+
+
+## 6 November 2026 — weekend shutdown requested
+
+The owner requested an immediate weekend shutdown and renewed ROSA device login. Verified account 058264461741, eu-central-1, cluster 2ts9ru3jvhafk5h0q1bvhlfqe1d9icqs and VPC vpc-055157230688f4ec8. Closed audience access, found no active campaign or provider work, then stopped all three entry points. Saved a consistent local-only checkpoint containing eight campaigns, two profiles, six sessions, twelve events and 96 provider calls. Checksums/schema/idle/integrity checks and isolated restore hashes passed. Private infrastructure state and baseline ownership of three workers and six EBS volumes were saved before deletion. Both database writers were stopped after backup. No inference, campaign or cloud backup upload occurred.
+
+The 32-resource ROSA delete-only plan targets the verified cluster and eleven project-owned IAM roles. Apply is running; network teardown and final inventory are pending. The recovery guide points to the latest checkpoint. Hardened future shutdowns against stale same-account cluster checkpoints and plans; the read-only audit now requires current pre-deletion infrastructure and volume/instance ownership inputs rather than hard-coded October identifiers. All 21 targeted shutdown/audit tests passed. No automatic restart is scheduled.
