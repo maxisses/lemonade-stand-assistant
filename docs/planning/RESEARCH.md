@@ -165,3 +165,13 @@ The adapted dashboard follows that visual hierarchy with separate AgentOps and R
 ## 9 November 2026 — stage context source review
 
 The revised 22-slide deck uses the five requested Red Hat articles to connect the Metal to Agents architecture with runtime guardrails and pre-release evaluation. See [the presentation source map](../../presentation/README.md#editorial-context-and-source-map--9-november-2026) for source links, factual boundaries and the dated incident selection. The opening and closing use the same architecture visual. Documentation verification distinguishes OpenShift AI 3.5.2 from 3.6 Early Access; FMS remains this demo's implementation and its documented deprecation is explicit. This editorial change does not add tool, network-containment or capacity evidence.
+
+
+## Agent Sandbox source review — 9 November 2026
+
+- [Requested article and reference demonstration](https://developers.redhat.com/articles/2026/07/15/red-hat-build-agent-sandbox-isolated-workload-management-kubernetes): separates generation from explicit execution and explains the division between workload lifecycle and VM-backed isolation. Its breakout illustration is not evidence that every ordinary container can be escaped, or that our current application permits execution. No prototype commands were executed.
+- [Agent Sandbox 1.13 documentation](https://docs.redhat.com/en/documentation/openshift_sandboxed_containers/1.13/html/deploying_red_hat_build_of_agent_sandbox/discover-agent-sandbox_agent-sandbox): lists AWS runc/kata-remote as Technology Preview, with a 4.21.21+ minimum in the 4.21 column. Our version clears that numeric minimum; exact HCP integration remains a separate check.
+- [ROSA HCP deployment guide](https://cloud.redhat.com/experts/rosa/sandboxed-containers/): a Red Hat expert's validated 4.20 example provides a candidate STS/peer-pod path. It does not establish acceptance on this 4.21 cluster. Per-pod EC2 VMs incur separate cost; a local Kata metal pool is an alternative with different cost and hardware requirements.
+- [OSC 1.13 AWS guide](https://docs.redhat.com/en/documentation/openshift_sandboxed_containers/1.13/html/deploying_openshift_sandboxed_containers_on_aws/index): authoritative installation, HCP limitations, image, networking and cleanup reference. Verify the detailed matrix before installation; the HCP chapter fetch returned 503 during this audit.
+
+The live operator catalog independently confirms candidate versions 0.9.0 / 1.13.1. No sandbox isolation or availability claim has been validated in this environment. The proposed stage extension and acceptance steps are recorded in PROJECT_PLAN.md.

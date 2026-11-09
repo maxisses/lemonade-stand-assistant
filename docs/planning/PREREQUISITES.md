@@ -91,3 +91,12 @@ The owner subsequently authorized switching to the portfolio AWS account and cla
 ## Functional build completed, 27 October 2026
 
 The replacement account's billing and permissions supported the complete CPU build. ROSA/OpenShift AI/GitOps, CPU model downloads, detector serving, external MaaS through guardrails, and private operator access are now verified. No further owner-provided prerequisite is blocking this functional baseline. No GPU was provisioned. Audience controls, evaluation budgets, event capacity, final branding assets, and stage preparation are subsequent project work, not evidence supplied by these initial functional checks. The active account incurs CPU, managed-platform, networking, and storage charges until teardown.
+
+
+## Agent Sandbox extension audit — 9 November 2026
+
+Read-only inspection confirmed the current project identity and three m6i.2xlarge workers on ROSA HCP 4.21.34. The operator catalog advertises Agent Sandbox 0.9.0 and OSC 1.13.1; neither is deployed and there are no RuntimeClasses or sandbox CRDs. External MaaS can remain the model source; GPUs are not a prerequisite for the proposed CPU code runner.
+
+Before live execution, resolve HCP-specific compatibility, scoped STS permissions, peer-pod VM image creation, internal connectivity, EC2 quotas and selected-instance cost. Agent Sandbox lifecycle management alone is not VM isolation. Candidate path: kata-remote on separate CPU EC2 VMs, with all resources included in account-scoped teardown. Local Kata on the present worker shape must not be assumed. Technology Preview status must be visible in the presentation. Warm-pool replenishment creates additional capacity demand, so set and verify an overall VM ceiling and cleanup, not merely the number of warm slots.
+
+See the proposed scope at the end of PROJECT_PLAN.md. Scope choice is pending; this audit installs no operator, opens no network path and changes no spending limit.
