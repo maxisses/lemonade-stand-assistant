@@ -1,5 +1,5 @@
 {
-  "recorded": "2026-11-06",
+  "recorded": "2026-11-09",
   "upstream_commit": "5c0f65f07e4773c9770dde866bb877fe727e3391",
   "provider_model": "qwen38-27b",
   "provider_model_revision": "not exposed by provider; behavior must be revalidated",
@@ -8,7 +8,7 @@
     "rhoai_channel": "stable-3.5",
     "gitops_channel": "gitops-1.22"
   },
-  "runtime_validation": "Offline after completed weekend shutdown on 2026-11-06. See shutdown_2026_11_06; earlier rebuild and validation sections are historical. Rebuild only on explicit owner request.",
+  "runtime_validation": "Rebuilt and functionally revalidated on 2026-11-09; see rebuild_2026_11_09. Earlier shutdown/rebuild sections are historical; event capacity remains unmeasured.",
   "images": [
     {
       "image": "quay.io/ckavili/lemon-fastapi:1.0.26",
@@ -1131,5 +1131,104 @@
     "private_audit": "local/shutdown-audit-2026-11-06.json",
     "retained_cost_note": "Small S3 state-storage/request charges remain possible; not an account-wide billing claim.",
     "audit_started_at": "2026-11-06T14:47:23.003385+00:00"
+  },
+  "rebuild_2026_11_09": {
+    "status": "completed_functional_acceptance_passed",
+    "cluster_id": "2tvgos7v8icc62s5sp0d7rpcpfs365cm",
+    "ingress_domain": "apps.rosa.lemonade-demo.mjkz.p3.openshiftapps.com",
+    "account": "058264461741",
+    "region": "eu-central-1",
+    "workers": 3,
+    "worker_type": "m6i.2xlarge",
+    "gpu_nodes": 0,
+    "ready_deployments": 12,
+    "openshift": "4.21.34",
+    "gitops_csv": "openshift-gitops-operator.v1.22.2",
+    "rhoai_csv": "rhods-operator.3.5.2",
+    "private_checkpoint": "local/backups/2026-11-06-weekend-final",
+    "record_verification": {
+      "campaigns": {
+        "total": 8,
+        "preserved": 8
+      },
+      "profiles": {
+        "total": 2,
+        "preserved": 2
+      },
+      "sessions": {
+        "total": 6,
+        "preserved": 6
+      },
+      "events": {
+        "total": 12,
+        "preserved": 12
+      },
+      "calls": {
+        "total": 98,
+        "preserved": 96
+      }
+    },
+    "functional_probes": [
+      {
+        "timestamp": "2026-11-09T06:05:28.439903+00:00",
+        "cluster_id": "2tvgos7v8icc62s5sp0d7rpcpfs365cm",
+        "case": "local-block",
+        "requests": 1,
+        "retries": 0,
+        "outcome": "blocked",
+        "detectors": [
+          "regex"
+        ],
+        "seconds": 9.181,
+        "response_characters": 0,
+        "event_types": [
+          "error"
+        ],
+        "response_sha256": null,
+        "passed": true
+      },
+      {
+        "timestamp": "2026-11-09T06:05:43.857523+00:00",
+        "cluster_id": "2tvgos7v8icc62s5sp0d7rpcpfs365cm",
+        "case": "benign",
+        "requests": 1,
+        "retries": 0,
+        "outcome": "allowed",
+        "detectors": [],
+        "seconds": 6.44,
+        "response_characters": 111,
+        "event_types": [
+          "chunk",
+          "done"
+        ],
+        "response_sha256": "151d26c28ab7b7748771054841f01486871d5730101d29df6665fcb38e3b672e",
+        "passed": true
+      },
+      {
+        "timestamp": "2026-11-09T06:06:11.760241+00:00",
+        "cluster_id": "2tvgos7v8icc62s5sp0d7rpcpfs365cm",
+        "case": "language-policy",
+        "requests": 1,
+        "retries": 0,
+        "outcome": "blocked",
+        "detectors": [
+          "language"
+        ],
+        "seconds": 4.507,
+        "response_characters": 0,
+        "event_types": [
+          "error"
+        ],
+        "response_sha256": null,
+        "passed": true
+      }
+    ],
+    "audience_closed": true,
+    "provider_concurrency": 1,
+    "new_campaigns": 0,
+    "capacity_test_performed": false,
+    "terraform_drift": false,
+    "s3_checkpoint_uploaded": false,
+    "state_recovery": "Recovered matching-lineage newer local state after DNS failure; released only own stale lock; verified ready cluster before untaint. No cluster replacement or duplicate creation."
   }
 }

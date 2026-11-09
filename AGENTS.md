@@ -101,8 +101,15 @@ The verified local checkpoint restored six campaign reports, one saved profile, 
 The 4 November results above are historical; the current shutdown state is recorded below. Keep database checkpoints local-only and keep credentials, state and raw private reports outside Git. At that restoration, there were 13 days until the event and six days until the 10 November feature freeze. No GPU provisioning is authorized.
 
 
-## Current state — weekend shutdown completed on 6 November 2026
+## Historical state — weekend shutdown completed on 6 November 2026
 
 The owner requested shutting down immediately for the weekend and renewed ROSA login. The current cluster and foundation are fully removed; their Terraform states contain zero managed resources. The final account-scoped audit found no active Lemonade compute, volumes, load balancers, network, project IAM/OIDC or cluster DNS resources. Only the private encrypted/versioned state bucket remains, with four bootstrap resources. Shared account resources were preserved. Both the 28s8 and 6abk URLs are retired.
 
 The latest verified local-only checkpoint is app/local/backups/2026-11-06-weekend-final from the parent (local/backups/2026-11-06-weekend-final inside app). It preserves eight campaigns, two profiles, six sessions, twelve events and 96 provider calls; isolated restore reproduced all three hashes. Do not use the older October checkpoint/counts for the next restore. No database archive was uploaded to S3. Read docs/shutdown.md and docs/rebuild.md before any subsequent cloud work. Rebuild only after an explicit owner request; no automatic restart is scheduled. No GPU or load-test authorization was added by this shutdown request.
+
+
+## Current runtime — restored on 9 November 2026
+
+The owner explicitly requested rebuilding on 9 November. ROSA HCP 4.21.34 is running in eu-central-1 with three Ready m6i.2xlarge CPU workers, zero GPUs, GitOps 1.22.2 and OpenShift AI 3.5.2. Both GitOps applications are Synced/Healthy and all twelve application deployments are ready. The new ingress domain is apps.rosa.lemonade-demo.mjkz.p3.openshiftapps.com; deployment origins, presentation links and both QR copies use it. Earlier 28s8 and 6abk URLs remain retired.
+
+The latest local-only checkpoint from 6 November restored all eight campaigns, two profiles, six sessions, twelve events and 96 historical provider calls, with every saved ID preserved. Authenticated routes, dashboard WebSocket and public/operator boundaries passed. Three serial functional probes passed without retries: topic blocked (9.181 s), benign allowed (6.440 s, 111 characters), English-only policy blocked (4.507 s). These are individual observations, not capacity measurements. Audience admission remains closed, no campaign is active and provider concurrency remains one. No GPU, load test or new campaign was started. Backups remain local-only. Current compute/network/storage resources incur charges until another requested teardown.

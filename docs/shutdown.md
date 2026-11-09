@@ -1,4 +1,6 @@
-# Weekend shutdown — 6 November 2026
+# Historical weekend shutdown — 6 November 2026
+
+**Current status:** the owner requested rebuilding on 9 November; restoration and bounded functional acceptance are complete. Compute and networking are running again. The completed shutdown inventory below remains historical evidence. See [rebuild.md](rebuild.md) for current status.
 
 **Completed:** ROSA and its foundation network have been destroyed. The final account-scoped audit found no active project compute, volumes, load balancers, network resources, project IAM/OIDC or cluster DNS resources. Both removed Terraform stages contain zero managed resources. Only the private Terraform state bucket and its four bootstrap resources remain. No automatic restart is scheduled.
 

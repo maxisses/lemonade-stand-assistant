@@ -1,8 +1,14 @@
 # Project plan: launching the customer's Lemonade business unit
 
-Updated: 6 November 2026 · Event: 17 November 2026 · Time zone: Europe/Vienna
+Updated: 9 November 2026 · Event: 17 November 2026 · Time zone: Europe/Vienna
 
-## Current operational status — weekend shutdown completed on 6 November
+## Current operational status — restored on 9 November
+
+The owner explicitly requested rebuilding on 9 November. ROSA HCP 4.21.34 is running in eu-central-1 with three Ready m6i.2xlarge CPU workers, zero GPUs, GitOps 1.22.2 and OpenShift AI 3.5.2. Both GitOps applications are Synced/Healthy and all twelve application deployments are ready. The new ingress domain is apps.rosa.lemonade-demo.mjkz.p3.openshiftapps.com; deployment origins, presentation links and both QR copies use it. Earlier 28s8 and 6abk URLs remain retired.
+
+The latest local-only checkpoint from 6 November restored all eight campaigns, two profiles, six sessions, twelve events and 96 historical provider calls, with every saved ID preserved. Authenticated routes, dashboard WebSocket and public/operator boundaries passed. Three serial functional probes passed without retries: topic blocked (9.181 s), benign allowed (6.440 s, 111 characters), English-only policy blocked (4.507 s). These are individual observations, not capacity measurements. Audience admission remains closed, no campaign is active and provider concurrency remains one. No GPU, load test or new campaign was started. Backups remain local-only. Current compute/network/storage resources incur charges until another requested teardown.
+
+## Historical operational status — weekend shutdown completed on 6 November
 
 The owner requested an immediate weekend shutdown. ROSA and foundation have been destroyed; both Terraform states are empty. All three workers are terminated, all six volumes are removed, and the final audit found no active project network, load balancer, IAM/OIDC or cluster DNS resources. Only the private encrypted/versioned state bucket remains, with small storage/request costs. Shared account resources were preserved. The 6abk URLs/QR are retired and must be refreshed on the next rebuild. No automatic restart is scheduled.
 
@@ -23,7 +29,7 @@ The requested shutdown completed on 28 October. ROSA, all three workers, all six
 
 Build a two-act demonstration on OpenShift AI in AWS: **first AgentOps with guardrails, then red teaming of the protected system**. The customer's fictional new Lemonade business unit launches an AI customer assistant. Act 1 shows useful answers, business policies, input/output checks, and observable runtime behavior, including manual audience challenges. Act 2 asks how thoroughly that protection has been tested, then introduces automated attacks, findings, and the improvement/retest loop. A baseline comparison supports evaluation; it is not the opening story.
 
-As of 6 November, there are 11 calendar days until the event and four days until the 10 November feature freeze. The owner authorized the initial build following the prerequisite audit and the rebuild on 4 November. The CPU platform and guarded inference path passed three serial checks after the 4 November restore; the environment is now offline after the requested weekend shutdown. The remaining critical path after an explicitly requested rebuild is the outstanding control/audience acceptance work → reliable comparison tests → an agreed, measured event profile and rehearsal. Earlier milestone dates below are historical and must not be read as completed work. Prioritize the working reference and rehearsals over optional extensions.
+As of 9 November, there are eight calendar days until the event and one day until the 10 November feature freeze. The owner authorized the initial build following the prerequisite audit and the rebuild on 4 November. The CPU platform and guarded inference path passed three serial checks after the 4 November restore; the environment is running again after the 9 November rebuild and three new serial checks. The remaining critical path is the outstanding control/audience acceptance work → reliable comparison tests → an agreed, measured event profile and rehearsal. Earlier milestone dates below are historical and must not be read as completed work. Prioritize the working reference and rehearsals over optional extensions.
 
 **Confirmed:** 17 November 2026; customer event with approximately 100 attendees; stage demo with a short audience segment; resources will be arranged; Lemonade Stand presented as a new business unit of the customer; reproduce the original first, then adapt the dashboard and branding. All project artifacts, UI, prompts, evaluation content, and presentation materials are in English. Conversation with the project owner remains in German.
 
@@ -112,7 +118,7 @@ Prefer **ROSA with Hosted Control Planes plus OpenShift AI**, provided the AWS O
 
 Planning region: eu-central-1, subject to environment restrictions and platform compatibility. Account lifetime must extend through at least 18 November; automatic sandbox expiration must not interrupt the event.
 
-Preserved deployment topology (currently offline); initial functional control/audience checks passed, including completed-report/ledger persistence on restart. The fa5f23f direct-chat/SSE and saved-profile checks passed serially; event-capacity acceptance and higher-concurrency/alternative-model inference remain outstanding. Controlled app/provider restart retained the saved profile, run snapshot, model and concurrency with audience closed:
+Restored deployment topology; initial functional control/audience checks passed, including completed-report/ledger persistence on restart. The fa5f23f direct-chat/SSE and saved-profile checks passed serially; event-capacity acceptance and higher-concurrency/alternative-model inference remain outstanding. Controlled app/provider restart retained the saved profile, run snapshot, model and concurrency with audience closed:
 
 ~~~mermaid
 flowchart LR
