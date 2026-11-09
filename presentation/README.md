@@ -1,6 +1,6 @@
 # Lemonade customer event — HTML stage deck
 
-The 18-slide English deck follows the portfolio demo's 1920 × 1080 Red Hat design: expressive cover, dark persona dividers, story rows, technical SVG diagrams and live-link chips. It is editable HTML/CSS, with no presentation runtime or external font dependency. The deck does not send model requests or start campaigns. Chapter 1 is **AgentOps: guardrails at runtime**. Chapter 2 is **Automated red teaming: evidence before release**. The customer, attacker and audience segments stay in Chapter 1; the release team opens Chapter 2 with the model-change question.
+The 22-slide English deck follows the portfolio demo's 1920 × 1080 Red Hat design: expressive cover, dark persona dividers, story rows, technical SVG diagrams and live-link chips. It is editable HTML/CSS, with no presentation runtime or external font dependency. The deck does not send model requests or start campaigns. Chapter 1 is **AgentOps: guardrails at runtime**. Chapter 2 is **Automated red teaming: evidence before release**. The customer, attacker and audience segments stay in Chapter 1; the release team opens Chapter 2 with the model-change question.
 
 ## Open and present
 
@@ -21,7 +21,7 @@ Open `http://127.0.0.1:18778/`. Use a browser window on the presentation screen.
 | F | Enter / exit fullscreen where supported |
 | Escape | Close notes |
 
-Move the pointer to reveal the controls, jump to any slide with the picker, or use a direct hash such as `#10` for the QR. The Print control uses the 16:9 print stylesheet for all slides. Notes appear on the same screen; close them before projecting. A separate presenter display is not implemented.
+Move the pointer to reveal the controls, jump to any slide with the picker, or use a direct hash such as `#13` for the QR. The Print control uses the 16:9 print stylesheet for all slides. Notes appear on the same screen; close them before projecting. A separate presenter display is not implemented.
 
 ## Configure the customer and live links
 
@@ -41,18 +41,19 @@ The page checks the SVG metadata against config.js when served over HTTP and hid
 
 ## Stage runbook
 
-Suggested pacing is 18–22 minutes. Confirm the actual slot before freezing the deck.
+Suggested pacing is 22–25 minutes. Confirm the actual slot before freezing the deck.
 
 | Slides | Suggested time | Action / transition |
 | --- | --- | --- |
-| 1–2 | 1 minute | Introduce Snemeis' new Lemonade business unit and name both chapters: runtime guardrails, then automated red teaming. |
-| 3–5 | 3 minutes | Product team: define useful behavior and business rules; ask one benign question in protected chat; show its outcome; then the technical path. |
-| 6–7 | 3 minutes | Customer: normal question, language mistake and mild frustration. Let actual behavior drive the explanation. Show the architecture after the persona. |
-| 8–9 | 2 minutes | Attacker: use a prepared synthetic probe against the same protected app. Read the response; an allowed safe refusal is not an attack success. Then show the architecture. |
-| 10 | 2 minutes | Open a short audience window and display the QR. Participants land in chat and can switch the role suggestions there. Close the window before Chapter 2 unless overlap was rehearsed. |
-| 11–13 | 3 minutes | Open Chapter 2 with the model-change question. Switch to `/#red-team`, explain the adaptive feedback loop, and show an agreed, rehearsed Adaptive run or a clearly labeled Previous run. Then show its architecture. |
-| 14–16 | 4 minutes | Briefly show scope, progress and stop control. Inspect one actual result, review it, and retest selected exact cases plus benign controls after a genuine versioned change. Keep detailed budgets in Control and the speaker notes. |
-| 17–18 | 1–2 minutes | Summarize the platform and discuss the customer's release criteria. Close audience access and stop any remaining run. |
+| 1–4 | 2–3 minutes | Introduce Snemeis, the Metal to Agents stack and the two-chapter focus. Model APIs do not remove application responsibility. |
+| 5–7 | 3 minutes | Product team: define behavior; ask one benign question; show its outcome and the technical path. |
+| 8 | 1–1.5 minutes | Use the dated, sourced research incident to distinguish behavioral policy from infrastructure enforcement. Avoid claiming all guardrails were off. |
+| 9–10 | 3 minutes | Customer: normal question, language mistake and mild frustration. Show the architecture after the persona. |
+| 11–12 | 2 minutes | Attacker: a synthetic probe against the same protected app. An allowed safe refusal is not attack success. Then show architecture. |
+| 13 | 2 minutes | Open a short audience window and show the QR. Close admission before Chapter 2 unless overlap was rehearsed. |
+| 14–16 | 3 minutes | Chapter 2: model-change question, adaptive feedback, agreed rehearsed run or labeled Previous run, then architecture. |
+| 17–19 | 4 minutes | Scope and stop control; inspect an actual finding, review it and retest after a genuine versioned change. |
+| 20–22 | 2–3 minutes | Summarize implementation, return to the same stack, assign owners and evidence for the next use case. Close remaining work. |
 
 Complete the small Functional smoke test before presenting. It is a fixed corpus with benign controls and does not demonstrate adaptive attacks. The adaptive explanation shows each strategy using its own measured result to generate its next probe. Human review follows as a separate release-evidence step; it is not required before every adaptive round. A recorded or previous run must remain visibly labeled, and the source-comparison dashboard is not a fair attack-success benchmark.
 
@@ -82,7 +83,7 @@ The authenticated **Red Team Control** page at `/control` provides the following
 3. Expand **Findings and evidence** to read the exact prompt, outcome, validated response or block, evaluation basis and version context. Submit a review verdict and an optional note for eligible completed cases. Model-judge findings remain proposed until reviewed.
 4. Use **Export report** for the selected run. Campaign and attempt records are stored in SQLite on a persistent volume; uncertain interrupted work is not silently replayed on restart.
 5. Select one to nine eligible completed attempts and use **Retest selected cases** after the original run is terminal. The run preserves those exact prompts, ensures both fixed benign controls are included without duplication, and records the current configuration fingerprint. The UI does not edit the policy.
-6. In **Audience window**, select one to ten minutes and use **Open window**. Show slide 10's QR. Use **Close audience access** when the segment ends. Product team, Customer and Attacker are audience scenarios only; they never confer operator access. The audience lands directly in chat. Switching its compact role control updates suggestions while retaining the session, remaining allowance and displayed transcript. All roles use the same protected target. Sessions expire with the window, and a restart closes admission.
+6. In **Audience window**, select one to ten minutes and use **Open window**. Show slide 13's QR. Use **Close audience access** when the segment ends. Product team, Customer and Attacker are audience scenarios only; they never confer operator access. The audience lands directly in chat. Switching its compact role control updates suggestions while retaining the session, remaining allowance and displayed transcript. All roles use the same protected target. Sessions expire with the window, and a restart closes admission.
 
 ### Model settings and custom profiles
 
@@ -130,6 +131,28 @@ Current scope: protected single-turn text assistant; external MaaS; FMS with CPU
 - `assets/hat-light.png`, `hat-dark.png`, `redhat-logo.png`: copied unchanged from the owner's portfolio presentation. Red Hat marks remain their owners' trademarks; these supplied assets are not newly drawn or claimed to be generally licensed by this repository.
 - Red Hat Display, Red Hat Text and Red Hat Mono: locally bundled from the official [Google Fonts repository](https://github.com/google/fonts), under the included OFL licenses in `assets/fonts/`. All live slide text is editable HTML or SVG.
 - Local QR generation: Segno 1.6.6, with no third-party QR web service. Runtime needs only a static browser; Segno is needed only when changing the audience URL.
+
+## Editorial context and source map — 9 November 2026
+
+The opening and closing share one five-band visual: four software layers above the hardware foundation. Highlighting the top two bands locates the demo; it does not imply that runtime content checks cover the whole platform. Slide 3 scopes the live evidence. Slide 8 sits immediately before Customer and Attacker. Slide 21 returns to the opening stack with implementation labels and separate next-use-case tests. All persona diagrams and live links remain intact. For a shorter slot, compress the opening explanation and platform recap; keep both chapter transitions, the audience closing cue and evidence caveats.
+
+| Source | Editorial use and boundary |
+| --- | --- |
+| [Metal to Agents](https://www.redhat.com/en/blog/what-metal-agents-navigating-architecture-enterprise-ai) | Conceptual layer taxonomy; not a product availability matrix. |
+| [Open inference stack](https://www.redhat.com/en/blog/why-agentic-ai-needs-open-inference-stack) | Repeated calls, context and API compatibility affect task cost and reliability. Explain shared budgets; do not import marketing savings figures. |
+| [BYOA / OpenClaw](https://www.redhat.com/en/blog/operationalizing-bring-your-own-agent-red-hat-ai-openclaw-edition) | Framework choice is separate from platform identity, isolation and lifecycle. OpenClaw is not deployed here. |
+| [Deploying agents](https://developers.redhat.com/articles/2026/04/14/deploying-agents-red-hat-ai-openclaw) | Distinguish model access from tool identity and permissions. Use the architecture lesson, not the prototype as a production guarantee. |
+| [Infrastructure red teaming](https://developers.redhat.com/articles/2026/05/26/testing-infrastructure-red-teaming-abliterated-models) | Controlled experiment testing multiple enforcement layers. Its model and percentages are not demo results; no such test is run by this deck. |
+| [OpenShift AI release notes](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.5/html/release_notes/index) | Latest regular documentation checked on 9 November describes 3.5.2. [3.6 Early Access](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.5/html/3.6_early_access_release_notes/index) is separate. |
+| [Support removals and deprecations](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.5/html/release_notes/support-removals_relnotes) | FMS remains the demo path but is deprecated; NeMo is recommended for new deployments. Standalone LM-Eval is deprecated in favor of EvalHub. This demo does not implement either migration. |
+| [Primary incident report](https://alignment.openai.com/misalignment-reports/an-agent-used-dns-to-reach-an-external-chatbot/) | Slide 8 dates and factual boundaries come from this report. The requested recency window is 9 August–9 November 2026. |
+| [Public discussion](https://www.reddit.com/r/OpenAI/comments/1wqmxk3/openai_stopped_all_frontier_training_evaluation/) | Evidence of broad discussion, not technical authority. Avoid a fixed reach or vote claim. |
+
+No verified recent case is presented as proof that every guardrail was disabled. The selected case supports a narrower missing-enforcement story. The slide labels research context and cites the original report. Keep that qualification when speaking. Older chatbot anecdotes were not substituted for the requested recent window.
+
+## Context revision verification — 9 November 2026
+
+The four new slides, updated final slide and relocated QR were visually inspected at 1280 × 720. Navigation through all 22 slides passed; inspected content remained inside each slide, all images loaded and browser warning/error logs were empty. All 22 speaker notes, the five original technical diagrams, HTTPS live links and both dashboard hashes are present. QR metadata still matches the configured audience route. `preview-stack.png` is an actual browser capture of the revised opening. This static review made no model call, started no campaign and changed no cloud resource. Projector/venue rehearsal remains separate.
 
 ## First-draft verification
 

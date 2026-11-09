@@ -19,7 +19,7 @@ window.LEMONADE_DECK = {
     "audience": "New QR and public chat verified; admission closed and operator paths denied. Capacity rehearsal pending."
   },
   "validation": {
-    "presentation": "18 slides visually reviewed; local assets and configured QR verified.",
+    "presentation": "22 slides: new context/story/closing layouts visually reviewed on 9 November; all slide bounds, images, navigation and configured QR checked.",
     "liveIntegration": "Initial campaigns remain historical evidence. fa5f23f passed a saved custom Functional profile: 2 allowed, 1 blocked, 0 errors; 3 new target generations total across the small check, all qwen38-27b at concurrency 1.",
     "eventCapacity": "Pending an agreed bounded rehearsal; configured limits are not measured capacity.",
     "audienceUxRevision": "Verified serially: direct chat entry, legacy role fields ignored with session/quota retained, allowed SSE status then validated content, blocked SSE with no answer content.",

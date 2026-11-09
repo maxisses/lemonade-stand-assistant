@@ -12,3 +12,33 @@
 .campaign-controls p{font-size:30px}
 .campaign-note{margin-top:85px;font-size:36px}
 .act-bar .chapter-label{color:var(--red);font:500 24px var(--display);margin:0 0 8px}
+
+/* Repeated stack geometry connects the opening context to the closing evidence. */
+.stack-layout{display:grid;grid-template-columns:1050px 1fr;gap:65px;margin-top:48px}
+.stack-bands{display:flex;flex-direction:column;gap:12px}
+.stack-band{display:grid;grid-template-columns:335px 1fr;align-items:center;min-height:88px;padding:16px 24px;background:#f2f2f2;border-left:6px solid #6a6a6a;gap:18px}
+.stack-band strong{font:500 30px/1.2 var(--display)}
+.stack-band span{font:400 26px/1.35 var(--text);color:#4b4b4b}
+.stack-band.focus-band{background:#fff0f0;border-color:var(--red)}
+.stack-crosscut{font:500 24px/1.4 var(--text);padding:16px 0 0;color:#4b4b4b}
+.context-tag{font:500 24px/1.4 var(--display);color:var(--red);margin-bottom:24px}
+.stack-aside{border-top:4px solid var(--red);padding-top:22px}
+.stack-aside h3{font-size:52px;line-height:1.1;margin-bottom:28px}
+.stack-aside p{font:400 30px/1.5 var(--text);color:#4b4b4b}
+.context-small{font:400 24px/1.45 var(--text);color:#4b4b4b;margin-top:30px}
+.source-line{position:absolute;left:180px;right:380px;bottom:72px;font:400 18px/1.4 var(--text);color:#6a6a6a}
+.source-line a{color:#4b4b4b;text-decoration:underline;text-underline-offset:3px}
+.focus-chapters{display:grid;grid-template-columns:1fr 1fr;gap:90px;margin-top:65px}
+.focus-chapters>div{border-top:5px solid var(--red);padding-top:28px}
+.focus-chapters h3{font-size:54px;line-height:1.15;margin-bottom:30px}
+.focus-chapters p{font:400 30px/1.5 var(--text);color:#4b4b4b}
+.scope-strip{display:grid;grid-template-columns:340px 1fr;gap:20px;padding:26px 30px;background:#f2f2f2;margin-top:48px;font:400 28px/1.45 var(--text)}
+.scope-strip strong{font-weight:500}
+.scope-boundary{font:400 25px/1.5 var(--text);color:#4b4b4b;margin-top:28px}
+.incident-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:60px;margin-top:65px}
+.incident-steps>div{border-top:4px solid var(--red);padding-top:20px}
+.incident-steps .number{font:400 64px/1.2 var(--display);color:var(--red);margin-bottom:20px}
+.incident-steps h3{font-size:40px;margin-bottom:24px}
+.incident-steps p{font:400 30px/1.45 var(--text);color:#4b4b4b}
+.incident-lesson{font:400 42px/1.25 var(--display);margin-top:65px}
+.incident-caveat{font:400 24px/1.4 var(--text);color:#6a6a6a;margin-top:28px}
