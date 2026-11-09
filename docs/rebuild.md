@@ -1,5 +1,7 @@
 # Rebuild after a planned shutdown
 
+**9 November update: rebuild requested and in progress.** Foundation is recreated and ROSA creation has started. Platform, database restore, new URLs and acceptance checks remain pending. The following completed shutdown record is historical; do not assume compute is still stopped.
+
 **Current state: weekend shutdown completed on 6 November 2026.** ROSA and foundation are destroyed, both Terraform states are empty, and the final audit found no active project compute/network/storage except the retained state bucket. The latest verified local-only checkpoint is `local/backups/2026-11-06-weekend-final`, with eight campaigns, two profiles, six audience sessions, twelve events and 96 provider calls. Follow [shutdown.md](shutdown.md) for actual completion. Do not rebuild until the owner explicitly asks. The earlier 4 November rebuild remains historical acceptance evidence, not a statement that the environment is currently available. The `6abk` URLs are retired.
 
 The application, CPU infrastructure, operator versions, model revisions, routes, guardrails, presentation and limits are stored in this fork. Persistent reports/settings and credentials need the private backup described below. Rebuilding a deleted ROSA HCP cluster provisions a new cluster; it is not an instant power-on. The new cluster receives new hostnames, so refresh all links and QR assets before use. Rebuild duration has not been benchmarked.
