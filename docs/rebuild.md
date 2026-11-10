@@ -147,3 +147,11 @@ A rebuild is not validated merely because the pods are ready. Perform the previo
 ## Agent Sandbox extension
 
 When `sandbox.enabled` is true, complete the pinned sandbox platform before application sync. Follow [sandbox.md](sandbox.md) for the account-scoped build, image-rights removal, operator workflow and additional acceptance. A normal ROSA rebuild alone does not create the peer-pod image or warm pool.
+
+## Agent Catalog UI
+
+The owner requested enabling the RHOAI Agent Catalog on 10 November. After the dashboard operator creates `odh-dashboard-config`, run `python3 scripts/rebuild.py dashboard`. The application bootstrap also reapplies this step. The tracked merge patch is `deploy/dashboard-features.patch.json`; it sets only `spec.dashboardConfig.agentsCatalog: true` and preserves unrelated dashboard settings. The catalog is Developer Preview and exposes agent starter kits; enabling it does not deploy an agent or call a model.
+
+Reload the OpenShift AI dashboard and open **AI hub → Agents**. To reverse the setting, merge-patch `agentsCatalog` to `false` and update the tracked patch before the next rebuild.
+
+The catalog also requires `spec.components.modelregistry.managementState: Managed` in the platform DataScienceCluster. This is now declared in GitOps, with `registriesNamespace: rhoai-model-registries`. Wait for platform readiness before applying the dashboard flag. The catalog backend does not require creating a separate user model-registry instance or uploading a model.

@@ -30,7 +30,8 @@ spec:
     mlflowoperator:
       managementState: Removed
     modelregistry:
-      managementState: Removed
+      managementState: Managed
+      registriesNamespace: rhoai-model-registries
     ogx:
       managementState: Removed
     ray:

@@ -91,6 +91,20 @@ def refresh_links(oc):
     print("Review and commit these public files, then push before the application phase.")
 
 
+def dashboard_features(oc):
+    """Enable the selected UI preview after the dashboard operator creates its CR."""
+    dsc = get(oc, "datasciencecluster", "default-dsc")
+    if dsc["spec"]["components"].get("modelregistry", {}).get("managementState") != "Managed":
+        raise RebuildError("Agent Catalog requires the modelregistry platform component; sync the platform first.")
+    path = ROOT / "deploy/dashboard-features.patch.json"
+    run(oc + ["patch", "odhdashboardconfig", "odh-dashboard-config", "-n", "redhat-ods-applications",
+              "--type=merge", "--patch-file", str(path)])
+    actual = get(oc, "odhdashboardconfig", "odh-dashboard-config", "-n", "redhat-ods-applications")
+    if actual["spec"].get("dashboardConfig", {}).get("agentsCatalog") is not True:
+        raise RebuildError("Agent Catalog dashboard configuration was not retained.")
+    print("Enabled Agent Catalog in the OpenShift AI UI (Developer Preview).")
+
+
 def published_revision():
     if run(["git", "status", "--porcelain"]):
         raise RebuildError("Commit the intended deployment and URL changes before application sync.")
@@ -107,7 +121,7 @@ def published_revision():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("phase", choices=("check", "gitops-operator", "platform", "links", "secrets", "application", "status"))
+    parser.add_argument("phase", choices=("check", "gitops-operator", "platform", "dashboard", "links", "secrets", "application", "status"))
     phase = parser.parse_args().phase
     _, oc = context()
     if phase == "gitops-operator":
@@ -118,6 +132,9 @@ def main():
         apply(oc, "gitops/bootstrap/controller-access.yaml")
         apply(oc, "gitops/bootstrap/platform-app.yaml")
         print("Approve only the pinned OpenShift AI InstallPlan and wait for default-dsc Ready before application.")
+    elif phase == "dashboard":
+        require_csv(oc, "redhat-ods-operator", "rhods-operator.3.5.2")
+        dashboard_features(oc)
     elif phase == "links":
         refresh_links(oc)
     elif phase == "secrets":
@@ -141,6 +158,7 @@ def main():
             get(oc,"runtimeclass","kata-remote")
             run([sys.executable,str(ROOT/"scripts/sandbox_platform.py"),"access"])
         revision = published_revision()
+        dashboard_features(oc)
         apply(oc, "gitops/bootstrap/lemonade-app.yaml")
         run(oc + ["patch", "application", "lemonade-demo", "-n", "openshift-gitops", "--type=merge", "-p",
                   json.dumps({"operation": {"sync": {"revision": revision, "prune": False}}})])
