@@ -92,10 +92,8 @@ spec:
   hard:
     pods: "2"
     count/sandboxclaims.extensions.agents.x-k8s.io: "1"
-    requests.cpu: "1"
-    requests.memory: 1Gi
-    limits.cpu: "2"
-    limits.memory: 1Gi
+    # The peer-pod webhook replaces CPU/memory requests with a VM resource.
+    requests.kata.peerpods.io/vm: "2"
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
