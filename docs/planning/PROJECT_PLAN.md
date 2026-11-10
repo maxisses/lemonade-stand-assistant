@@ -330,3 +330,8 @@ Measured environment: verified project account 058264461741, eu-central-1 and ex
 ## 10 November 2026 — Sandbox integration authorized
 
 The owner chose the integrated live extension and separately approved the scoped AWS/operator plan and namespace/RBAC/service-key integration. Agent Sandbox 0.9.0 and OSC 1.13.1 are installed on the restored ROSA HCP 4.21.34 cluster; kata-remote and the dedicated CPU VM image are ready. Temporary image-builder permissions were removed after image readiness. The operator-only analysis workflow and bounded checks are being deployed; live acceptance is recorded in the build journal, not inferred from installation. See [sandbox operations](../sandbox.md). No GPU or larger-load authorization was added.
+
+
+### Sandbox functional acceptance — 10 November
+
+The final direct broker/runner path passed generated synthetic analysis, conventional token-mount absence, one internal-network denial and timeout/cleanup checks. Three earlier integration failures remain recorded. See the build journal and sandbox operations guide for measured results and the latest local-only checkpoint. The 25-slide deck integrates the product action in Chapter 1 and predefined execution-boundary checks in Chapter 2. DNS/metadata containment, general escapes and event capacity remain unvalidated; the established chat flow remains the fallback.

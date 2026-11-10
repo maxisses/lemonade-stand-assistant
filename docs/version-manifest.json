@@ -1,5 +1,5 @@
 {
-  "recorded": "2026-11-09",
+  "recorded": "2026-11-10",
   "upstream_commit": "5c0f65f07e4773c9770dde866bb877fe727e3391",
   "provider_model": "qwen38-27b",
   "provider_model_revision": "not exposed by provider; behavior must be revalidated",
@@ -1230,5 +1230,63 @@
     "terraform_drift": false,
     "s3_checkpoint_uploaded": false,
     "state_recovery": "Recovered matching-lineage newer local state after DNS failure; released only own stale lock; verified ready cluster before untaint. No cluster replacement or duplicate creation."
+  },
+  "agent_sandbox": {
+    "status": "Final transport functionally accepted on 2026-11-10; Technology Preview, capacity unmeasured",
+    "technology_preview": true,
+    "agent_sandbox_operator": "0.9.0",
+    "osc_operator": "1.13.1",
+    "runtime": "kata-remote",
+    "peer_instance_type": "t3.medium",
+    "maximum_vm_slots": 2,
+    "warm_slots": 1,
+    "selected_workers": 1,
+    "image_creation_policy": "Removed after completed image build",
+    "pinned_images": {
+      "operators": {
+        "agent-sandbox-operator.v0.9.0": [],
+        "sandboxed-containers-operator.v1.13.1": [
+          "registry.redhat.io/openshift-sandboxed-containers/osc-monitor-rhel9@sha256:7b9adb111b0277f41222b409fc8815b2d075ce945401741ea6e0670dfa8ec5a1",
+          "registry.redhat.io/openshift-sandboxed-containers/osc-cloud-api-adaptor-rhel9@sha256:7523fc2133233196f8fcbbe7c96d44c24ec4d3d60b40a0c306da4240e5997e4c",
+          "registry.redhat.io/openshift-sandboxed-containers/osc-cloud-api-adaptor-webhook-rhel9@sha256:ca897a4689f3ac66fa2e4ce440e3f080ae283565ed52d9082f9b5194bf36c4d9",
+          "registry.redhat.io/openshift-sandboxed-containers/osc-podvm-builder-rhel9@sha256:a4f12990522eb37056afe0329cec4c42edcdd1d569fb54a497d5727424d78d91",
+          "registry.redhat.io/openshift-sandboxed-containers/osc-podvm-payload-rhel9@sha256:8c13e3816ae9e11b0029920d22c5f312b856c5f43fc927b937934c93aaaa6780",
+          "registry.redhat.io/openshift-sandboxed-containers/osc-dm-verity-image@sha256:cd0bbdc464dfe0060b33a07474f30ed093a6efc839ba910a44915ef9f55b195b",
+          "registry.redhat.io/openshift-sandboxed-containers/osc-must-gather-rhel9@sha256:1c37ef009bf983e9b74b240844332d16f09bf3b9d6685883df1ac7c5262a40a1",
+          "registry.redhat.io/openshift-sandboxed-containers/osc-storage-helper@sha256:c65fb8f12888705d4989d6b8f0e4e3f144224b43f72b609d5f496e77b3b73917"
+        ]
+      },
+      "image_payload": {
+        "PODVM_IMAGE_URI": "oci::registry.redhat.io/openshift-sandboxed-containers/osc-dm-verity-image@sha256:cd0bbdc464dfe0060b33a07474f30ed093a6efc839ba910a44915ef9f55b195b"
+      }
+    },
+    "controller_images": {
+      "agent-sandbox-operator.v0.9.0": [
+        "registry.redhat.io/agent-sandbox/agent-sandbox-rhel9-operator@sha256:554102df4c721bd27be7129c910c206ed1329be14df68906a588959b0e7d9309",
+        "registry.redhat.io/agent-sandbox/agent-sandbox-router@sha256:d7d745b9ad8143282a1356d13a9b351faf6aa1955ee6b02f100fc282dbbd91d3"
+      ],
+      "sandboxed-containers-operator.v1.13.1": [
+        "registry.redhat.io/openshift-sandboxed-containers/osc-rhel9-operator@sha256:5805a0ec3fce8903af6ff43457072aecd38ef67e19c1719c049244bcbf32a3f5",
+        "registry.redhat.io/openshift-sandboxed-containers/osc-rhel9-operator@sha256:5805a0ec3fce8903af6ff43457072aecd38ef67e19c1719c049244bcbf32a3f5"
+      ]
+    },
+    "application_revision": "14828f1",
+    "acceptance": {
+      "analysis": "160 cups / 40 litres, 0.082 s",
+      "credential_mount": "Conventional service-account token absent",
+      "internal_network": "Checked internal service unreachable from runner",
+      "timeout_seconds": 5.022,
+      "cleanup": "Complete for all four final-transport checks",
+      "provider_generations": 3,
+      "concurrency": 1,
+      "sandbox_records": 8,
+      "earlier_errors_retained": 3
+    },
+    "checkpoint": "local/backups/2026-11-10-sandbox-final",
+    "temporary_artifacts": {
+      "image_policy": "removed",
+      "upload_bucket": "removed",
+      "vmimport_role": "removed"
+    }
   }
 }

@@ -39,6 +39,7 @@ class AccessTests(unittest.TestCase):
             report = access.build_report(CONTEXT)
         self.assertIn("https://ai.demo.example", json.dumps(report))
         self.assertNotIn("guardrails.demo.example", json.dumps(report))
+        self.assertEqual(next(s["url"] for s in report["services"] if s["name"] == "Agent Sandbox"), "https://chat.demo.example/sandbox")
         self.assertEqual(next(s["url"] for s in report["services"] if s["name"] == "Chat"), "https://chat.demo.example")
         self.assertEqual(next(s["url"] for s in report["services"] if s["name"] == "Dashboard"), "https://dashboard.demo.example")
 

@@ -96,6 +96,7 @@ def build_report(context, *, offline=False):
     selections = [
         ("Chat", [(NAMESPACE, "lemonade-chat")]),
         ("Red Team Control", [(NAMESPACE, "lemonade-chat")]),
+        ("Agent Sandbox", [(NAMESPACE, "lemonade-chat")]),
         ("Audience chat", [(NAMESPACE, "lemonade-audience")]),
         ("Dashboard", [(NAMESPACE, "lemonade-dashboard")]),
         ("OpenShift AI", [("openshift-ingress", "data-science-gateway"), ("redhat-ods-applications", "rhods-dashboard")]),
@@ -111,6 +112,9 @@ def build_report(context, *, offline=False):
         if name == "Red Team Control":
             url = url.rstrip("/") + "/control" if url else None
             login = "OpenShift sign-in; viewing requires get pods, execution requires create jobs in lemonade-demo."
+        if name == "Agent Sandbox":
+            url = url.rstrip("/") + "/sandbox" if url else None
+            login = "OpenShift operator sign-in; reviewed synthetic code execution, Technology Preview."
         if name == "Audience chat":
             url = url.rstrip("/") + "/join" if url else None
             login = "Opens directly in chat; roles change prompt suggestions only. Requires an operator-opened event window."

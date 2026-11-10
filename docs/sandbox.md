@@ -7,13 +7,13 @@ This extension keeps the two-act demonstration: runtime controls first, systemat
 1. Close audience admission and finish campaigns. Keep provider concurrency one.
 2. Open Agent Sandbox from Red Team Control. Wait for a warm VM.
 3. Generate one fixed analysis using the shared, budgeted external model (192 output tokens). Review the complete code; generation never executes it.
-4. Run the reviewed code. The saved SHA-256 binds the approval to that exact candidate. A broker allocates a fresh claim and verifies its Pod owner and `kata-remote` runtime before execution.
+4. Run the reviewed code. The saved SHA-256 binds the approval to that exact candidate. A broker allocates a fresh claim and verifies its Pod owner and `kata-remote` runtime before execution. Code travels over the cluster Pod network directly from the broker to that verified runner; the namespace NetworkPolicy permits this ingress only from the broker. Browser/app-to-broker and broker-to-Kubernetes connections use verified TLS. The runner HTTP hop is internal and carries synthetic fixture code, not credentials.
 5. Inspect stdout, outcome, runtime, code hash and cleanup. The fictional dataset is Monday 40, Tuesday 55 and Wednesday 65 cups at 250 ml per cup: the expected total is 160 cups / 40 litres. These are fixture values, not business KPIs.
 6. In the release-validation chapter, run predefined internal-network, credential-mount and timeout checks individually. They use the same execution path without an attacker model. A boundary observation is not a proof against arbitrary escape or exfiltration.
 
 Code generation has a separate tool-workflow policy; customer-chat FMS detectors do not validate Python. Execution security depends on authorization, explicit review, fixed templates, restricted identity/network, resource limits and VM isolation. The runner receives neither provider keys nor a service-account token. Output is untrusted text and displayed with textContent. No arbitrary target, uploaded dataset or free-form execution API is exposed to the audience.
 
-The broker permits one claim. The warm pool retains one slot and replenishes after allocation: up to two t3.medium peer VMs on one selected worker, with a per-worker peer-pod limit and namespace quota. Each run has a five-second subprocess wall limit, bounded output, foreground cleanup and a 240-second claim deadline. Cleanup errors lock further dispatch. Unexpected interrupted executions are recorded and never replayed. Records reside in the existing private audience SQLite database and are included in local-only checkpoints.
+The broker permits one claim. The warm pool retains one slot and replenishes after allocation: up to two t3.medium peer VMs on one selected worker, with a per-worker peer-pod limit and namespace Pod/VM quota. The peer-pod webhook converts container CPU/memory values into VM annotations; the namespace quota therefore limits `requests.kata.peerpods.io/vm`, not ordinary container CPU/memory. The fixed instance type and runner subprocess limits provide additional bounds. Each run has a five-second subprocess wall limit, bounded output, foreground cleanup and a 240-second claim deadline. Cleanup errors lock further dispatch. Unexpected interrupted executions are recorded and never replayed. Records reside in the existing private audience SQLite database and are included in local-only checkpoints.
 
 ## Versions and status
 
@@ -74,3 +74,9 @@ AWS pricing observed during installation: Linux t3.medium in Frankfurt USD 0.048
 - [Agent Sandbox 1.13 documentation](https://docs.redhat.com/en/documentation/openshift_sandboxed_containers/1.13/html/deploying_red_hat_build_of_agent_sandbox/discover-agent-sandbox_agent-sandbox)
 - [ROSA HCP peer-pod deployment guide](https://cloud.redhat.com/experts/rosa/sandboxed-containers/)
 - OSC source v1.13.1: `891eadc9fa270c38b1d7040d05675636990058b8`; Cloud API Adaptor submodule: `9a7ba8eefca59e9929111b276faf7448432a3f17`.
+
+## Functional acceptance — 10 November 2026
+
+The final direct-runner transport passed a generated analysis (160 cups / 40 litres), absent service-account token, blocked access to the checked internal service and timeout at 5.022 seconds; each recorded complete cleanup. Three earlier integration failures remain saved as errors. See the [build journal](build-journal.md) for exact durations, failed-attempt history and untested boundaries. Warm-slot replenishment takes minutes; it must finish before the next execution. Keep only one boundary check live in the release chapter and identify any other displayed reports as previous results.
+
+`scripts/sandbox_probe.py` provides one serial functional operation at a time. `generate` returns code for review; `run --id … --sha256 …` requires the exact reviewed candidate. Fixed `credentials`, `egress` and `timeout` operations never call a model. `status` is read-only. Private evidence files remain under ignored local/sandbox. A nonzero exit indicates a failed or unobserved check; do not silently retry.

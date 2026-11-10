@@ -63,7 +63,7 @@
   document.querySelectorAll('[data-presenter]').forEach(el => { el.textContent = config.presenter; });
   document.querySelectorAll('[data-event-date]').forEach(el => { el.textContent = config.eventDate; });
   document.querySelectorAll('[data-link]').forEach(el => {
-    const url = new URL(config.links[el.dataset.link]);
+    const url = new URL(el.dataset.link === 'sandbox' ? config.links.chat + '/sandbox' : config.links[el.dataset.link]);
     if (url.protocol !== 'https:') throw new Error('Live links must use HTTPS.');
     // Keep chapter views attached to the base URL refreshed by the rebuild helper.
     if (el.dataset.dashboardView) {

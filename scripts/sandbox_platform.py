@@ -52,15 +52,23 @@ def discover(c,oc):
         if probe.returncode==0 or 'NoSuchEntity' not in probe.stderr:
             raise RebuildError('A pre-existing vmimport role or IAM lookup failure requires review; no changes made.')
         old={}
+    selected_node=old.get('node_name',nodes[0]['metadata']['name'])
+    node=next((n for n in nodes if n['metadata']['name']==selected_node),None)
+    if node is None:raise RebuildError('Previously selected worker is absent; review sandbox placement before changing it.')
+    instance=next(i for i in instances if i['InstanceId']==node['spec']['providerID'].rsplit('/',1)[-1])
     issuer=get(oc,'authentication.config.openshift.io','cluster')['spec']['serviceAccountIssuer']
     result={**{k:c[k] for k in ('cluster_id','aws_account_id','region')},'oidc_issuer':issuer,
-            'vpc_id':instances[0]['VpcId'],'subnet_id':instances[0]['SubnetId'],
-            'worker_security_group':selected[0], 'node_name':nodes[0]['metadata']['name'],
+            'vpc_id':instance['VpcId'],'subnet_id':instance['SubnetId'],
+            'worker_security_group':selected[0], 'node_name':selected_node,
             'vmimport_absent_before_install':old.get('vmimport_absent_before_install',True)}
     FOLDER.mkdir(mode=0o700,exist_ok=True)
     (FOLDER/'context.json').write_text(json.dumps(result,indent=2))
     variables={k:result[k] for k in ('cluster_id','oidc_issuer','subnet_id','worker_security_group')}
-    (FOLDER/'platform.tfvars.json').write_text(json.dumps(variables,indent=2))
+    vars_file=FOLDER/'platform.tfvars.json'
+    if vars_file.exists():
+        previous_vars=json.loads(vars_file.read_text())
+        variables['image_creation_enabled']=previous_vars.get('image_creation_enabled',True)
+    vars_file.write_text(json.dumps(variables,indent=2))
     print('Saved verified sandbox context; CPU t3.medium only, one selected worker, at most two peer-pod slots.')
     filters=[{'Type':'TERM_MATCH','Field':k,'Value':v} for k,v in {'instanceType':'t3.medium','location':'EU (Frankfurt)','operatingSystem':'Linux','tenancy':'Shared','preInstalledSw':'NA','capacitystatus':'Used'}.items()]
     prices=aws(['pricing','get-products','--region','us-east-1','--service-code','AmazonEC2','--filters',json.dumps(filters),'--max-results','10'])
@@ -122,6 +130,8 @@ def configure(c,oc):
     cfg=saved(c)
     for ns,_,_,csv in PINS:
         if get(oc,'csv',csv,'-n',ns)['status']['phase']!='Succeeded':raise RebuildError('Pinned operator is not ready: '+csv)
+    selected=[n['metadata']['name'] for n in get(oc,'nodes')['items'] if n['metadata'].get('labels',{}).get('lemonade.openshift.io/sandbox-worker')=='true']
+    if any(name!=cfg['node_name'] for name in selected):raise RebuildError('Another worker has the sandbox selector; refusing to expand VM capacity.')
     run(oc+['label','node',cfg['node_name'],'lemonade.openshift.io/sandbox-worker=true','--overwrite'])
     bucket='podvm-lemonade-'+c['aws_account_id']+'-'+c['cluster_id']
     existing=get(oc,'configmaps','-n',OSC_NS)['items']
@@ -254,7 +264,11 @@ def destroy_apply(c,oc):
         if change.get('mode')!='data' and (change['change']['actions'] not in (['delete'],['no-op']) or
             change['type'] not in ('aws_iam_role','aws_iam_role_policy','aws_vpc_security_group_ingress_rule')):
             raise RebuildError('Unexpected sandbox destroy scope.')
-    for ns,_,_,_ in PINS:run(oc+['delete','namespace',ns,'--wait=false'])
+    for ns,_,_,_ in PINS:
+        namespace=get(oc,'namespace',ns)
+        if namespace['metadata'].get('labels',{}).get('lemonade.openshift.io/component')!='sandbox-platform':
+            raise RebuildError('Operator namespace ownership changed; deletion refused.')
+        run(oc+['delete','namespace',ns,'--wait=false'])
     with (FOLDER/'destroy-apply.log').open('w') as log:
         result=subprocess.run([sys.executable,str(ROOT/'scripts/tf.py'),'sandbox','apply','-input=false',str(FOLDER/'destroy.tfplan')],cwd=ROOT,stdout=log,stderr=subprocess.STDOUT)
     if result.returncode:raise RebuildError('Sandbox destroy failed; see private log.')

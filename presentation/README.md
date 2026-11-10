@@ -1,6 +1,6 @@
 # Lemonade customer event — HTML stage deck
 
-The 22-slide English deck follows the portfolio demo's 1920 × 1080 Red Hat design: expressive cover, dark persona dividers, story rows, technical SVG diagrams and live-link chips. It is editable HTML/CSS, with no presentation runtime or external font dependency. The deck does not send model requests or start campaigns. Chapter 1 is **AgentOps: guardrails at runtime**. Chapter 2 is **Automated red teaming: evidence before release**. The customer, attacker and audience segments stay in Chapter 1; the release team opens Chapter 2 with the model-change question.
+The 25-slide English deck follows the portfolio demo's 1920 × 1080 Red Hat design: expressive cover, dark persona dividers, story rows, technical SVG diagrams and live-link chips. It is editable HTML/CSS, with no presentation runtime or external font dependency. The deck does not send model requests or start campaigns. Chapter 1 is **AgentOps: guardrails at runtime**. Chapter 2 is **Automated red teaming: evidence before release**. The customer, attacker and audience segments stay in Chapter 1; the release team opens Chapter 2 with the model-change question.
 
 ## Open and present
 
@@ -21,7 +21,7 @@ Open `http://127.0.0.1:18778/`. Use a browser window on the presentation screen.
 | F | Enter / exit fullscreen where supported |
 | Escape | Close notes |
 
-Move the pointer to reveal the controls, jump to any slide with the picker, or use a direct hash such as `#13` for the QR. The Print control uses the 16:9 print stylesheet for all slides. Notes appear on the same screen; close them before projecting. A separate presenter display is not implemented.
+Move the pointer to reveal the controls, jump to any slide with the picker, or use a direct hash such as `#15` for the QR. The Print control uses the 16:9 print stylesheet for all slides. Notes appear on the same screen; close them before projecting. A separate presenter display is not implemented.
 
 ## Configure the customer and live links
 
@@ -41,19 +41,22 @@ The page checks the SVG metadata against config.js when served over HTTP and hid
 
 ## Stage runbook
 
-Suggested pacing is 22–25 minutes. Confirm the actual slot before freezing the deck.
+Suggested pacing is 25–28 minutes. Confirm the actual slot before freezing the deck.
 
 | Slides | Suggested time | Action / transition |
 | --- | --- | --- |
 | 1–4 | 2–3 minutes | Introduce Snemeis, the Metal to Agents stack and the two-chapter focus. Model APIs do not remove application responsibility. |
 | 5–7 | 3 minutes | Product team: define behavior; ask one benign question; show its outcome and the technical path. |
-| 8 | 1–1.5 minutes | Use the dated, sourced research incident to distinguish behavioral policy from infrastructure enforcement. Avoid claiming all guardrails were off. |
-| 9–10 | 3 minutes | Customer: normal question, language mistake and mild frustration. Show the architecture after the persona. |
-| 11–12 | 2 minutes | Attacker: a synthetic probe against the same protected app. An allowed safe refusal is not attack success. Then show architecture. |
-| 13 | 2 minutes | Open a short audience window and show the QR. Close admission before Chapter 2 unless overlap was rehearsed. |
-| 14–16 | 3 minutes | Chapter 2: model-change question, adaptive feedback, agreed rehearsed run or labeled Previous run, then architecture. |
-| 17–19 | 4 minutes | Scope and stop control; inspect an actual finding, review it and retest after a genuine versioned change. |
-| 20–22 | 2–3 minutes | Summarize implementation, return to the same stack, assign owners and evidence for the next use case. Close remaining work. |
+| 8–9 | 2–3 minutes | Product action: generate analysis, review, execute in a VM and inspect cleanup; explain the separate execution architecture. |
+| 10 | 1 minute | Dated research incident: behavioral policy and infrastructure enforcement need separate evidence. |
+| 11–12 | 3 minutes | Customer: normal question, language mistake and mild frustration, then architecture. |
+| 13–14 | 2 minutes | Attacker: synthetic probe through the same protected chat, then architecture. |
+| 15 | 2 minutes | Open the bounded audience window and show the QR; close admission before Chapter 2. |
+| 16–18 | 3 minutes | Release-team model-change question, adaptive feedback and protected-target architecture. |
+| 19–21 | 4–5 minutes | Inspect and retest findings. Prepare the transition to execution-boundary evidence. |
+| 22 | 1 minute | Test one execution boundary live; label earlier results as saved evidence. |
+| 23–25 | 2 minutes | Return to the whole stack: behavioral evidence and execution evidence have different scopes. |
+
 
 Complete the small Functional smoke test before presenting. It is a fixed corpus with benign controls and does not demonstrate adaptive attacks. The adaptive explanation shows each strategy using its own measured result to generate its next probe. Human review follows as a separate release-evidence step; it is not required before every adaptive round. A recorded or previous run must remain visibly labeled, and the source-comparison dashboard is not a fair attack-success benchmark.
 
@@ -83,7 +86,7 @@ The authenticated **Red Team Control** page at `/control` provides the following
 3. Expand **Findings and evidence** to read the exact prompt, outcome, validated response or block, evaluation basis and version context. Submit a review verdict and an optional note for eligible completed cases. Model-judge findings remain proposed until reviewed.
 4. Use **Export report** for the selected run. Campaign and attempt records are stored in SQLite on a persistent volume; uncertain interrupted work is not silently replayed on restart.
 5. Select one to nine eligible completed attempts and use **Retest selected cases** after the original run is terminal. The run preserves those exact prompts, ensures both fixed benign controls are included without duplication, and records the current configuration fingerprint. The UI does not edit the policy.
-6. In **Audience window**, select one to ten minutes and use **Open window**. Show slide 13's QR. Use **Close audience access** when the segment ends. Product team, Customer and Attacker are audience scenarios only; they never confer operator access. The audience lands directly in chat. Switching its compact role control updates suggestions while retaining the session, remaining allowance and displayed transcript. All roles use the same protected target. Sessions expire with the window, and a restart closes admission.
+6. In **Audience window**, select one to ten minutes and use **Open window**. Show slide 15's QR. Use **Close audience access** when the segment ends. Product team, Customer and Attacker are audience scenarios only; they never confer operator access. The audience lands directly in chat. Switching its compact role control updates suggestions while retaining the session, remaining allowance and displayed transcript. All roles use the same protected target. Sessions expire with the window, and a restart closes admission.
 
 ### Model settings and custom profiles
 
@@ -181,3 +184,9 @@ Runtime `fa5f23f` is Synced/Healthy. The saved custom Functional profile **Stage
 One allowed audience response delivered its first status at **0.099 seconds**, its validated event at **6.142 seconds**, then checked-content chunks and `done`. The blocked case delivered status/error with no answer content. These are individual observations, not performance benchmarks. The check used only **3 new target generations**, all at concurrency **1** with `qwen38-27b`; it ended with no active campaign and audience admission closed.
 
 Only `qwen38-27b` is currently advertised by MaaS. No alternative-model inference, live concurrency above 1 or event capacity is claimed. Controlled application/provider restart at fa5f23f preserved the saved profile, run snapshot, selected model and concurrency; audience admission remained closed. All 12 deployments were 1/1 ready and both GitOps applications were Synced/Healthy. Physical QR scanning and the final venue rehearsal remain open.
+
+## Integrated Sandbox cue
+
+The `/sandbox` live link derives from the current authenticated chat route. It is not available to audience roles. Use [sandbox.md](../docs/sandbox.md) for Generate → Review → Run, narrow boundary checks, Technology Preview caveats and actual acceptance status. Sandbox checks are predefined tool-path probes, not the adaptive chat swarm. Never imply the text guardrails validate generated Python or that a network timeout proves all egress paths are closed.
+
+Warm-slot replenishment creates a new peer VM after each run. The first observed VM took approximately 2 minutes 22 seconds from Pod creation to runner start; this is one observation, not an availability SLA. Run the product analysis in Chapter 1, allow the slot to replenish during the customer/audience sequence, and show only one boundary probe live in Chapter 2. Inspect the warm-slot indicator before every execution.
