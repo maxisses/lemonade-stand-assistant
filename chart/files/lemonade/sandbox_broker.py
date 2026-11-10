@@ -30,7 +30,8 @@ class Broker:
                 headers={'Authorization':'Bearer '+token},json=data,timeout=aiohttp.ClientTimeout(total=12)) as response:
             if missing and response.status==404:return None
             if not 200<=response.status<300:raise HTTPException(503,'Sandbox platform operation failed.')
-            raw=await response.content.read(32769)
+            try:raw=await response.content.readexactly(32769)
+            except asyncio.IncompleteReadError as partial:raw=partial.partial
             if len(raw)>32768:raise HTTPException(503,'Sandbox platform response exceeded the bound.')
             return json.loads(raw)
     async def cleanup(self,name):

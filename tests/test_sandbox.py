@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -70,6 +71,29 @@ class BrokerTests(unittest.IsolatedAsyncioTestCase):
         result=await service.execute('a'*32,'print(1)')
         self.assertEqual(result['cleanup'],'attention_required')
         with self.assertRaises(broker.HTTPException):await service.execute('b'*32,'print(2)')
+    async def test_platform_json_waits_for_all_chunks_and_keeps_size_bound(self):
+        class Response:
+            status=200
+            def __init__(self,payload):
+                self.content=asyncio.StreamReader()
+                self.content.feed_data(payload[:3])
+                async def finish():
+                    await asyncio.sleep(.01)
+                    self.content.feed_data(payload[3:]);self.content.feed_eof()
+                self.pending=asyncio.create_task(finish())
+            async def __aenter__(self):return self
+            async def __aexit__(self,*args):await self.pending
+        class Client:
+            def __init__(self,payload):self.payload=payload
+            def request(self,*args,**kwargs):return Response(self.payload)
+        with tempfile.TemporaryDirectory() as folder:
+            Path(folder,'token').write_text('fake-test-token')
+            service=broker.Broker()
+            with patch.object(broker,'SERVICE_ACCOUNT',Path(folder)):
+                service.client=Client(b'{"status":{"readyReplicas":1}}')
+                self.assertEqual(await service.kube('GET','/fixture'),{'status':{'readyReplicas':1}})
+                service.client=Client(b' '*32769)
+                with self.assertRaises(broker.HTTPException):await service.kube('GET','/fixture')
     async def test_parallel_execution_is_rejected(self):
         service=FakeBroker()
         async with service.lock:

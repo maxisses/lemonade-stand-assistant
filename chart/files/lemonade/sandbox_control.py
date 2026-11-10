@@ -56,7 +56,8 @@ class SandboxControl:
         async with self.control.client.request(method,url+path,json=data,
                 headers={'Authorization':'Bearer '+os.environ['SANDBOX_BROKER_KEY']},
                 timeout=aiohttp.ClientTimeout(total=timeout),allow_redirects=False) as response:
-            raw=await response.content.read(32769)
+            try:raw=await response.content.readexactly(32769)
+            except asyncio.IncompleteReadError as partial:raw=partial.partial
             if len(raw)>32768:raise HTTPException(503,'Broker response is too large.')
             result=json.loads(raw)
             if response.status>=300:raise HTTPException(response.status,str(result.get('detail','Sandbox service error.'))[:200])
