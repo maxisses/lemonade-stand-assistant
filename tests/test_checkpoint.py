@@ -64,6 +64,19 @@ class CheckpointTests(unittest.TestCase):
     def hashes(self):
         return {name: hashlib.sha256((self.destination / name).read_bytes()).hexdigest() for name in DDL}
 
+    def test_sandbox_evidence_blocks_overwrite_and_active_backup(self):
+        path=self.source/'audience.sqlite'
+        with database(path) as db:
+            db.execute('CREATE TABLE sandbox_runs(id TEXT PRIMARY KEY,status TEXT,created REAL,document TEXT)')
+            db.execute("INSERT INTO sandbox_runs VALUES('sandbox-case','allocating',1,'{}')")
+        with self.assertRaisesRegex(RuntimeError,'active work'):
+            checkpoint.check_database(path,path.name)
+        with database(path) as db:
+            db.execute("UPDATE sandbox_runs SET status='finished'")
+        checkpoint.check_database(path,path.name)
+        with self.assertRaisesRegex(RuntimeError,'existing evidence'):
+            checkpoint.check_database(path,path.name,empty=True)
+
     def test_snapshot_includes_committed_wal(self):
         path = self.source / 'campaigns.sqlite'
         db = sqlite3.connect(path)

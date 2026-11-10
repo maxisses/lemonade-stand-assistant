@@ -13,9 +13,12 @@ def main():
     if server.rstrip('/')!=context['cluster_api_url'].rstrip('/'):raise AccessError('Wrong cluster; no secret created.')
     exists=command(oc+['-n','lemonade-demo','get','secret','lemonade-control','--ignore-not-found','-o','name'])
     if exists:
-        print('Retained existing demo session keys.');return
+        present=command(oc+['-n','lemonade-demo','get','secret','lemonade-control','-o','jsonpath={.data.sandbox-key}'])
+        if not present:
+            command(oc+['-n','lemonade-demo','patch','secret','lemonade-control','--type=merge','--patch-file=/dev/stdin'],input=json.dumps({'stringData':{'sandbox-key':secrets.token_urlsafe(32)}}))
+        print('Retained existing session keys; ensured a private sandbox service key.');return
     manifest={'apiVersion':'v1','kind':'Secret','metadata':{'name':'lemonade-control','namespace':'lemonade-demo'},'type':'Opaque',
-              'stringData':{key:secrets.token_urlsafe(32) for key in ('session-secret','gateway-key')}}
+              'stringData':{key:secrets.token_urlsafe(32) for key in ('session-secret','gateway-key','sandbox-key')}}
     command(oc+['create','-f','-'],input=json.dumps(manifest))
     print('Created private demo session keys.')
 

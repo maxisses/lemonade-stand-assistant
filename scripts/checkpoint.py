@@ -39,6 +39,9 @@ SCHEMAS = {
 }
 
 
+OPTIONAL_SCHEMAS = {'audience.sqlite': {'sandbox_runs': {'id', 'status', 'created', 'document'}}}
+
+
 def check_database(path, name, *, empty=False):
     """Check real schemas and idle state; optionally require a fresh restore target."""
     path = Path(path)
@@ -48,7 +51,9 @@ def check_database(path, name, *, empty=False):
     try:
         if db.execute('PRAGMA integrity_check').fetchall() != [('ok',)]:
             raise RuntimeError('SQLite integrity check failed: ' + name)
-        for table, expected in SCHEMAS[name].items():
+        present_tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        optional = {table: columns for table, columns in OPTIONAL_SCHEMAS.get(name, {}).items() if table in present_tables}
+        for table, expected in {**SCHEMAS[name], **optional}.items():
             columns = {row[1] for row in db.execute('PRAGMA table_info(' + table + ')')}
             if not set(expected) <= columns:
                 raise RuntimeError('Unexpected database schema: ' + name)
@@ -61,13 +66,15 @@ def check_database(path, name, *, empty=False):
             active = windows[0][1] > time.time() or db.execute("SELECT count(*) FROM events WHERE outcome='pending'").fetchone()[0]
         else:
             active = db.execute("SELECT count(*) FROM calls WHERE status='pending'").fetchone()[0]
+        if 'sandbox_runs' in optional:
+            active = active or db.execute("SELECT count(*) FROM sandbox_runs WHERE status IN ('generating','allocating','running','stopping')").fetchone()[0]
         if active:
             raise RuntimeError('Database contains active work: ' + name)
         if empty:
             tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-            if tables - set(SCHEMAS[name]) - {'sqlite_sequence'}:
+            if tables - set(SCHEMAS[name]) - set(optional) - {'sqlite_sequence'}:
                 raise RuntimeError('Refusing to overwrite unknown database tables: ' + name)
-            protected = tables & {'campaigns', 'profiles', 'calls', 'events', 'sessions'}
+            protected = tables & {'campaigns', 'profiles', 'calls', 'events', 'sessions', 'sandbox_runs'}
             if any(db.execute('SELECT count(*) FROM ' + table).fetchone()[0] for table in protected):
                 raise RuntimeError('Refusing to overwrite existing evidence: ' + name)
             if name == 'provider.sqlite':
@@ -87,6 +94,8 @@ def snapshot_database(path, name):
             target = sqlite3.connect(snapshot)
             try:
                 source.backup(target)
+                # A checkpoint is a standalone file, including when its source uses WAL.
+                target.execute("PRAGMA journal_mode=DELETE")
             finally:
                 target.close()
             check_database(snapshot, name)
@@ -134,7 +143,7 @@ def restore_databases(payload, campaign_directory, provider_directory):
 def remote_helpers():
     schemas = {name: {table: sorted(columns) for table, columns in tables.items()} for name, tables in SCHEMAS.items()}
     return ('import base64,json,os,sqlite3,sys,tempfile,time\nfrom pathlib import Path\nSCHEMAS = '
-            + repr(schemas) + '\n' + '\n'.join(inspect.getsource(function) for function in
+            + repr(schemas) + '\nOPTIONAL_SCHEMAS = ' + repr(OPTIONAL_SCHEMAS) + '\n' + '\n'.join(inspect.getsource(function) for function in
                 (check_database, snapshot_database, restore_databases)))
 
 

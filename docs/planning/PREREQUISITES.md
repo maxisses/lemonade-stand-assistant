@@ -100,3 +100,8 @@ Read-only inspection confirmed the current project identity and three m6i.2xlarg
 Before live execution, resolve HCP-specific compatibility, scoped STS permissions, peer-pod VM image creation, internal connectivity, EC2 quotas and selected-instance cost. Agent Sandbox lifecycle management alone is not VM isolation. Candidate path: kata-remote on separate CPU EC2 VMs, with all resources included in account-scoped teardown. Local Kata on the present worker shape must not be assumed. Technology Preview status must be visible in the presentation. Warm-pool replenishment creates additional capacity demand, so set and verify an overall VM ceiling and cleanup, not merely the number of warm slots.
 
 See the proposed scope at the end of PROJECT_PLAN.md. Scope choice is pending; this audit installs no operator, opens no network path and changes no spending limit.
+
+
+## 10 November 2026 — Sandbox integration authorized
+
+The owner chose the integrated live extension and separately approved the scoped AWS/operator plan and namespace/RBAC/service-key integration. Agent Sandbox 0.9.0 and OSC 1.13.1 are installed on the restored ROSA HCP 4.21.34 cluster; kata-remote and the dedicated CPU VM image are ready. Temporary image-builder permissions were removed after image readiness. The operator-only analysis workflow and bounded checks are being deployed; live acceptance is recorded in the build journal, not inferred from installation. See [sandbox operations](../sandbox.md). No GPU or larger-load authorization was added.

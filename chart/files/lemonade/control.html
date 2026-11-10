@@ -33,7 +33,7 @@ body:has(#campaignRail:not([hidden])) #launchPanel{display:none}
 </style>
 </head>
 <body>
-<header class="topbar"><div class="brand">Snemeis Lemonade Division<small>Demo scenario · Protected assistant</small></div><nav aria-label="Demo views"><a href="/">Presenter chat ↗</a></nav></header>
+<header class="topbar"><div class="brand">Snemeis Lemonade Division<small>Demo scenario · Protected assistant</small></div><nav aria-label="Demo views"><a id="sandboxLink" href="/sandbox" hidden>Agent Sandbox ↗</a> <a href="/">Presenter chat ↗</a></nav></header>
 <main class="page-shell">
 <div class="intro"><div><div class="eyebrow">Act 2 · AgentOps</div><h1>Red Team Control</h1></div><div class="intro-status"><div><span id="connection" class="pill warn" role="status">Connecting</span><span id="lastUpdated" class="small-text muted">Waiting for current state</span></div><button id="refresh" class="small">Refresh</button></div></div>
 <nav class="view-nav" aria-label="Control sections"><button type="button" data-view="run" aria-controls="view-run" aria-pressed="true">Campaign</button><button type="button" data-view="audience" aria-controls="view-audience" aria-pressed="false">Audience</button><button type="button" data-view="review" aria-controls="view-review" aria-pressed="false">Review</button><button type="button" data-view="settings" aria-controls="view-settings" aria-pressed="false">Settings</button></nav>
@@ -183,6 +183,7 @@ function updateProfileEditor(){
  setButtons();
 }
 function renderSettings(data,force=false){
+ $('sandboxLink').hidden=!state?.sandbox_enabled;
  const previous=settingsData,changed=settingsChanged(),draftModel=$('modelChoice').value,draftConcurrency=$('concurrencyChoice').value;
  settingsData=data;settingsError='';settingsLoadedAt=Date.now();
  const signature=JSON.stringify([data.models,data.settings,data.limits]);

@@ -106,3 +106,8 @@ demoControl:
   storageSize: 1Gi
   operatorUrl: ""
   audienceUrl: ""
+
+# Operator-led CPU sandbox extension; enable only after platform acceptance.
+sandbox:
+  enabled: false
+  warmReplicas: 1

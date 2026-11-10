@@ -141,3 +141,7 @@ Before generating new traffic, compare every saved record ID and table count aga
 Check both GitOps Applications are Synced/Healthy, all desired application deployments are ready, the provider is not unexpectedly paused and audience admission is closed. Run `python3 scripts/show_access.py` for the new links. Sign in once and confirm Control, chat, dashboard and its WebSocket work. Verify the public audience route does not expose Control or metrics, and the QR resolves to the new `/join` URL.
 
 A rebuild is not validated merely because the pods are ready. Perform the previously agreed small serial functional checks only when the owner resumes testing: one benign response, the local topic block and the language policy. Keep model discovery separate from inference validation, preserve the shared budgets, and do not start a capacity ramp, concurrent audience campaign or GPU resources. Record the new runtime versions and measurements in the build journal/version manifest. Complete the event rehearsal and pending human reviews separately.
+
+## Agent Sandbox extension
+
+When `sandbox.enabled` is true, complete the pinned sandbox platform before application sync. Follow [sandbox.md](sandbox.md) for the account-scoped build, image-rights removal, operator workflow and additional acceptance. A normal ROSA rebuild alone does not create the peer-pod image or warm pool.

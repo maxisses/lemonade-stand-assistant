@@ -135,6 +135,11 @@ def main():
                          "https://lemonade-audience-lemonade-demo." + domain):
             if expected not in (ROOT / "deploy/functional-values.yaml").read_text():
                 raise RebuildError("Refresh, review and publish the new cluster URLs before application sync.")
+        if re.search(r'(?m)^sandbox:\n  enabled: true', (ROOT / "deploy/functional-values.yaml").read_text()):
+            require_csv(oc,"agent-sandbox-system","agent-sandbox-operator.v0.9.0")
+            require_csv(oc,"openshift-sandboxed-containers-operator","sandboxed-containers-operator.v1.13.1")
+            get(oc,"runtimeclass","kata-remote")
+            run([sys.executable,str(ROOT/"scripts/sandbox_platform.py"),"access"])
         revision = published_revision()
         apply(oc, "gitops/bootstrap/lemonade-app.yaml")
         run(oc + ["patch", "application", "lemonade-demo", "-n", "openshift-gitops", "--type=merge", "-p",

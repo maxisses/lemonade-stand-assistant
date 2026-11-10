@@ -54,7 +54,7 @@ def infrastructure_environment():
 
 def terraform_environment(stage):
     """Keep backend metadata and bootstrap state isolated by AWS account."""
-    if stage not in {"bootstrap", "foundation", "rosa"}:
+    if stage not in {"bootstrap", "foundation", "rosa", "sandbox"}:
         raise RuntimeError("Unknown Terraform stage")
     env = infrastructure_environment()
     account = env["TF_VAR_expected_account_id"]

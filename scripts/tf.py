@@ -14,8 +14,8 @@ def verify_plan(plan, env, directory):
             raise RuntimeError("Saved plan targets another account or region; no apply executed")
 
 def main():
-    if len(sys.argv) < 3 or sys.argv[1] not in {"bootstrap", "foundation", "rosa"}:
-        sys.exit("Usage: python3 scripts/tf.py bootstrap|foundation|rosa <terraform arguments>")
+    if len(sys.argv) < 3 or sys.argv[1] not in {"bootstrap", "foundation", "rosa", "sandbox"}:
+        sys.exit("Usage: python3 scripts/tf.py bootstrap|foundation|rosa|sandbox <terraform arguments>")
     stage, args = sys.argv[1], sys.argv[2:]
     env = terraform_environment(stage)
     check = subprocess.run(["aws", "sts", "get-caller-identity", "--output", "json"], env=env, capture_output=True, text=True)

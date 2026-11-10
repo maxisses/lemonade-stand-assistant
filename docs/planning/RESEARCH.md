@@ -175,3 +175,8 @@ The revised 22-slide deck uses the five requested Red Hat articles to connect th
 - [OSC 1.13 AWS guide](https://docs.redhat.com/en/documentation/openshift_sandboxed_containers/1.13/html/deploying_openshift_sandboxed_containers_on_aws/index): authoritative installation, HCP limitations, image, networking and cleanup reference. Verify the detailed matrix before installation; the HCP chapter fetch returned 503 during this audit.
 
 The live operator catalog independently confirms candidate versions 0.9.0 / 1.13.1. No sandbox isolation or availability claim has been validated in this environment. The proposed stage extension and acceptance steps are recorded in PROJECT_PLAN.md.
+
+
+## 10 November 2026 — Sandbox integration authorized
+
+The owner chose the integrated live extension and separately approved the scoped AWS/operator plan and namespace/RBAC/service-key integration. Agent Sandbox 0.9.0 and OSC 1.13.1 are installed on the restored ROSA HCP 4.21.34 cluster; kata-remote and the dedicated CPU VM image are ready. Temporary image-builder permissions were removed after image readiness. The operator-only analysis workflow and bounded checks are being deployed; live acceptance is recorded in the build journal, not inferred from installation. See [sandbox operations](../sandbox.md). No GPU or larger-load authorization was added.

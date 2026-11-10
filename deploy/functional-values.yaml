@@ -59,3 +59,7 @@ demoControl:
   storageSize: 1Gi
   operatorUrl: https://lemonade-chat-lemonade-demo.apps.rosa.lemonade-demo.mjkz.p3.openshiftapps.com
   audienceUrl: https://lemonade-audience-lemonade-demo.apps.rosa.lemonade-demo.mjkz.p3.openshiftapps.com
+
+sandbox:
+  enabled: true
+  warmReplicas: 1

@@ -325,3 +325,8 @@ Proposed implementation sequence:
 6. Update the persona architecture, stage controls, rehearsal and fallback only after the live path passes. Clearly label Technology Preview and any external reference recording. With feature freeze on 10 November, keep this optional until end-to-end acceptance; the established chat/guardrail/red-team flow remains the event fallback.
 
 Measured environment: verified project account 058264461741, eu-central-1 and explicit project kubeconfig; ROSA 4.21.34 with three m6i.2xlarge workers. Catalog availability is not installation or functional evidence. No resources or model requests were created by this audit.
+
+
+## 10 November 2026 — Sandbox integration authorized
+
+The owner chose the integrated live extension and separately approved the scoped AWS/operator plan and namespace/RBAC/service-key integration. Agent Sandbox 0.9.0 and OSC 1.13.1 are installed on the restored ROSA HCP 4.21.34 cluster; kata-remote and the dedicated CPU VM image are ready. Temporary image-builder permissions were removed after image readiness. The operator-only analysis workflow and bounded checks are being deployed; live acceptance is recorded in the build journal, not inferred from installation. See [sandbox operations](../sandbox.md). No GPU or larger-load authorization was added.

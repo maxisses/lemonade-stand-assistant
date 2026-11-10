@@ -84,6 +84,8 @@ spec:
     - https://github.com/maxisses/lemonade-stand-assistant.git
   destinations:
     - server: https://kubernetes.default.svc
+      namespace: lemonade-sandbox
+    - server: https://kubernetes.default.svc
       namespace: lemonade-demo
     - server: https://kubernetes.default.svc
       namespace: redhat-ods-operator
@@ -95,6 +97,12 @@ spec:
     - group: datasciencecluster.opendatahub.io
       kind: DataScienceCluster
   namespaceResourceWhitelist:
+    - group: ""
+      kind: ResourceQuota
+    - group: extensions.agents.x-k8s.io
+      kind: SandboxTemplate
+    - group: extensions.agents.x-k8s.io
+      kind: SandboxWarmPool
     - group: ""
       kind: ConfigMap
     - group: ""

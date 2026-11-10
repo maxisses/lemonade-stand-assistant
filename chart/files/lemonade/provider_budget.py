@@ -214,7 +214,7 @@ async def forward(path: str, request: Request):
     if app.state.waiting>=8:
         raise HTTPException(429,'Provider queue is full.')
     role=request.headers.get('x-demo-role','target')
-    role=role if role in ('attacker','judge','target') else 'target'
+    role=role if role in ('attacker','judge','target','sandbox') else 'target'
     app.state.waiting+=1
     identifier=None
     try:

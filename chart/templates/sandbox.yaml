@@ -1,0 +1,161 @@
+{{- if .Values.sandbox.enabled }}
+{{- if not .Values.demoControl.enabled }}{{ fail "Sandbox requires authenticated demo controls" }}{{- end }}
+{{- if gt (int .Values.sandbox.warmReplicas) 1 }}{{ fail "At most one warm sandbox is permitted" }}{{- end }}
+{{- $ns := include "assistant.namespace" . }}
+{{- $files := include "assistant.filesPath" . }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: lemonade-sandbox-control-files, namespace: {{ $ns }}}
+data:
+{{- range $name := list "sandbox_control.py" "sandbox.html" }}
+  {{ $name }}: |
+{{ $.Files.Get (printf "%s/%s" $files $name) | indent 4 }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: lemonade-sandbox-broker-files, namespace: {{ $ns }}}
+data:
+  sandbox_broker.py: |
+{{ .Files.Get (printf "%s/sandbox_broker.py" $files) | indent 4 }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: lemonade-sandbox-broker, namespace: {{ $ns }}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lemonade-sandbox-broker
+  namespace: {{ $ns }}
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: lemonade-sandbox-broker-tls
+spec:
+  selector: {app: lemonade-sandbox-broker}
+  ports: [{name: https, port: 8443, targetPort: https}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: lemonade-sandbox-broker, namespace: {{ $ns }}}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector: {matchLabels: {app: lemonade-sandbox-broker}}
+  template:
+    metadata:
+      labels: {app: lemonade-sandbox-broker}
+      annotations:
+        checksum/source: {{ .Files.Get (printf "%s/sandbox_broker.py" $files) | sha256sum | quote }}
+    spec:
+      serviceAccountName: lemonade-sandbox-broker
+      containers:
+        - name: broker
+          image: {{ .Values.app.image | quote }}
+          command: [python, -m, uvicorn]
+          args: ["sandbox_broker:app", "--host", "0.0.0.0", "--port", "8443", "--workers", "1", "--ssl-keyfile", "/etc/tls/tls.key", "--ssl-certfile", "/etc/tls/tls.crt", "--no-access-log"]
+          ports: [{name: https, containerPort: 8443}]
+          env:
+            - name: SANDBOX_BROKER_KEY
+              valueFrom:
+                secretKeyRef: {name: lemonade-control, key: sandbox-key}
+          volumeMounts:
+            - {name: source, mountPath: /application/sandbox_broker.py, subPath: sandbox_broker.py, readOnly: true}
+            - {name: tls, mountPath: /etc/tls, readOnly: true}
+          resources:
+            requests: {cpu: 50m, memory: 96Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities: {drop: [ALL]}
+            seccompProfile: {type: RuntimeDefault}
+          readinessProbe:
+            httpGet: {scheme: HTTPS, path: /health, port: https}
+      volumes:
+        - name: source
+          configMap: {name: lemonade-sandbox-broker-files}
+        - name: tls
+          secret: {secretName: lemonade-sandbox-broker-tls}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: lemonade-sandbox-runner, namespace: lemonade-sandbox}
+data:
+  runner.py: |
+{{ .Files.Get (printf "%s/sandbox_runner.py" $files) | indent 4 }}
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata: {name: lemonade-sandbox-ceiling, namespace: lemonade-sandbox}
+spec:
+  hard:
+    pods: "2"
+    count/sandboxclaims.extensions.agents.x-k8s.io: "1"
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    limits.cpu: "2"
+    limits.memory: 1Gi
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: sandbox-boundary, namespace: lemonade-sandbox}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  egress: []
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: {{ $ns }}}
+          podSelector:
+            matchLabels: {app: lemonade-sandbox-broker}
+      ports: [{protocol: TCP, port: 8080}]
+---
+apiVersion: extensions.agents.x-k8s.io/v1beta1
+kind: SandboxTemplate
+metadata: {name: lemonade-python, namespace: lemonade-sandbox}
+spec:
+  service: true
+  podTemplate:
+    metadata:
+      labels: {app: lemonade-sandbox-runner}
+      annotations:
+        checksum/runner: {{ .Files.Get (printf "%s/sandbox_runner.py" $files) | sha256sum | quote }}
+    spec:
+      runtimeClassName: kata-remote
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      nodeSelector: {lemonade.openshift.io/sandbox-worker: "true"}
+      containers:
+        - name: runner
+          image: {{ .Values.app.image | quote }}
+          command: [python, -B, /runner.py]
+          ports: [{containerPort: 8080, name: http}]
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: "1", memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities: {drop: [ALL]}
+            seccompProfile: {type: RuntimeDefault}
+          volumeMounts:
+            - {name: runner, mountPath: /runner.py, subPath: runner.py, readOnly: true}
+            - {name: scratch, mountPath: /tmp}
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+      volumes:
+        - name: runner
+          configMap: {name: lemonade-sandbox-runner}
+        - name: scratch
+          emptyDir: {sizeLimit: 32Mi}
+---
+apiVersion: extensions.agents.x-k8s.io/v1beta1
+kind: SandboxWarmPool
+metadata: {name: lemonade-python, namespace: lemonade-sandbox}
+spec:
+  replicas: {{ .Values.sandbox.warmReplicas }}
+  sandboxTemplateRef: {name: lemonade-python}
+{{- end }}

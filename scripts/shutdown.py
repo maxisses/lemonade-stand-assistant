@@ -83,6 +83,13 @@ def main():
     saved = checkpoint.verify(folder)
     recorded = checkpoint.context()
     verify_checkpoint_context(saved, recorded)
+    # Peer pods and image-build permissions must be removed while the cluster still exists.
+    sandbox_env=terraform_environment('sandbox')
+    if (Path(sandbox_env['TF_DATA_DIR'])/'terraform.tfstate').exists():
+        verify_backend('sandbox',sandbox_env)
+        state=subprocess.run(['terraform','-chdir='+str(ROOT/'infra/sandbox'),'state','pull'],env=sandbox_env,capture_output=True,text=True)
+        if state.returncode or any(r.get('mode')=='managed' and r.get('instances') for r in json.loads(state.stdout).get('resources',[])):
+            raise RuntimeError('Sandbox infrastructure remains. Complete sandbox_platform.py quiesce/runtime/image/IAM cleanup before ROSA teardown.')
     env = terraform_environment(args.stage)
     verify_backend(args.stage, env)
     # Foundation may only be removed after the ROSA stage is genuinely empty.

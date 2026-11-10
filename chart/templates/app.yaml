@@ -63,6 +63,7 @@ spec:
         {{- if .Values.demoControl.enabled }}
         checksum/control: {{ printf "%s%s%s%s" (.Files.Get (printf "%s/demo_control.py" $files)) (.Files.Get (printf "%s/campaigns.py" $files)) (.Files.Get (printf "%s/control.html" $files)) (.Files.Get (printf "%s/audience.html" $files)) | sha256sum | quote }}
         {{- end }}
+        checksum/sandbox: {{ printf "%s%s" (.Files.Get (printf "%s/sandbox_control.py" $files)) (.Files.Get (printf "%s/sandbox.html" $files)) | sha256sum | quote }}
         checksum/prompt: {{ .Files.Get (printf "%s/system-prompt.txt" $files) | sha256sum | quote }}
       labels:
         app: {{ $app }}
@@ -81,6 +82,15 @@ spec:
               name: http
           env:
             {{- if .Values.demoControl.enabled }}
+            {{- if .Values.sandbox.enabled }}
+            - name: SANDBOX_ENABLED
+              value: "true"
+            - name: SANDBOX_BROKER_URL
+              value: https://lemonade-sandbox-broker.{{ $ns }}.svc:8443
+            - name: SANDBOX_BROKER_KEY
+              valueFrom:
+                secretKeyRef: {name: lemonade-control, key: sandbox-key}
+            {{- end }}
             - name: DEMO_CONTROL_ENABLED
               value: "true"
             - name: DEMO_DATA_DIR
@@ -126,6 +136,10 @@ spec:
             - name: ORCHESTRATOR_STREAMING
               value: {{ .Values.app.upstreamStreaming | quote }}
           volumeMounts:
+            {{- if .Values.sandbox.enabled }}
+            - {name: sandbox-files, mountPath: /application/sandbox_control.py, subPath: sandbox_control.py, readOnly: true}
+            - {name: sandbox-files, mountPath: /application/static/sandbox.html, subPath: sandbox.html, readOnly: true}
+            {{- end }}
             {{- if .Values.demoControl.enabled }}
             - name: state
               mountPath: /data
@@ -188,6 +202,10 @@ spec:
               drop:
                 - ALL
       volumes:
+        {{- if .Values.sandbox.enabled }}
+        - name: sandbox-files
+          configMap: {name: lemonade-sandbox-control-files}
+        {{- end }}
         {{- if .Values.demoControl.enabled }}
         - name: state
           persistentVolumeClaim:

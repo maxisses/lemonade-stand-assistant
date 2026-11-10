@@ -135,13 +135,17 @@ class DemoControl:
         self.settings=None
         self.audience.db.execute('CREATE TABLE IF NOT EXISTS profiles(id TEXT PRIMARY KEY,name TEXT,profile TEXT,options TEXT,revision INTEGER,created REAL,UNIQUE(name,revision))')
         self.audience.db.commit()
+        self.sandbox=None
+        if os.getenv("SANDBOX_ENABLED")=="true":
+            from sandbox_control import SandboxControl
+            self.sandbox=SandboxControl(self)
         self.routes()
 
     def active_campaign(self):
         return any(run['status'] in ACTIVE for run in self.engine.list())
 
     def settings_locked(self):
-        return bool(self.active_campaign() or self.audience.state()['open'] or self.audience.pending or self.application_inflight or self.presenter_waiting)
+        return bool((self.sandbox and self.sandbox.active()) or self.active_campaign() or self.audience.state()['open'] or self.audience.pending or self.application_inflight or self.presenter_waiting)
 
     async def sync_settings(self):
         """Caller owns config_lock; provider persistence is authoritative."""
@@ -209,6 +213,7 @@ class DemoControl:
             except HTTPException:pass
 
     async def shutdown(self):
+        if self.sandbox:await self.sandbox.stop()
         await self.engine.shutdown()
         self.audience.db.close()
         if self.client:await self.client.close()
@@ -350,7 +355,7 @@ class DemoControl:
             try:_,provider=await self.provider('/budget')
             except Exception:provider={'paused':'unreachable'}
             provider.update(provider_paused=bool(provider.get('paused')),generations_per_minute=12,provider_concurrency=provider.get('concurrency',1),max_input_chars=self.core.MAX_INPUT_CHARS,max_output_tokens=self.core.MAX_OUTPUT_TOKENS)
-            return {'csrf_token':self.csrf(subject),'policy':self.policy(),'limits':provider,
+            return {'sandbox_enabled':bool(self.sandbox),'csrf_token':self.csrf(subject),'policy':self.policy(),'limits':provider,
                     'permissions':{'can_execute':bool(await self.permission(request,execute=True,fail=False))},
                     'audience':self.audience.state(),'active_run':active,'runs':runs,
                     'application_active_requests':self.application_inflight,'settings_locked':self.settings_locked()}

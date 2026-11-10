@@ -76,3 +76,7 @@ Do not delete data volumes independently before cluster removal unless backup ve
 ## Rebuild
 
 Follow [rebuild.md](rebuild.md). The infrastructure code, pinned operators, guardrails, model settings, application, dashboard and presentation are preserved. `scripts/rebuild.py` supplies guarded bootstrap steps and updates the new cluster URLs and QR assets. `scripts/checkpoint.py restore` restores the durable records with all public entry points and both database writers stopped. A deleted cluster is recreated rather than instantly powered on; rebuild duration has not been benchmarked.
+
+## Additional teardown requirement after the Sandbox extension
+
+Before deleting the current ROSA cluster, follow the ordered [Sandbox teardown](sandbox.md#shutdown-order). Quiesce claims and warm VMs, allow the operator to clean up its image artifacts, and remove the sandbox Terraform stage. The normal shutdown helper now refuses ROSA/foundation plans while this stage retains managed resources. Database checkpoints remain local-only and include sandbox execution evidence when present.
