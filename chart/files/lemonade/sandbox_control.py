@@ -88,7 +88,10 @@ class SandboxControl:
             try:await self.broker('/runs/'+record['id'],'DELETE')
             except Exception:pass
             record.update(status='cancelled',error='Stop requested. Confirm broker cleanup before the next execution.')
-        except Exception:record.update(status='execution_error',error='Sandbox execution or verification failed. Inspect platform health; no retry was sent.')
+        except HTTPException as error:
+            record.update(status='execution_error',error=str(error.detail)[:400])
+        except Exception as error:
+            record.update(status='execution_error',error='Sandbox execution failed ('+type(error).__name__+'). Inspect platform health; no retry was sent.')
         finally:self.save(record)
     async def stop(self):
         if self.active():

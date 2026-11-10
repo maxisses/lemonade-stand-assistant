@@ -29,7 +29,8 @@ class Broker:
         async with self.client.request(method,'https://kubernetes.default.svc'+path,
                 headers={'Authorization':'Bearer '+token},json=data,timeout=aiohttp.ClientTimeout(total=12)) as response:
             if missing and response.status==404:return None
-            if not 200<=response.status<300:raise HTTPException(503,'Sandbox platform operation failed.')
+            if not 200<=response.status<300:
+                raise HTTPException(503,f'Sandbox platform rejected {method} {path} (HTTP {response.status}).')
             try:raw=await response.content.readexactly(32769)
             except asyncio.IncompleteReadError as partial:raw=partial.partial
             if len(raw)>32768:raise HTTPException(503,'Sandbox platform response exceeded the bound.')
