@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
+import ipaddress
 import json
 import os
 from pathlib import Path
@@ -34,6 +35,19 @@ class Broker:
             try:raw=await response.content.readexactly(32769)
             except asyncio.IncompleteReadError as partial:raw=partial.partial
             if len(raw)>32768:raise HTTPException(503,'Sandbox platform response exceeded the bound.')
+            return json.loads(raw)
+    async def runner(self,pod,code):
+        # The destination comes only from the authenticated, owner-verified Pod status.
+        address=ipaddress.ip_address(pod['status']['podIP'])
+        if not address.is_private or address.is_loopback or address.is_link_local or address.is_multicast:
+            raise HTTPException(503,'Runner address is outside the private Pod network.')
+        host='['+str(address)+']' if address.version==6 else str(address)
+        async with self.client.post('http://'+host+':8080/run',json={'code':code},
+                timeout=aiohttp.ClientTimeout(total=12),allow_redirects=False) as response:
+            if response.status!=200:raise HTTPException(503,'Runner rejected execution (HTTP '+str(response.status)+').')
+            try:raw=await response.content.readexactly(16385)
+            except asyncio.IncompleteReadError as partial:raw=partial.partial
+            if len(raw)>16384:raise HTTPException(503,'Runner response exceeded the bound.')
             return json.loads(raw)
     async def cleanup(self,name):
         await self.kube('DELETE',EXT+'/sandboxclaims/'+name,{'propagationPolicy':'Foreground'},missing=True)
@@ -78,7 +92,7 @@ class Broker:
                             if pod['spec'].get('runtimeClassName')!='kata-remote' or not any(x.get('uid')==sandbox['metadata']['uid'] for x in owners):
                                 raise HTTPException(503,'VM runtime/ownership verification failed; execution refused.')
                             if any(x.get('type')=='Ready' and x.get('status')=='True' for x in pod.get('status',{}).get('conditions',[])):
-                                result=await self.kube('POST',PODS+'/'+target+':8080/proxy/run',{'code':code})
+                                result=await self.runner(pod,code)
                                 # Runner output is untrusted evidence, never an authorization decision.
                                 result={k:result.get(k) for k in ('outcome','stdout','exit_code','seconds','output_truncated','dataset')}
                                 result.update(runtime='kata-remote',sandbox=target,pod_uid=pod['metadata']['uid'],

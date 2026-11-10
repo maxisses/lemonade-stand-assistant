@@ -77,7 +77,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(body)))
         self.end_headers();self.wfile.write(body)
     def do_GET(self):
-        self.reply(200,{'ready':not consumed}) if self.path=='/health' else self.reply(404,{'error':'Not found'})
+        self.reply(503 if consumed else 200,{'ready':not consumed}) if self.path=='/health' else self.reply(404,{'error':'Not found'})
     def do_POST(self):
         global consumed
         if self.path!='/run':return self.reply(404,{'error':'Not found'})

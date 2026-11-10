@@ -39,11 +39,13 @@ class FakeBroker(broker.Broker):
         if '/sandboxclaims/' in path:
             return None if self.deleted else {'status':{'sandbox':{'name':'owned-sandbox'}}}
         if '/sandboxes/' in path:return {'metadata':{'uid':'sandbox-uid'}}
-        if path.endswith('/proxy/run'):return {'outcome':'completed','stdout':'160','exit_code':0,'seconds':.1}
         if '/pods/' in path:
             return {'metadata':{'uid':'pod-uid','ownerReferences':[{'uid':'sandbox-uid' if self.owner else 'someone-else'}]},
                     'spec':{'runtimeClassName':self.runtime},'status':{'conditions':[{'type':'Ready','status':'True'}]}}
         raise AssertionError(path)
+    async def runner(self,pod,code):
+        self.calls.append(('POST','verified-runner',{'code':code}))
+        return {'outcome':'completed','stdout':'160','exit_code':0,'seconds':.1}
 
 
 class BrokerTests(unittest.IsolatedAsyncioTestCase):
@@ -56,14 +58,14 @@ class BrokerTests(unittest.IsolatedAsyncioTestCase):
         result=await service.execute('a'*32,code)
         self.assertEqual(result['code_sha256'],hashlib.sha256(code.encode()).hexdigest())
         self.assertEqual(result['cleanup'],'complete');self.assertTrue(service.deleted)
-        calls=[c for c in service.calls if c[1].endswith('/proxy/run')]
+        calls=[c for c in service.calls if c[1]=='verified-runner']
         self.assertEqual(calls[0][2],{'code':code})
     async def test_shared_kernel_or_wrong_owner_fails_closed(self):
         for service in (FakeBroker(runtime='runc'),FakeBroker(owner=False)):
             with self.subTest(runtime=service.runtime,owner=service.owner),self.assertRaises(broker.HTTPException):
                 await service.execute('b'*32,'print(1)')
             self.assertTrue(service.deleted)
-            self.assertFalse(any(c[1].endswith('/proxy/run') for c in service.calls))
+            self.assertFalse(any(c[1]=='verified-runner' for c in service.calls))
     async def test_failed_cleanup_blocks_next_run(self):
         service=FakeBroker()
         async def fail(name):raise RuntimeError('simulated cleanup failure')
@@ -94,6 +96,11 @@ class BrokerTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(await service.kube('GET','/fixture'),{'status':{'readyReplicas':1}})
                 service.client=Client(b' '*32769)
                 with self.assertRaises(broker.HTTPException):await service.kube('GET','/fixture')
+    async def test_runner_rejects_non_pod_destinations(self):
+        service=broker.Broker()
+        for address in ['127.0.0.1','169.254.169.254','8.8.8.8','::1']:
+            with self.subTest(address=address),self.assertRaises(broker.HTTPException):
+                await service.runner({'status':{'podIP':address}},'print(1)')
     async def test_parallel_execution_is_rejected(self):
         service=FakeBroker()
         async with service.lock:
